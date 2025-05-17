@@ -1,6 +1,6 @@
 "use server";
 
-import { signIn, signOut } from "@/auth";
+import { signIn, signOut } from "@/auth"
 import { db } from "@/lib/db";
 import { AuthError } from "next-auth";
 

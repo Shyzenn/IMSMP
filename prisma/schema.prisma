@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String   @id @default(uuid())
+  username String   @unique
+  role     Role
+  password String
+  createdAt DateTime @default(now())
+}
+
+
+enum Role {
+  Pharmacist_Staff
+  Nurse
+  Manager
+  Cashier
+}
+
+model Product {
+  id              String   @id @default(uuid()) // UUID as Primary Key
+  product_name    String   @unique // Unique product name
+  category        Category   // Category of the product
+  quantity        Int      @default(0) // Default stock quantity
+  releaseDate     DateTime? // Optional release date
+  expiryDate      DateTime? // Optional expiry date
+  price           Decimal  @default(0.00) // Product price
+  createdAt       DateTime @default(now()) // Auto-generated timestamp
+  updatedAt       DateTime @updatedAt // Auto-update timestamp
+}
+
+enum Category {
+  ANTIBIOTIC
+  GASTROINTESTINAL
+  PAIN_RELIEVER
+  ANTI_INFLAMMATORY
+  GENERAL_MEDICATION
+}
+
+
+

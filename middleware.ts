@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const roleRoutes = {
-  Manager: ["/dashboard", "/inventory", "/transaction", "/add-product", "/order"],
+  Manager: ["/dashboard", "/inventory", "/transaction", "/add-product", "/order", "/settings"],
   Nurse: ["/request-order"],
   Cashier: ["/cashier_dashboard"],
   Pharmacist_Staff: ["/pharmacist_dashboard"],
@@ -55,5 +55,6 @@ export const config = {
     "/cashier_dashboard/:path*",
     "/pharmacist_dashboard/:path*",
     "/auth/signin",
+    "/settings/:path*"
   ],
 };
