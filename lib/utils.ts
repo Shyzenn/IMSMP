@@ -9,3 +9,12 @@ export function capitalLetter(str: string) {
   if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
+
+export function formattedDate(date?: Date): string {
+  const d = date ?? new Date();
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}

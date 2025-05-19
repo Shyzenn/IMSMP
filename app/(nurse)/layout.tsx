@@ -15,14 +15,14 @@ export default function AdminLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className={`antialiased bg-background`}>
+    <div className={`antialiased bg-background bg-gray-100`}>
       <SidebarProvider>
         <div className="flex h-screen w-screen">
           <NurseSidebar />
           <div className="flex-1 flex flex-col ">
             <Header />
             <div className="flex-1 m-3">
-              <div className="w-full h-full "> {children}</div>
+              <div className="w-full h-full"> {children}</div>
             </div>
           </div>
         </div>

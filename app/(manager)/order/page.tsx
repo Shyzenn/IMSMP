@@ -54,7 +54,8 @@ const Order = () => {
                       <strong>Name:</strong> {submittedData.patientName}
                     </p>
                     <p>
-                      Date:<span className="font-normal">{formattedDate}</span>
+                      Date:
+                      <span className="font-normal">{formattedDate()}</span>
                     </p>
                   </div>
                   <p className="">

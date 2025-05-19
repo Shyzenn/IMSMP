@@ -17,7 +17,7 @@ export default function AdminLayout({
 }>) {
   return (
     <ReactQueryProvider>
-      <div className={`antialiased bg-background`}>
+      <div className={`antialiased bg-background bg-gray-100`}>
         <SidebarProvider>
           <div className="flex h-screen w-screen">
             <AdminSidebar />
