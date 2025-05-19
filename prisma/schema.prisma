@@ -33,6 +33,32 @@ model Product {
   price           Decimal  @default(0.00) // Product price
   createdAt       DateTime @default(now()) // Auto-generated timestamp
   updatedAt       DateTime @updatedAt // Auto-update timestamp
+  orderItems      OrderItem[]
+}
+
+model OrderRequest {
+  id           String       @id @default(uuid())
+  room_number  String
+  patient_name String
+  status       Status
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  items        OrderItem[]  // relation to items
+}
+
+model OrderItem {
+  id         String     @id @default(uuid())
+  quantity   Int        @default(1)
+  order      OrderRequest @relation(fields: [orderId], references: [id])
+  orderId    String
+  product    Product     @relation(fields: [productId], references: [id])
+  productId  String
+}
+
+enum Status {
+  pending
+  for_payment
+  paid
 }
 
 enum Category {

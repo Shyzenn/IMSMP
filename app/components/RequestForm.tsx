@@ -235,7 +235,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
                 <label>Quantity</label>
                 <div className="flex items-center">
                   <input
-                    type="text"
+                    type="number"
                     value={input.quantity}
                     onChange={(e) =>
                       handleInputChange(index, "quantity", e.target.value)
