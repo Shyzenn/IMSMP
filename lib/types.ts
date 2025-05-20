@@ -50,3 +50,17 @@ export const addProductSchema = z.object({
 });
 
 export type TAddProductSchema = z.infer<typeof addProductSchema>;
+
+export const addRequestOrderSchema = z.object({
+  room_number: z.string().min(1),
+  patient_name: z.string().min(1),
+  status: z.enum(["pending", "for_payment", "paid"]),
+  products: z.array(
+    z.object({
+      productId: z.string().min(1, "required"),
+      quantity: z.number().min(1, "required"),
+    })
+  ),
+});
+
+export type TAddRequestOrderSchema = z.infer<typeof addRequestOrderSchema>;

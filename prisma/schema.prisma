@@ -38,8 +38,8 @@ model Product {
 
 model OrderRequest {
   id           String       @id @default(uuid())
-  room_number  String
-  patient_name String
+  room_number  String?
+  patient_name String?
   status       Status
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
