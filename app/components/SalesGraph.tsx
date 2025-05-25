@@ -10,6 +10,8 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 
 ChartJS.register(
   CategoryScale,
@@ -20,7 +22,43 @@ ChartJS.register(
   Legend
 );
 
+const fetchMostRequested = async () => {
+  const { data } = await axios.get("api/most_requested");
+  return Array.isArray(data) ? data : [];
+};
+
 const SalesGraph = () => {
+  const {
+    data: most_requested = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryFn: fetchMostRequested,
+    queryKey: ["most_requested"],
+  });
+
+  const labels = most_requested.map((product) => product.name);
+  const requestData = most_requested.map((product) => product.totalRequested);
+
+  const data = {
+    labels,
+    datasets: [
+      {
+        label: "Requests",
+        data: requestData,
+        backgroundColor: [
+          "#007bff",
+          "#339cff",
+          "#66baff",
+          "#99d8ff",
+          "#ccecff",
+        ],
+        borderRadius: 5,
+        barThickness: 20,
+      },
+    ],
+  };
+
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -36,34 +74,15 @@ const SalesGraph = () => {
     scales: {
       x: {
         beginAtZero: true,
+        ticks: {
+          precision: 0,
+        },
       },
     },
   };
 
-  const data = {
-    labels: [
-      "Paracetamol",
-      "Amoxicillin",
-      "Vitamin C Tablets",
-      "Aspirin",
-      "Ibuprofen Gel",
-    ],
-    datasets: [
-      {
-        label: "Requests",
-        data: [98, 86, 74, 57, 29],
-        backgroundColor: [
-          "#007bff",
-          "#339cff",
-          "#66baff",
-          "#99d8ff",
-          "#ccecff",
-        ],
-        borderRadius: 5,
-        barThickness: 20,
-      },
-    ],
-  };
+  if (isLoading) return <p>Loading products...</p>;
+  if (isError) return <p>Failed to load products.</p>;
 
   return (
     <div className="bg-white w-[60%] rounded-md p-3">

@@ -24,7 +24,7 @@ enum Role {
 }
 
 model Product {
-  id              String   @id @default(uuid()) // UUID as Primary Key
+  id              Int   @id @default(autoincrement()) // UUID as Primary Key
   product_name    String   @unique // Unique product name
   category        Category   // Category of the product
   quantity        Int      @default(0) // Default stock quantity
@@ -37,7 +37,7 @@ model Product {
 }
 
 model OrderRequest {
-  id           String       @id @default(uuid())
+  id           Int       @id @default(autoincrement())
   room_number  String?
   patient_name String?
   status       Status
@@ -47,12 +47,12 @@ model OrderRequest {
 }
 
 model OrderItem {
-  id         String     @id @default(uuid())
+  id         Int     @id @default(autoincrement())
   quantity   Int        @default(1)
   order      OrderRequest @relation(fields: [orderId], references: [id])
-  orderId    String
+  orderId    Int
   product    Product     @relation(fields: [productId], references: [id])
-  productId  String
+  productId  Int
 }
 
 enum Status {

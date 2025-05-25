@@ -5,16 +5,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function capitalLetter(str: string) {
+export function capitalLetter(str: string | null) {
   if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
-export function formattedDate(date?: Date): string {
-  const d = date ?? new Date();
+export function formattedDate(dateInput?: string | number | Date) {
+  const d = new Date(dateInput ?? Date.now());
+  if (isNaN(d.getTime())) return "Invalid Date";
   return d.toLocaleDateString("en-US", {
     year: "numeric",
-    month: "long",
+    month: "short",
     day: "numeric",
   });
 }
+

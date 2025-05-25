@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Button from "@/app/components/Button";
 import TableComponent from "./TableComponent";
 import { Column } from "@/lib/interfaces";
 import { Input } from "@/components/ui/input";
-import AddButton from "@/app/components/Button";
-import { FiPlus } from "react-icons/fi";
 import { IoIosClose } from "react-icons/io";
 import { useFieldArray, useForm } from "react-hook-form";
 import { addRequestOrderSchema, TAddRequestOrderSchema } from "@/lib/types";
@@ -16,8 +20,7 @@ import toast from "react-hot-toast";
 import LoadingButton from "@/components/loading-button";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
-import { OrderItem } from "@prisma/client";
-// import { v4 as uuidv4 } from "uuid";
+import { capitalLetter, formattedDate } from "@/lib/utils";
 
 const columns: Column[] = [
   { label: "Order ID", accessor: "id" },
@@ -27,29 +30,13 @@ const columns: Column[] = [
   { label: "Status", accessor: "status", align: "right" },
 ];
 
-export interface OrderRequestProps extends Record<string, unknown> {
-  order_id: string;
-  patient_name?: string;
-  date: string;
-  items: OrderItemProps[];
-  status: string;
-  createdAt: Date;
-}
-
 interface ProductData {
   id: string;
   productName: string;
   quantity: number;
 }
 
-interface OrderItemProps {
-  id: string;
-  quantity: number;
-  productId: string;
-  product: ProductData;
-}
-
-const fetchOrderRequest = async (): Promise<OrderRequestProps[]> => {
+const fetchOrderRequest = async () => {
   const { data } = await axios.get("/api/request_order");
   return Array.isArray(data) ? data : [];
 };
@@ -60,6 +47,10 @@ const RecentRequestOrder = () => {
   const [filteredProducts, setFilteredProducts] = useState<ProductData[]>([]);
   const [dropdownIndex, setDropdownIndex] = useState<number | null>(null);
   const dropdownRefs = useRef<(HTMLLIElement | null)[]>([]);
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
+  const [selectedQuantity, setSelectedQuantity] = useState<
+    Record<number, number>
+  >({});
 
   const {
     data: orderRequest = [],
@@ -68,15 +59,17 @@ const RecentRequestOrder = () => {
   } = useQuery({
     queryKey: ["request_order"],
     queryFn: fetchOrderRequest,
+    refetchInterval: isModalOpen ? false : 5000,
   });
 
-  const formattedData = orderRequest.map((order) => ({
-    ...order,
-    createdAt: new Date(order.createdAt).toLocaleDateString(),
-    items:
-      order.items?.map((item) => ` (x${item.quantity})`).join(", ") ??
-      "No items",
-  }));
+  const formattedData = useMemo(
+    () =>
+      orderRequest.map((order) => ({
+        ...order,
+        createdAt: formattedDate(order.createdAt),
+      })),
+    [orderRequest]
+  );
 
   const handleFocus = (index: number) => {
     const top10 = products.slice(0, 10);
@@ -85,23 +78,33 @@ const RecentRequestOrder = () => {
   };
 
   const handleSelectProduct = (index: number, productName: string) => {
-    setValue(`products.${index}.productId`, productName);
+    setValue(`products.${index}.productId`, capitalLetter(productName));
     setDropdownIndex(null);
+
+    const selectedProduct = products.find(
+      (p) => capitalLetter(p.productName) === capitalLetter(productName)
+    );
+
+    if (selectedProduct) {
+      setSelectedQuantity((prev) => ({
+        ...prev,
+        [index]: Number(selectedProduct.quantity),
+      }));
+    }
   };
 
-  const handleProductInputChange = (index: number, value: string) => {
+  const handleInputChangeProduct = (index: number, value: string) => {
+    const top10 = products.filter((product) =>
+      product.productName.toLowerCase().includes(value.toLowerCase())
+    );
     setValue(`products.${index}.productId`, value);
     setDropdownIndex(index);
-
-    const top10 = products
-      .filter((p) => p.productName.toLowerCase().includes(value.toLowerCase()))
-      .slice(0, 10);
     setFilteredProducts(top10);
   };
 
   const fetchProducts = useCallback(async () => {
     try {
-      const response = await fetch("/api/product");
+      const response = await fetch("api/product");
       if (!response.ok) throw new Error("Failed to fetch products");
 
       const data = await response.json();
@@ -111,18 +114,17 @@ const RecentRequestOrder = () => {
             id: product.id,
             productName: product.product_name,
             quantity: product.quantity.toString(),
-            price: product.price,
           }))
         );
       }
     } catch (error) {
-      console.error("Error fetching products:", error);
+      console.error("Error fetching products", error);
     }
   }, []);
 
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]); // only runs when needed
+  }, [fetchProducts]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -146,14 +148,25 @@ const RecentRequestOrder = () => {
     reset,
     control,
     setValue,
+    watch,
   } = useForm<TAddRequestOrderSchema>({
     resolver: zodResolver(addRequestOrderSchema),
+    mode: "onChange",
     defaultValues: {
       room_number: "",
       patient_name: "",
       status: "pending",
       products: [{ productId: "", quantity: 0 }],
     },
+  });
+
+  const watchProducts = watch("products");
+
+  const isQuantityExceeded = watchProducts.some((product, index) => {
+    const hasProductSelected =
+      product.productId.trim() !== "" && selectedQuantity[index] !== undefined;
+
+    return hasProductSelected && product.quantity > selectedQuantity[index];
   });
 
   const { fields, prepend, remove } = useFieldArray({
@@ -185,6 +198,7 @@ const RecentRequestOrder = () => {
       } else if (responseData.success) {
         reset();
         notify();
+        setIsModalOpen(false);
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -256,17 +270,23 @@ const RecentRequestOrder = () => {
                 </div>
 
                 <div className="p-8 h-[10%]">
-                  <AddButton
+                  <button
+                    type="button"
                     onClick={() =>
                       prepend({
                         productId: "",
                         quantity: 0,
                       })
                     }
-                    label="Add Product"
-                    icon={<FiPlus />}
-                    type="button"
-                  />
+                    className={`px-8 py-2 rounded-md text-white ${
+                      isQuantityExceeded
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-green-500 hover:bg-green-600"
+                    }`}
+                    disabled={isQuantityExceeded}
+                  >
+                    Add Product
+                  </button>
                   <div className="flex justify-between text-sm mt-8 mr-[118px]">
                     <p>Product Name</p>
                     <p>Quantity</p>
@@ -276,76 +296,143 @@ const RecentRequestOrder = () => {
                     {fields.map((item, index) => (
                       <li
                         key={item.id}
-                        className="flex gap-8 items-center w-full"
+                        className="items-center w-full"
                         ref={(el) => {
                           dropdownRefs.current[index] = el;
                         }}
                       >
-                        <div className="relative w-[60%]">
-                          <Input
-                            placeholder="enter product name"
-                            {...register(
-                              `products.${index}.productId` as const,
-                              {
-                                required: true,
-                              }
-                            )}
-                            onChange={(e) =>
-                              handleProductInputChange(index, e.target.value)
-                            }
-                            onFocus={() => handleFocus(index)}
-                          />
-                          {errors.products?.[index]?.productId && (
-                            <p className="mt-1 text-sm text-red-500">
-                              {errors.products[index]?.productId?.message}
-                            </p>
-                          )}
+                        <div className="flex gap-8 w-full">
+                          <div className="relative w-[53%]">
+                            <Input
+                              className={`w-full ${
+                                errors.products?.[index]?.productId
+                                  ? "border-red-500 focus:ring-red-500"
+                                  : ""
+                              }`}
+                              placeholder="enter product name"
+                              {...register(
+                                `products.${index}.productId` as const,
+                                { required: true }
+                              )}
+                              onFocus={() => {
+                                handleFocus(index);
+                                setHighlightedIndex(0);
+                              }}
+                              onChange={(e) => {
+                                handleInputChangeProduct(index, e.target.value);
+                                setHighlightedIndex(0);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "ArrowDown") {
+                                  e.preventDefault();
+                                  setHighlightedIndex((prev) => {
+                                    const nextIndex =
+                                      (prev === null ? 0 : prev + 1) %
+                                      filteredProducts.length;
+                                    return nextIndex;
+                                  });
+                                } else if (e.key === "ArrowUp") {
+                                  e.preventDefault();
+                                  setHighlightedIndex((prev) => {
+                                    const nextIndex =
+                                      prev === null || prev === 0
+                                        ? filteredProducts.length - 1
+                                        : prev - 1;
+                                    return nextIndex;
+                                  });
+                                } else if (
+                                  e.key === "Enter" &&
+                                  highlightedIndex !== null
+                                ) {
+                                  const product =
+                                    filteredProducts[highlightedIndex];
+                                  if (product.quantity.toString() !== "0") {
+                                    handleSelectProduct(
+                                      index,
+                                      product.productName
+                                    );
+                                  }
+                                }
+                              }}
+                            />
 
-                          {dropdownIndex === index &&
-                            filteredProducts.length > 0 && (
-                              <ul className="absolute bottom-full mb-2 z-20 w-full bg-white border border-gray-300 shadow-md rounded-md max-h-60 overflow-y-auto">
-                                {filteredProducts.map((product) => (
-                                  <li
-                                    key={product.id}
-                                    onClick={() =>
-                                      handleSelectProduct(
-                                        index,
-                                        product.productName
-                                      )
-                                    }
-                                    className="p-2 hover:bg-gray-100 cursor-pointer"
-                                  >
-                                    {product.productName}
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                        </div>
-                        <div className="flex flex-col w-[30%]">
-                          <Input
-                            className="w-full"
-                            type="number"
-                            placeholder="enter quantity"
-                            {...register(
-                              `products.${index}.quantity` as const,
-                              {
-                                valueAsNumber: true,
-                                required: true,
-                              }
-                            )}
-                          />
-                          {errors.products?.[index]?.quantity && (
-                            <p className="mt-1 text-sm text-red-500">
-                              {errors.products[index]?.quantity?.message}
-                            </p>
+                            {dropdownIndex === index &&
+                              filteredProducts.length > 0 && (
+                                <ul className="absolute bottom-full mb-2 z-20 w-full bg-white border border-gray-300 shadow-md rounded-md max-h-60 overflow-y-auto">
+                                  {filteredProducts.map((product, i) => (
+                                    <li
+                                      key={product.id}
+                                      className={`p-2 ${
+                                        product.quantity.toString() === "0"
+                                          ? "bg-red-100 text-gray-400 cursor-not-allowed"
+                                          : "cursor-pointer hover:bg-gray-100"
+                                      } ${
+                                        highlightedIndex === i
+                                          ? "border-2 "
+                                          : ""
+                                      }`}
+                                      onMouseEnter={() =>
+                                        setHighlightedIndex(i)
+                                      }
+                                      onClick={() => {
+                                        if (
+                                          product.quantity.toString() !== "0"
+                                        ) {
+                                          handleSelectProduct(
+                                            index,
+                                            product.productName
+                                          );
+                                        }
+                                      }}
+                                    >
+                                      <p className="flex justify-between">
+                                        {capitalLetter(product.productName)}
+                                        <span className="text-sm">
+                                          {product.quantity} item
+                                          {product.quantity.toString() > "1"
+                                            ? "s"
+                                            : ""}{" "}
+                                          left
+                                        </span>
+                                      </p>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                          </div>
+                          <div className="flex flex-col w-[37%]">
+                            <Input
+                              className={`w-full ${
+                                errors.products?.[index]?.quantity
+                                  ? "border-red-500"
+                                  : ""
+                              }`}
+                              type="number"
+                              placeholder="enter quantity"
+                              {...register(
+                                `products.${index}.quantity` as const,
+                                {
+                                  valueAsNumber: true,
+                                  required: true,
+                                }
+                              )}
+                            />
+                          </div>
+                          {fields.length > 1 && (
+                            <IoIosClose
+                              className="text-2xl text-red-600 cursor-pointer"
+                              onClick={() => remove(index)}
+                            />
                           )}
                         </div>
-                        {fields.length > 1 && (
-                          <IoIosClose
-                            className="text-2xl text-red-600 cursor-pointer"
-                            onClick={() => remove(index)}
-                          />
-                        )}
+                        {selectedQuantity[index] !== undefined &&
+                          watchProducts?.[index]?.quantity >
+                            selectedQuantity[index] && (
+                            <p className="text-sm text-red-500 mt-1 text-center">
+                              Exceeds available stock ({selectedQuantity[index]}{" "}
+                              left)
+                            </p>
+                          )}
                       </li>
                     ))}
                   </ul>
@@ -356,13 +443,21 @@ const RecentRequestOrder = () => {
                 <button
                   type="button"
                   className="border px-6 py-2 rounded-md hover:bg-gray-50"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    reset();
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-green-500 text-white px-8 py-2 rounded-md"
+                  className={`px-8 py-2 rounded-md text-white ${
+                    isQuantityExceeded || isSubmitting
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-green-500 hover:bg-green-600"
+                  }`}
+                  disabled={isQuantityExceeded || isSubmitting}
                 >
                   {isSubmitting ? <LoadingButton /> : "Submit"}
                 </button>

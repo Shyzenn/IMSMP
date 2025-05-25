@@ -52,13 +52,13 @@ export const addProductSchema = z.object({
 export type TAddProductSchema = z.infer<typeof addProductSchema>;
 
 export const addRequestOrderSchema = z.object({
-  room_number: z.string().min(1),
-  patient_name: z.string().min(1),
+  room_number: z.string().optional(),
+  patient_name: z.string().optional(),
   status: z.enum(["pending", "for_payment", "paid"]),
   products: z.array(
     z.object({
       productId: z.string().min(1, "required"),
-      quantity: z.number().min(1, "required"),
+      quantity: z.number().min(1, "Quantity must be at least 1")
     })
   ),
 });
