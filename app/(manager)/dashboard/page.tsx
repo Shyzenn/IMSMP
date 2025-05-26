@@ -1,4 +1,5 @@
 import DashboardCards from "@/app/components/DashboardCards";
+import ManagerRecentReqTable from "@/app/components/ManagerRecentReqTable";
 import SalesGraph from "@/app/components/SalesGraph";
 import {
   TbShoppingCart,
@@ -49,7 +50,7 @@ export default function Dashboard() {
         <div className="bg-white w-[45%] rounded-md">Content 2</div>
       </div>
       <div className="bg-white h-[45%] rounded-md">
-        <div className=""></div>
+        <ManagerRecentReqTable />
       </div>
     </div>
   );

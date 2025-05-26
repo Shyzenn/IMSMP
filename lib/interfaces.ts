@@ -30,4 +30,33 @@ export interface Column {
 export interface TableComponentProps<T extends Record<string, unknown>> {
   columns: Column[];
   data: T[];
+  setIsOrderModalOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  onRowClick?: (row: T) => void;
+}
+
+export interface ProductData {
+  id: string;
+  productName: string;
+  quantity: number;
+}
+
+export interface OrderItem {
+  productName: string;
+  quantity: number;
+}
+
+export interface Order {
+  id: string;
+  patient_name: string;
+  createdAt: string;
+  status: string;
+  items: string;
+  itemDetails: OrderItem[];
+}
+
+export interface Links {
+  name: string;
+  href?: string;
+  hrefs?: string[];
+  icon: IconType;
 }

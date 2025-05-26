@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import Button from "@/app/components/Button";
 import TableComponent from "./TableComponent";
-import { Column } from "@/lib/interfaces";
+import { Order, ProductData } from "@/lib/interfaces";
 import { Input } from "@/components/ui/input";
 import { IoIosClose } from "react-icons/io";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -18,31 +18,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { addRequesOrder } from "@/lib/action";
 import toast from "react-hot-toast";
 import LoadingButton from "@/components/loading-button";
-import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
-import { capitalLetter, formattedDate } from "@/lib/utils";
-
-const columns: Column[] = [
-  { label: "Order ID", accessor: "id" },
-  { label: "Customer Name", accessor: "patient_name" },
-  { label: "Date Placed", accessor: "createdAt" },
-  { label: "Items", accessor: "items" },
-  { label: "Status", accessor: "status", align: "right" },
-];
-
-interface ProductData {
-  id: string;
-  productName: string;
-  quantity: number;
-}
-
-const fetchOrderRequest = async () => {
-  const { data } = await axios.get("/api/request_order");
-  return Array.isArray(data) ? data : [];
-};
+import {
+  capitalLetter,
+  columns,
+  fetchOrderRequest,
+  formattedDate,
+} from "@/lib/utils";
+import OrderDetailsModal from "./OrderDetailsModal";
 
 const RecentRequestOrder = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [products, setProducts] = useState<ProductData[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<ProductData[]>([]);
   const [dropdownIndex, setDropdownIndex] = useState<number | null>(null);
@@ -189,6 +177,27 @@ const RecentRequestOrder = () => {
     });
 
   const onSubmit = async (data: TAddRequestOrderSchema) => {
+    let hasInvalidProduct = false;
+
+    data.products.forEach((product, index) => {
+      const exists = products.some(
+        (p) =>
+          capitalLetter(p.productName) ===
+          capitalLetter(product.productId.trim())
+      );
+      if (!exists) {
+        setError(`products.${index}.productId`, {
+          type: "manual",
+          message: "Product does not exist",
+        });
+        hasInvalidProduct = true;
+      }
+    });
+
+    if (hasInvalidProduct) {
+      return; // Don't submit
+    }
+
     try {
       console.log("Submitting data:", data);
       const responseData = await addRequesOrder(data);
@@ -233,9 +242,20 @@ const RecentRequestOrder = () => {
         {orderRequest.length === 0 ? (
           <p>No Request Order</p>
         ) : (
-          <TableComponent data={formattedData} columns={columns} />
+          <TableComponent
+            data={formattedData}
+            columns={columns}
+            setIsOrderModalOpen={setIsOrderModalOpen}
+            onRowClick={(row) => setSelectedOrder(row)}
+          />
         )}
       </div>
+
+      <OrderDetailsModal
+        isOrderModalOpen={isOrderModalOpen}
+        selectedOrder={selectedOrder}
+        setIsOrderModalOpen={setIsOrderModalOpen}
+      />
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30">
@@ -416,6 +436,7 @@ const RecentRequestOrder = () => {
                                   required: true,
                                 }
                               )}
+                              disabled={!watch(`products.${index}.productId`)}
                             />
                           </div>
                           {fields.length > 1 && (
@@ -425,14 +446,21 @@ const RecentRequestOrder = () => {
                             />
                           )}
                         </div>
-                        {selectedQuantity[index] !== undefined &&
-                          watchProducts?.[index]?.quantity >
-                            selectedQuantity[index] && (
-                            <p className="text-sm text-red-500 mt-1 text-center">
-                              Exceeds available stock ({selectedQuantity[index]}{" "}
-                              left)
+                        <div className="flex justify-between">
+                          {errors.products?.[index]?.productId && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.products[index].productId?.message}
                             </p>
                           )}
+                          {selectedQuantity[index] !== undefined &&
+                            watchProducts?.[index]?.quantity >
+                              selectedQuantity[index] && (
+                              <p className="text-sm text-red-500 mt-1 text-center mr-3">
+                                Exceeds available stock (
+                                {selectedQuantity[index]} left)
+                              </p>
+                            )}
+                        </div>
                       </li>
                     ))}
                   </ul>

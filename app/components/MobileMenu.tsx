@@ -1,6 +1,6 @@
 "use client";
 
-import Sidebar from "./AdminSidebar";
+import Sidebar from "./Sidebar";
 import { CiMenuFries } from "react-icons/ci";
 import { useSidebar } from "../(manager)/SidebarContext";
 

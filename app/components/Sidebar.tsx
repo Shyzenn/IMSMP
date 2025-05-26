@@ -4,35 +4,15 @@ import Link from "next/link";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { RiDashboardHorizontalLine } from "react-icons/ri";
-import { MdOutlineInventory2 } from "react-icons/md";
-import { GrTransaction } from "react-icons/gr";
-import { IoBagAddOutline } from "react-icons/io5";
-import { BsBoxSeam } from "react-icons/bs";
 import { TbSettings2 } from "react-icons/tb";
 import { PiSignOutThin } from "react-icons/pi";
 import { useSidebar } from "@/app/(manager)/SidebarContext";
 import PharmacyIcon from "@/public/macoleens_logo.jpg";
 import Image from "next/image";
 import { handleSignOut } from "../authActions";
+import { Links } from "@/lib/interfaces";
 
-const links = [
-  {
-    name: "Dashboard",
-    href: "/dashboard",
-    icon: <RiDashboardHorizontalLine />,
-  },
-  {
-    name: "Inventory",
-    hrefs: ["/inventory"],
-    icon: <MdOutlineInventory2 />,
-  },
-  { name: "Transaction", href: "/transaction", icon: <GrTransaction /> },
-  { name: "Add New Product", href: "/add-product", icon: <IoBagAddOutline /> },
-  { name: "Order", href: "/order", icon: <BsBoxSeam /> },
-];
-
-const Sidebar = () => {
+const Sidebar = ({ links }: { links?: Links[] }) => {
   const { isOpen } = useSidebar();
   const [isHovered, setIsHovered] = useState(false);
   const pathname = usePathname();
@@ -99,11 +79,11 @@ const Sidebar = () => {
           "xl:items-baseline": isHovered,
         })}
       >
-        {links.map((link) => {
+        {links?.map((link) => {
           return (
             <Link
               key={link.name}
-              href={link.hrefs ? link.hrefs[0] : link.href}
+              href={link.hrefs?.[0] || link.href || "/"}
               className={clsx(
                 "flex items-center gap-2 rounded-md p-3 text-sm hover:bg-green-50 2xl:w-full",
                 {
@@ -114,7 +94,7 @@ const Sidebar = () => {
                 }
               )}
             >
-              {link.icon}
+              <link.icon />
               <p
                 className={clsx("2xl:block", {
                   "xl:block": isHovered,

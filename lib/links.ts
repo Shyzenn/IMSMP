@@ -1,0 +1,37 @@
+'use client'
+
+import { RiDashboardHorizontalLine } from "react-icons/ri";
+import { MdOutlineInventory2 } from "react-icons/md";
+import { GrTransaction } from "react-icons/gr";
+import { IoBagAddOutline } from "react-icons/io5";
+import { BsBoxSeam } from "react-icons/bs";
+import { Links } from "./interfaces";
+
+export const links: Links[] = [
+  {
+    name: "Dashboard",
+    href: "/dashboard",
+    icon: RiDashboardHorizontalLine,
+  },
+  {
+    name: "Inventory",
+    hrefs: ["/inventory"],
+    icon: MdOutlineInventory2,
+  },
+  { name: "Transaction", href: "/transaction", icon: GrTransaction },
+  { name: "Add New Product", href: "/add-product", icon: IoBagAddOutline },
+  { name: "Order", href: "/order", icon: BsBoxSeam },
+];
+
+export const nurseLinks = [
+  {
+    name: "Request Order",
+    href: "/request-order",
+    icon: RiDashboardHorizontalLine,
+  },
+  {
+    name: "Transaction",
+    href: "/(nurse)/transaction",
+    icon: GrTransaction,
+  },
+];

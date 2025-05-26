@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "../globals.css";
 import Header from "../components/Header";
-import AdminSidebar from "@/app/components/AdminSidebar";
 import { SidebarProvider } from "./SidebarContext";
 import ReactQueryProvider from "./QueryClientProvider";
+import { links } from "@/lib/links";
+import Sidebar from "../components/Sidebar";
 
 export const metadata: Metadata = {
   title: "Macoleen's Pharmacy",
@@ -19,9 +20,9 @@ export default function AdminLayout({
     <ReactQueryProvider>
       <div className={`antialiased bg-background bg-gray-100`}>
         <SidebarProvider>
-          <div className="flex h-screen w-screen">
-            <AdminSidebar />
-            <div className="flex-1 flex flex-col ">
+          <div className="flex">
+            <Sidebar links={links} />
+            <div className="flex-1 flex flex-col h-svh overflow-y-auto">
               <Header />
               <div className="flex-1 m-3">
                 <div className="w-full h-full"> {children}</div>

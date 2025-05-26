@@ -71,7 +71,7 @@ export async function GET() {
       },
     });
 
-    const formattedOrders = orders.map((order) => {
+    const formattedOrders = orders.map((order) => { 
       const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
       
       const customId = `ORD-${order.id.toString().padStart(4, '0')}`
@@ -81,8 +81,12 @@ export async function GET() {
         patient_name: `${order.patient_name ? capitalLetter(order.patient_name) : 'Unknown'}`,
         createdAt: order.createdAt.toISOString(),
         status: capitalLetter(order.status),
-        items: `${totalItems} item${totalItems !== 1 ? 's' : ''}`,
-      };
+        items: `${totalItems} item${totalItems !== 1 ? 's' : ''}`, 
+        itemDetails: order.items.map((item) => ({
+          productName: item.product.product_name,
+          quantity: item.product.quantity
+        }))
+      };  
     });
 
     return NextResponse.json(formattedOrders, { status: 200 });
