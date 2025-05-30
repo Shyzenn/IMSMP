@@ -32,6 +32,9 @@ export interface TableComponentProps<T extends Record<string, unknown>> {
   data: T[];
   setIsOrderModalOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   onRowClick?: (row: T) => void;
+  title: string
+  requestOrderBtn?: React.ReactNode
+  interactiveRows: boolean
 }
 
 export interface ProductData {
@@ -51,6 +54,7 @@ export interface Order {
   createdAt: string;
   status: string;
   items: string;
+  roomNumber: string
   itemDetails: OrderItem[];
 }
 

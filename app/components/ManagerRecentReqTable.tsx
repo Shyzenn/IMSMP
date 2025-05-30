@@ -30,23 +30,30 @@ const ManagerRecentReqTable = () => {
     [orderRequest]
   );
 
-  if (isLoading) return <p>Loading...</p>;
   if (isError) return <p>Error fetching product</p>;
 
   return (
-    <div className="mx-4 h-[200px] 2xl:h-[400px] overflow-auto">
-      <TableComponent
-        data={formattedData}
-        columns={columns}
-        setIsOrderModalOpen={setIsOrderModalOpen}
-        onRowClick={(row) => setSelectedOrder(row)}
-      />
+    <div className="mx-4 h-[220px] 2xl:h-[400px] overflow-auto">
+      {isLoading ? (
+        "Loading..."
+      ) : (
+        <>
+          <TableComponent
+            title=" Order Request List"
+            data={formattedData}
+            columns={columns}
+            setIsOrderModalOpen={setIsOrderModalOpen}
+            onRowClick={(row) => setSelectedOrder(row)}
+            interactiveRows={true}
+          />
 
-      <OrderDetailsModal
-        isOrderModalOpen={isOrderModalOpen}
-        setIsOrderModalOpen={setIsOrderModalOpen}
-        selectedOrder={selectedOrder}
-      />
+          <OrderDetailsModal
+            isOrderModalOpen={isOrderModalOpen}
+            setIsOrderModalOpen={setIsOrderModalOpen}
+            selectedOrder={selectedOrder}
+          />
+        </>
+      )}
     </div>
   );
 };

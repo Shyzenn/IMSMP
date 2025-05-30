@@ -27,16 +27,21 @@ const OrderDetailsModal = ({
                   <IoIosClose className="text-2xl text-red-500 cursor-pointer" />
                 </button>
               </div>
-              <div className="flex flex-col gap-5 w-[80%] pb-2">
-                <div className="flex justify-between mt-4 ">
-                  <p>Created At:</p>
-                  <p className="font-semibold">{selectedOrder.createdAt}</p>
-                </div>
-                <div className="flex justify-between">
+              <div className="flex flex-col gap-5 pb-2">
+                <div className="flex gap-2">
                   <p>Patient Name:</p>
                   <p className="font-semibold">{selectedOrder.patient_name}</p>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex gap-2">
+                  <p>Room Number:</p>
+                  <p className="font-semibold">{selectedOrder.roomNumber}</p>
+                </div>
+                <div className="flex gap-2">
+                  <p>Created At:</p>
+                  <p className="font-semibold">{selectedOrder.createdAt}</p>
+                </div>
+
+                <div className="flex gap-2">
                   <p>Status:</p>
                   <p className="font-semibold">{selectedOrder.status}</p>
                 </div>

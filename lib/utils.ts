@@ -27,6 +27,21 @@ export const fetchOrderRequest = async () => {
   return Array.isArray(data) ? data : [];
 };
 
+export const fetchLowStocks = async () => {
+  const { data } = await axios.get("api/low_stock");
+  return Array.isArray(data) ? data : [];
+};
+
+export const fetchManagerCardData = async () => {
+  const { data } = await axios.get("api/manager_card");
+  return Array.isArray(data) ? data : [];
+};
+
+export const fetchExpiryProducts = async () => {
+  const { data } = await axios.get("api/expiry_products");
+  return Array.isArray(data) ? data : [];
+};
+
 export const columns: Column[] = [
   { label: "Order ID", accessor: "id" },
   { label: "Customer Name", accessor: "patient_name" },
@@ -34,3 +49,4 @@ export const columns: Column[] = [
   { label: "Items", accessor: "items" },
   { label: "Status", accessor: "status", align: "right" },
 ];
+

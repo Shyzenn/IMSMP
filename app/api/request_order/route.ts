@@ -79,6 +79,7 @@ export async function GET() {
       return {
         id: customId,
         patient_name: `${order.patient_name ? capitalLetter(order.patient_name) : 'Unknown'}`,
+        roomNumber: `${order.room_number ? capitalLetter(order.room_number) : 'Unknown'}`,
         createdAt: order.createdAt.toISOString(),
         status: capitalLetter(order.status),
         items: `${totalItems} item${totalItems !== 1 ? 's' : ''}`, 

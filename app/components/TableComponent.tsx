@@ -13,42 +13,66 @@ function TableComponent<T extends Record<string, unknown>>({
   data,
   setIsOrderModalOpen,
   onRowClick,
+  title,
+  requestOrderBtn,
+  interactiveRows,
 }: TableComponentProps<T>) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          {columns.map((column) => (
-            <TableHead
-              key={column.accessor}
-              className={column.align === "right" ? "text-right" : "text-left"}
-            >
-              {column.label}
-            </TableHead>
-          ))}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {data.map((row, i) => (
-          <TableRow key={i}>
+    <>
+      <div
+        className={`flex ${
+          requestOrderBtn ? "justify-between py-4" : "justify-start py-2"
+        } items-center sticky top-0 bg-white z-10`}
+      >
+        {requestOrderBtn ? (
+          <>
+            <p className="text-lg font-semibold">{title}</p>
+            <div>{requestOrderBtn}</div>
+          </>
+        ) : (
+          <>
+            <p className="text-lg font-semibold">{title}</p>
+          </>
+        )}
+      </div>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
             {columns.map((column) => (
-              <TableCell
+              <TableHead
                 key={column.accessor}
-                className={`${
+                className={
                   column.align === "right" ? "text-right" : "text-left"
-                } cursor-pointer`}
-                onClick={() => {
-                  setIsOrderModalOpen?.(true);
-                  onRowClick?.(row);
-                }}
+                }
               >
-                {String(row[column.accessor])}
-              </TableCell>
+                {column.label}
+              </TableHead>
             ))}
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {data.map((row, i) => (
+            <TableRow key={i}>
+              {columns.map((column) => (
+                <TableCell
+                  key={column.accessor}
+                  className={`${
+                    column.align === "right" ? "text-right" : "text-left"
+                  } ${interactiveRows ? "cursor-pointer" : ""}`}
+                  onClick={() => {
+                    setIsOrderModalOpen?.(true);
+                    onRowClick?.(row);
+                  }}
+                >
+                  {String(row[column.accessor])}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </>
   );
 }
 

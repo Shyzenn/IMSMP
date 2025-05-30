@@ -7,7 +7,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import Button from "@/app/components/Button";
 import TableComponent from "./TableComponent";
 import { Order, ProductData } from "@/lib/interfaces";
 import { Input } from "@/components/ui/input";
@@ -233,20 +232,25 @@ const RecentRequestOrder = () => {
 
   return (
     <>
-      <div className="flex justify-between p-5">
-        <p className="text-lg font-semibold">Recent Request Order</p>
-        <Button label="Request Order" onClick={() => setIsModalOpen(true)} />
-      </div>
-
       <div className="mx-4 max-h-[220px] overflow-auto">
         {orderRequest.length === 0 ? (
           <p>No Request Order</p>
         ) : (
           <TableComponent
+            requestOrderBtn={
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="px-8 py-2 rounded-md text-white bg-green-500 hover:bg-green-600"
+              >
+                Request Order
+              </button>
+            }
+            title="Recent Request Order"
             data={formattedData}
             columns={columns}
             setIsOrderModalOpen={setIsOrderModalOpen}
             onRowClick={(row) => setSelectedOrder(row)}
+            interactiveRows={true}
           />
         )}
       </div>
