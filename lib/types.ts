@@ -30,10 +30,21 @@ export type TSignInSchema = z.infer<typeof signInSchema>;
 
 // Add Product
 export const addProductSchema = z.object({
-  product_name: z.string().min(1, "Product Name is required"),
-  category: z.enum(["ANTIBIOTIC", "GASTROINTESTINAL", "PAIN_RELIEVER", "ANTI_INFLAMMATORY", "GENERAL_MEDICATION"], {
+  product_name: z .string({
+    required_error: "Product Name is required",
+  })
+  .min(1, "Product Name is required")
+  .trim(),
+ category: z
+  .string({
+    required_error: "Category is required.",
+  })
+  .refine((val) =>
+    ["ANTIBIOTIC", "GASTROINTESTINAL", "PAIN_RELIEVER", "ANTI_INFLAMMATORY", "GENERAL_MEDICATION"].includes(val), {
     message: "Category is required.",
   }),
+
+
   quantity: z.preprocess(
     (val) => (val === "" || val === undefined ? undefined : Number(val)),
     z.number({ required_error: "Quantity is required" })

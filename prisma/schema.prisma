@@ -8,11 +8,17 @@ datasource db {
 }
 
 model User {
-  id       String   @id @default(uuid())
-  username String   @unique
-  role     Role
-  password String
-  createdAt DateTime @default(now())
+  id            String   @id @default(uuid())
+  username      String   @unique
+  role          Role
+  password      String
+  createdAt     DateTime @default(now())
+
+  OrderRequest  OrderRequest[]
+  Product       Product[]
+
+  SentNotification     Notification[] @relation("SentNotification")
+  ReceivedNotification Notification[] @relation("ReceivedNotification")
 }
 
 
@@ -34,6 +40,9 @@ model Product {
   createdAt       DateTime @default(now()) // Auto-generated timestamp
   updatedAt       DateTime @updatedAt // Auto-update timestamp
   orderItems      OrderItem[]
+  Notification    Notification[]
+  userId          String?
+  user            User?       @relation(fields: [userId], references: [id])
 }
 
 model OrderRequest {
@@ -44,6 +53,9 @@ model OrderRequest {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   items        OrderItem[]  // relation to items
+  user         User       @relation(fields: [userId], references: [id])
+  userId       String
+  Notification Notification[]
 }
 
 model OrderItem {
@@ -69,5 +81,29 @@ enum Category {
   GENERAL_MEDICATION
 }
 
+enum NotificationType {
+  ORDER_REQUEST
+  ADD_PRODUCT
+}
 
+model Notification {
+  id        Int      @id @default(autoincrement())
+  title     String
+  message   String
+  read      Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
+  senderId    String
+  recipientId String
+  sender      User    @relation("SentNotification", fields:[senderId], references:[id])
+  recipient   User    @relation("ReceivedNotification", fields:[recipientId], references:[id])
+
+  orderId      Int?
+  order        OrderRequest?   @relation(fields: [orderId], references: [id])
+
+  productId    Int?
+  product      Product?        @relation(fields: [productId], references: [id])
+
+  type         NotificationType?
+}

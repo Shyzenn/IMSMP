@@ -27,7 +27,7 @@ const Sidebar = ({ links }: { links?: Links[] }) => {
   return (
     <div
       className={clsx(
-        "bg-white px-10 py-8 border-r h-svh fixed top-0 left-0 w-64 xl:relative xl:transform-none 2xl:w-64 transform transition-transform duration-500 ease-in-out xl:translate-x-0 z-30 2xl:px-8",
+        "bg-white px-10 py-8 border-r h-svh fixed top-0 left-0 w-64 xl:relative xl:transform-none 2xl:w-64 transform transition-transform duration-500 ease-in-out xl:translate-x-0 z-40 2xl:px-8",
         {
           "translate-x-0": isOpen, // Open sidebar
           "-translate-x-full": !isOpen, // Close sidebar

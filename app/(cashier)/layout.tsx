@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "../globals.css";
 import Header from "../components/Header";
-import NurseSidebar from "@/app/components/NurseSidebar";
 import { SidebarProvider } from "../(manager)/SidebarContext";
+import Sidebar from "../components/Sidebar";
 
 export const metadata: Metadata = {
   title: "Macoleen's Pharmacy",
@@ -18,7 +18,7 @@ export default function AdminLayout({
     <div className={`antialiased bg-background`}>
       <SidebarProvider>
         <div className="flex h-screen w-screen">
-          <NurseSidebar />
+          <Sidebar />
           <div className="flex-1 flex flex-col ">
             <Header />
             <div className="flex-1 m-3">

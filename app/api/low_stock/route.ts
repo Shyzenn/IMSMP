@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
     try {
         const lowStock = await db.product.findMany({
+            take:20,
             where:{
                 quantity:{
                     lte: 6
@@ -15,10 +16,10 @@ export async function GET() {
             }
         })
 
-        const formattedProducts = lowStock.map((products) => ({
-            id: products.id,
-            productName: capitalLetter(products.product_name),
-            quantity: products.quantity
+        const formattedProducts = lowStock.map((product) => ({
+            id: product.id,
+            productName: capitalLetter(product.product_name),
+            quantity: product.quantity
         }))
 
         return NextResponse.json(formattedProducts, {status: 200})

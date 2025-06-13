@@ -16,6 +16,8 @@ function TableComponent<T extends Record<string, unknown>>({
   title,
   requestOrderBtn,
   interactiveRows,
+  noDataMessage,
+  colorCodeExpiry = false,
 }: TableComponentProps<T>) {
   return (
     <>
@@ -52,24 +54,54 @@ function TableComponent<T extends Record<string, unknown>>({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((row, i) => (
-            <TableRow key={i}>
-              {columns.map((column) => (
-                <TableCell
-                  key={column.accessor}
-                  className={`${
-                    column.align === "right" ? "text-right" : "text-left"
-                  } ${interactiveRows ? "cursor-pointer" : ""}`}
-                  onClick={() => {
-                    setIsOrderModalOpen?.(true);
-                    onRowClick?.(row);
-                  }}
-                >
-                  {String(row[column.accessor])}
-                </TableCell>
-              ))}
+          {data.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={columns.length}
+                className="text-center py-4 text-gray-500"
+              >
+                {noDataMessage || "No Data Available"}
+              </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            data.map((row, i) => {
+              const expiry = new Date(row.expiryDate as string);
+              const today = new Date();
+              const diffInDays = Math.ceil(
+                (expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+              );
+
+              let rowColor = "";
+              if (diffInDays <= 7) {
+                rowColor = "bg-red-100";
+              } else if (diffInDays <= 14) {
+                rowColor = "bg-orange-100";
+              } else if (diffInDays <= 21) {
+                rowColor = "bg-yellow-100";
+              }
+
+              return (
+                <TableRow key={i} className={colorCodeExpiry ? rowColor : ""}>
+                  {columns.map((column) => (
+                    <TableCell
+                      key={column.accessor}
+                      className={`${
+                        column.align === "right" ? "text-right" : "text-left"
+                      } ${interactiveRows ? "cursor-pointer" : ""}`}
+                      onClick={() => {
+                        setIsOrderModalOpen?.(true);
+                        onRowClick?.(row);
+                      }}
+                    >
+                      {column.render
+                        ? column.render(row)
+                        : String(row[column.accessor])}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })
+          )}
         </TableBody>
       </Table>
     </>

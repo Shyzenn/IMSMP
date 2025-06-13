@@ -52,23 +52,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    jwt({ token, user, trigger, session }) {
-      if (user) {
-        token.id = user.id as string;
-        token.role = user.role as string;
-        token.username = user.username as string
-      }
-      if (trigger === "update" && session) {
-        token = { ...token, ...session };
-      }
-      return token;
-    },
-    session({ session, token }) {
-      session.user.id = token.id;
-      session.user.role = token.role;
-      session.user.username = token.username
-      return session;
-    },
+ callbacks: {
+  async jwt({ token, user, trigger, session }) {
+    if (user) {
+      token.id = user.id as string;
+      token.role = user.role as string;
+      token.username = user.username as string;
+    }
+    if (trigger === "update" && session) {
+      token = { ...token, ...session };
+    }
+    return token;
   },
+  async session({ session, token }) {
+    session.user.id = token.id;
+    session.user.role = token.role;
+    session.user.username = token.username;
+    console.log("Session user:", session.user);
+    return session;
+  },
+
+}
+
 });

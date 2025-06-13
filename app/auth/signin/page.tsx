@@ -78,6 +78,7 @@ const Login = () => {
                   id="password"
                   placeholder="password"
                   type={showPassword ? "text" : "password"}
+                  autoComplete="off"
                 />
                 <button
                   type="button"

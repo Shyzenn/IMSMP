@@ -2,7 +2,7 @@
 
 import React from "react";
 import DashboardCards from "./DashboardCards";
-import { fetchManagerCardData } from "@/lib/utils";
+import { fetchManagerCardData } from "@/lib/action";
 import { useQuery } from "@tanstack/react-query";
 import {
   TbShoppingCart,

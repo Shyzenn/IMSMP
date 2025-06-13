@@ -2,11 +2,21 @@ import { addRequestOrderSchema } from "@/lib/types";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { capitalLetter } from "@/lib/utils";
+import { auth } from "@/auth";
+import { NotificationType } from "@prisma/client";
+import { sendNotification } from "@/server";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const session = await auth();
 
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 400 });
+    }
+
+    const userId = session.user.id; 
+
+    const body = await req.json();
     const result = addRequestOrderSchema.safeParse(body);
 
     if (!result.success) {
@@ -25,6 +35,7 @@ export async function POST(req: Request) {
         room_number,
         patient_name,
         status,
+        userId,
         items: {
           create: products.map((product) => ({
             quantity: product.quantity,
@@ -37,23 +48,56 @@ export async function POST(req: Request) {
         },
       },
     });
-    console.log("Order successfully created:", newOrder);
+
+    // 🛎️ Send notification to the Manager(s)
+    const pharmacists = await db.user.findMany({
+      where: {role: "Pharmacist_Staff"}
+    })
+
+    const notifications = pharmacists.map((pharmacist) => ({
+      title: "New order request",
+      message: JSON.stringify({
+        patientName: patient_name,
+        roomNumber: room_number,
+        submittedBy: session.user.username,
+        role: session.user.role
+      }),
+      type: NotificationType.ORDER_REQUEST,
+      senderId: session.user.id,
+      recipientId: pharmacist.id,
+      orderId: newOrder.id
+    }))
+
+    await db.notification.createMany({data: notifications})
+
+    for (const notification of notifications) {
+    sendNotification(notification.recipientId, {
+      title: notification.title,
+      message: notification.message,
+      type: notification.type,
+    });
+  }
     
+    console.log("Order and notifications successfully created:", newOrder);
+
     return NextResponse.json({ success: true, orderId: newOrder.id });
   } catch (error) {
-  console.error("Full error object:", error);
-  if (error instanceof Error) {
-    return NextResponse.json(
-      { message: "Failed to create request order", error: error.message },
-      { status: 500 }
-    );
+    if (error instanceof Error) {
+      console.error("Error in POST /api/request_order:", error.message);
+      return NextResponse.json(
+        { message: "Failed to create request order", error: error.message },
+        { status: 500 }
+      );
+    } else {
+      console.error("Unknown error:", error);
+      return NextResponse.json(
+        { message: "An unknown error occurred" },
+        { status: 500 }
+      );
+    }
   }
-  return NextResponse.json(
-    { message: "An unknown error occurred" },
-    { status: 500 }
-  );
 }
-}
+
 
 
 export async function GET() {
@@ -69,6 +113,7 @@ export async function GET() {
       orderBy: {
         createdAt: 'desc',
       },
+      take:10
     });
 
     const formattedOrders = orders.map((order) => { 
@@ -85,7 +130,8 @@ export async function GET() {
         items: `${totalItems} item${totalItems !== 1 ? 's' : ''}`, 
         itemDetails: order.items.map((item) => ({
           productName: item.product.product_name,
-          quantity: item.product.quantity
+          quantity: item.quantity,
+          price:item.product.price
         }))
       };  
     });

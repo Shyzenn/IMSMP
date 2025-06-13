@@ -1,4 +1,3 @@
-import axios from "axios";
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { Column } from "./interfaces";
@@ -22,26 +21,6 @@ export function formattedDate(dateInput?: string | number | Date) {
   });
 }
 
-export const fetchOrderRequest = async () => {
-  const { data } = await axios.get("/api/request_order");
-  return Array.isArray(data) ? data : [];
-};
-
-export const fetchLowStocks = async () => {
-  const { data } = await axios.get("api/low_stock");
-  return Array.isArray(data) ? data : [];
-};
-
-export const fetchManagerCardData = async () => {
-  const { data } = await axios.get("api/manager_card");
-  return Array.isArray(data) ? data : [];
-};
-
-export const fetchExpiryProducts = async () => {
-  const { data } = await axios.get("api/expiry_products");
-  return Array.isArray(data) ? data : [];
-};
-
 export const columns: Column[] = [
   { label: "Order ID", accessor: "id" },
   { label: "Customer Name", accessor: "patient_name" },
@@ -50,3 +29,12 @@ export const columns: Column[] = [
   { label: "Status", accessor: "status", align: "right" },
 ];
 
+export const pageTitles: Record<string, string> = {
+    "/dashboard": "Dashboard",
+    "/inventory": "Inventory",
+    "/transaction": "Transaction",
+    "/add-product": "Add New Product",
+    "/order": "Order",
+    "/settings": "Settings",
+    "/request-order": "Request Order",
+  };

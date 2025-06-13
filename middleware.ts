@@ -3,10 +3,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const roleRoutes = {
-  Manager: ["/dashboard", "/inventory", "/transaction", "/add-product", "/order", "/settings"],
+  Manager: ["/dashboard", "/inventory", "/transaction",  "/order", "/settings"],
   Nurse: ["/request-order"],
   Cashier: ["/cashier_dashboard"],
-  Pharmacist_Staff: ["/pharmacist_dashboard"],
+  Pharmacist_Staff: ["/pharmacist_dashboard", "/pharmacist_inventory", "/pharmacist_transaction","/add-product", "/pharmacist_order", "/pharmacist_settings"],
 };
 
 export async function middleware(request: NextRequest) {
@@ -55,7 +55,11 @@ export const config = {
     "/cashier_dashboard/:path*",
     "/pharmacist_dashboard/:path*",
     "/auth/signin",
-    "/settings/:path*"
+    "/settings/:path*",
+    "/pharmacist_inventory/:path",
+    "/pharmacist_transaction/:path",
+    "/pharmacist_order/:path", 
+    "/pharmacist_settings/:path"
   ],
 };
   

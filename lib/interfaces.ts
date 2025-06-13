@@ -25,16 +25,18 @@ export interface Column {
   label: string;
   accessor: string;
   align?: "right" | "left";
-}
+  render?: (row: Record<string, unknown>) => React.ReactNode;}
 
 export interface TableComponentProps<T extends Record<string, unknown>> {
   columns: Column[];
   data: T[];
   setIsOrderModalOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   onRowClick?: (row: T) => void;
-  title: string
+  title?: string
   requestOrderBtn?: React.ReactNode
   interactiveRows: boolean
+  noDataMessage?:string
+  colorCodeExpiry?: boolean
 }
 
 export interface ProductData {
@@ -46,6 +48,7 @@ export interface ProductData {
 export interface OrderItem {
   productName: string;
   quantity: number;
+  price?: number
 }
 
 export interface Order {
@@ -64,3 +67,19 @@ export interface Links {
   hrefs?: string[];
   icon: IconType;
 }
+
+export interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+  type: "ORDER_REQUEST" | "ADD_PRODUCT";
+}
+
+export type UserFormValues = {
+  username: string;
+  role: "Pharmacist_Staff" | "Nurse" | "Manager" | "Cashier";
+  password: string;
+  confirmPassword: string;
+};

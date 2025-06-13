@@ -18,13 +18,14 @@ export async function GET() {
             },
             orderBy: {
                 expiryDate: 'asc'
-            }
+            },
+            take:20
         })
 
         const formattedProducts = expiryProducts.map((product) => ({
             id: product.id,
             name:capitalLetter(product.product_name),
-            expiryDate: product.expiryDate?.toLocaleDateString("en-GB"),
+            expiryDate: product.expiryDate?.toISOString() || "",
             quantity: product.quantity,
             category: capitalLetter(product.category)
         }))

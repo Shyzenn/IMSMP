@@ -22,8 +22,13 @@ ChartJS.register(
   Legend
 );
 
-const fetchMostRequested = async () => {
-  const { data } = await axios.get("api/most_requested");
+type RequestedProduct = {
+  name: string;
+  totalRequested: number;
+};
+
+const fetchMostRequested = async (): Promise<RequestedProduct[]> => {
+  const { data } = await axios.get("/api/most_requested");
   return Array.isArray(data) ? data : [];
 };
 
@@ -37,8 +42,15 @@ const SalesGraph = () => {
     queryKey: ["most_requested"],
   });
 
-  const labels = most_requested.map((product) => product.name);
-  const requestData = most_requested.map((product) => product.totalRequested);
+  const sorted = [...most_requested]
+    .sort((a, b) => b.totalRequested - a.totalRequested)
+    .slice(0, 5);
+
+  if (isLoading) return <p>Loading products...</p>;
+  if (isError) return <p>Failed to load products.</p>;
+
+  const labels = sorted.map((product) => product.name);
+  const requestData = sorted.map((product) => product.totalRequested);
 
   const data = {
     labels,
@@ -81,16 +93,17 @@ const SalesGraph = () => {
     },
   };
 
-  if (isLoading) return <p>Loading products...</p>;
-  if (isError) return <p>Failed to load products.</p>;
-
   return (
-    <div className="bg-white w-[60%] rounded-md p-3">
+    <div className="bg-white w-full md:w-[60%] h-full rounded-md p-3 shadow-md flex flex-col">
       <p className="text-lg font-semibold mb-2">
-        Top 5 most requested medicine
+        Top 5 Most Requested Medicines
       </p>
-      <div className="h-[85%]">
-        <Bar options={options} data={data} className="w-full" />
+      <div className="h-full">
+        {sorted.length === 0 ? (
+          <p className="text-center text-gray-500 mt">No Data Available</p>
+        ) : (
+          <Bar options={options} data={data} />
+        )}
       </div>
     </div>
   );

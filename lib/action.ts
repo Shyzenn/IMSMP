@@ -57,3 +57,25 @@ export const addRequesOrder = async (data:TAddRequestOrderSchema) => {
   return responseData;
 }
 
+import axios from "axios";
+
+export const fetchOrderRequest = async () => {
+  const { data } = await axios.get("/api/request_order");
+  return Array.isArray(data) ? data : [];
+};
+  
+export const fetchLowStocks = async () => {
+  const { data } = await axios.get("api/low_stock");
+  return Array.isArray(data) ? data : [];
+};
+
+export const fetchManagerCardData = async () => {
+  const { data } = await axios.get("api/manager/manager_card");
+  return Array.isArray(data) ? data : [];
+};
+
+export const fetchExpiryProducts = async () => {
+  const { data } = await axios.get("api/manager/expiry_products");
+  return Array.isArray(data) ? data : [];
+};
+

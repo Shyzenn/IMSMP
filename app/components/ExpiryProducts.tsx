@@ -4,9 +4,10 @@ import { Column } from "@/lib/interfaces";
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import TableComponent from "./TableComponent";
-import { fetchExpiryProducts, formattedDate } from "@/lib/utils";
+import { fetchExpiryProducts } from "@/lib/action";
+import { formattedDate } from "@/lib/utils";
 
-const colums: Column[] = [
+const columns: Column[] = [
   { label: "Product name", accessor: "name" },
   { label: "Expiry Date", accessor: "expiryDate" },
   { label: "Quantity", accessor: "quantity" },
@@ -25,19 +26,23 @@ const ExpiryProducts = () => {
 
   const formattedData = expiryProducts.map((product) => ({
     ...product,
-    expiryProducts: formattedDate(product.expiry_products),
+    expiryDate: formattedDate(product.expiryDate),
   }));
 
   if (isLoading) return <p>Loading data...</p>;
   if (isError) return <p>Failed to load data.</p>;
 
   return (
-    <div className="mx-4 max-h-[180px] overflow-auto">
+    <div className="mx-4 max-h-[260px] overflow-auto">
       <TableComponent
         data={formattedData}
-        columns={colums}
+        columns={columns}
         title="Product Expiring Soon"
         interactiveRows={false}
+        noDataMessage={
+          expiryProducts.length === 0 ? "No Expiring Products" : undefined
+        }
+        colorCodeExpiry={true}
       />
     </div>
   );

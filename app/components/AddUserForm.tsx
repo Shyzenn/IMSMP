@@ -1,14 +1,5 @@
 "use client";
 
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import LoadingButton from "@/components/loading-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +17,8 @@ import {
   UseFormRegister,
 } from "react-hook-form";
 import { TSignUpSchema } from "@/lib/types";
+import FormField from "./FormField";
+import SelectField from "./SelectField";
 
 interface AddUserFormProps {
   setIsOpen: (isOpen: boolean) => void;
@@ -67,60 +60,33 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid w-full items-center gap-4">
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="username">Username</Label>
+              <FormField label="Username" error={errors.username?.message}>
                 <Input
                   {...register("username")}
                   id="username"
                   placeholder="username"
                   type="text"
                 />
-                {errors.username && (
-                  <p className="mt-2 text-sm text-red-500">
-                    {`${errors.username.message}`}
-                  </p>
-                )}
-              </div>
+              </FormField>
 
               <div className="flex flex-col space-y-1.5">
                 <Controller
                   control={control}
                   name="role"
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a User Type" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white">
-                        <SelectGroup>
-                          <SelectLabel>Types</SelectLabel>
-                          <SelectItem
-                            value="Manager"
-                            className="hover:bg-gray-100"
-                          >
-                            Manager
-                          </SelectItem>
-                          <SelectItem
-                            value="Nurse"
-                            className="hover:bg-gray-100"
-                          >
-                            Nurse
-                          </SelectItem>
-                          <SelectItem
-                            value="Pharmacist_Staff"
-                            className="hover:bg-gray-100"
-                          >
-                            Pharmacist Staff
-                          </SelectItem>
-                          <SelectItem
-                            value="Cashier"
-                            className="hover:bg-gray-100"
-                          >
-                            Cashier
-                          </SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                    <SelectField
+                      field={field}
+                      label="Types"
+                      option={[
+                        { label: "Manager", value: "Manager" },
+                        { label: "Nurse", value: "Nurse" },
+                        {
+                          label: "Pharmacist Staff",
+                          value: "Pharmacist_Staff",
+                        },
+                        { label: "Cashier", value: "Cashier" },
+                      ]}
+                    />
                   )}
                 />
                 {errors.role && (

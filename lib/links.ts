@@ -19,7 +19,7 @@ export const links: Links[] = [
     icon: MdOutlineInventory2,
   },
   { name: "Transaction", href: "/transaction", icon: GrTransaction },
-  { name: "Add New Product", href: "/add-product", icon: IoBagAddOutline },
+  
   { name: "Order", href: "/order", icon: BsBoxSeam },
 ];
 
@@ -35,3 +35,24 @@ export const nurseLinks = [
     icon: GrTransaction,
   },
 ];
+
+export const pharmacistLinks = [
+  
+  {
+    name: "Dashboard",
+    href: "/pharmacist_dashboard",
+    icon: RiDashboardHorizontalLine,
+  },
+  {
+    name: "Inventory",
+   hrefs: ["/pharmacist_inventory"],
+    icon: MdOutlineInventory2,
+  },
+  { name: "Transaction", href: "/pharmacist_transaction", icon: GrTransaction },
+  { name: "Add New Product", 
+    href: "/add-product", 
+    icon: IoBagAddOutline 
+  },
+  
+  { name: "Order", href: "/order", icon: BsBoxSeam },
+]

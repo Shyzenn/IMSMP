@@ -18,13 +18,10 @@ import { addRequesOrder } from "@/lib/action";
 import toast from "react-hot-toast";
 import LoadingButton from "@/components/loading-button";
 import { useQuery } from "@tanstack/react-query";
-import {
-  capitalLetter,
-  columns,
-  fetchOrderRequest,
-  formattedDate,
-} from "@/lib/utils";
+import { capitalLetter, columns, formattedDate } from "@/lib/utils";
 import OrderDetailsModal from "./OrderDetailsModal";
+import { fetchOrderRequest } from "@/lib/action";
+import FormField from "./FormField";
 
 const RecentRequestOrder = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -232,37 +229,37 @@ const RecentRequestOrder = () => {
 
   return (
     <>
-      <div className="mx-4 max-h-[220px] overflow-auto">
-        {orderRequest.length === 0 ? (
-          <p>No Request Order</p>
-        ) : (
-          <TableComponent
-            requestOrderBtn={
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="px-8 py-2 rounded-md text-white bg-green-500 hover:bg-green-600"
-              >
-                Request Order
-              </button>
-            }
-            title="Recent Request Order"
-            data={formattedData}
-            columns={columns}
-            setIsOrderModalOpen={setIsOrderModalOpen}
-            onRowClick={(row) => setSelectedOrder(row)}
-            interactiveRows={true}
-          />
-        )}
+      <div className="mx-4 max-h-[320px] overflow-auto">
+        <TableComponent
+          requestOrderBtn={
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="px-8 py-2 rounded-md text-white bg-green-500 hover:bg-green-600"
+            >
+              Request Order
+            </button>
+          }
+          title="Recent Request Order"
+          data={formattedData}
+          columns={columns}
+          setIsOrderModalOpen={setIsOrderModalOpen}
+          onRowClick={(row) => setSelectedOrder(row)}
+          interactiveRows={true}
+          noDataMessage={
+            orderRequest.length === 0 ? "No Recent Order" : undefined
+          }
+        />
       </div>
 
       <OrderDetailsModal
         isOrderModalOpen={isOrderModalOpen}
         selectedOrder={selectedOrder}
+        hasPrint={false}
         setIsOrderModalOpen={setIsOrderModalOpen}
       />
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
           <div className="bg-white w-full max-w-[500px] max-h-[95vh] rounded-md relative overflow-hidden">
             <p className="text-center font-semibold text-xl py-4">
               Request Order Form
@@ -270,27 +267,22 @@ const RecentRequestOrder = () => {
 
             <form className="pb-[70px] mt-6" onSubmit={handleSubmit(onSubmit)}>
               <div className="overflow-y-auto max-h-[calc(95vh-150px)]">
-                <div className="border-b-2 pb-8 px-8">
-                  <div className="mb-8 flex flex-col gap-2">
-                    <label htmlFor="room#" className="text-sm">
-                      Room #
-                    </label>
+                <div className="border-b-2 pb-8 px-8 flex flex-col gap-8">
+                  <FormField label="Room#">
                     <Input
                       id="room#"
                       placeholder="room number"
                       {...register("room_number")}
                     />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="name" className="text-sm">
-                      Name
-                    </label>
+                  </FormField>
+
+                  <FormField label="Patient Name">
                     <Input
                       id="name"
                       placeholder="patient name"
                       {...register("patient_name")}
                     />
-                  </div>
+                  </FormField>
                 </div>
 
                 <div className="p-8 h-[10%]">

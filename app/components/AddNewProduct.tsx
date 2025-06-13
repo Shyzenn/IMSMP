@@ -17,12 +17,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import FormField from "./FormField";
+import DateField from "./DateField";
+import { useCallback } from "react";
 
 const AddNewProduct = () => {
-  const notify = () =>
+  //No need to re-declare notify() on every render.
+  const notify = useCallback(() => {
     toast.success("Product created successfully! 🎉", {
       icon: "✅",
     });
+  }, []);
 
   const {
     register,
@@ -80,20 +85,14 @@ const AddNewProduct = () => {
     >
       <div className="grid grid-cols-2 gap-12">
         {/* Product Name */}
-        <div>
-          <label className="text-sm font-medium">Product Name</label>
+        <FormField label="Product Name" error={errors.product_name?.message}>
           <Input
             {...register("product_name")}
             id="product_name"
             placeholder="Enter product name"
             type="text"
           />
-          {errors.product_name && (
-            <p className="mt-2 text-sm text-red-500">
-              {errors.product_name.message}
-            </p>
-          )}
-        </div>
+        </FormField>
 
         {/* Category */}
         <div>
@@ -102,7 +101,10 @@ const AddNewProduct = () => {
             control={control}
             name="category"
             render={({ field }) => (
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select
+                value={field.value ?? ""}
+                onValueChange={(val) => field.onChange(val)}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
@@ -134,8 +136,7 @@ const AddNewProduct = () => {
         </div>
 
         {/* Quantity */}
-        <div>
-          <label className="text-sm font-medium">Quantity</label>
+        <FormField label="Quantity" error={errors.quantity?.message}>
           <Input
             {...register("quantity")}
             id="quantity"
@@ -144,16 +145,10 @@ const AddNewProduct = () => {
             type="number"
             className="appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-moz-appearance:textfield]"
           />
-          {errors.quantity && (
-            <p className="mt-2 text-sm text-red-500">
-              {errors.quantity.message}
-            </p>
-          )}
-        </div>
+        </FormField>
 
         {/* Price */}
-        <div>
-          <label className="text-sm font-medium">Price</label>
+        <FormField label="Price" error={errors.price?.message}>
           <Input
             {...register("price")}
             step="0.01"
@@ -163,72 +158,23 @@ const AddNewProduct = () => {
             type="number"
             className="appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-moz-appearance:textfield]"
           />
-          {errors.price && (
-            <p className="mt-2 text-sm text-red-500">{errors.price.message}</p>
-          )}
-        </div>
+        </FormField>
 
         {/* Release Date */}
-        <div>
-          <label className="text-sm font-medium">Release Date</label>
-          <Controller
-            control={control}
-            name="releaseDate"
-            render={({ field }) => (
-              <div className="relative w-full">
-                <Input
-                  type="date"
-                  value={
-                    field.value ? field.value.toISOString().split("T")[0] : ""
-                  }
-                  onChange={(e) => field.onChange(new Date(e.target.value))}
-                  className="w-full cursor-pointer"
-                  onClick={(e) =>
-                    e.currentTarget.showPicker
-                      ? e.currentTarget.showPicker()
-                      : null
-                  }
-                />
-              </div>
-            )}
-          />
-          {errors.releaseDate && (
-            <p className="mt-2 text-sm text-red-500">
-              {errors.releaseDate.message}
-            </p>
-          )}
-        </div>
+        <DateField
+          label="Release Date"
+          name="releaseDate"
+          control={control}
+          error={errors.releaseDate?.message}
+        />
 
         {/* Expiry Date */}
-        <div>
-          <label className="text-sm font-medium">Expiry Date</label>
-          <Controller
-            control={control}
-            name="expiryDate"
-            render={({ field }) => (
-              <div className="relative w-full">
-                <Input
-                  type="date"
-                  value={
-                    field.value ? field.value.toISOString().split("T")[0] : ""
-                  }
-                  onChange={(e) => field.onChange(new Date(e.target.value))}
-                  className="w-full cursor-pointer"
-                  onClick={(e) =>
-                    e.currentTarget.showPicker
-                      ? e.currentTarget.showPicker()
-                      : null
-                  }
-                />
-              </div>
-            )}
-          />
-          {errors.expiryDate && (
-            <p className="mt-2 text-sm text-red-500">
-              {errors.expiryDate.message}
-            </p>
-          )}
-        </div>
+        <DateField
+          label="Expiry Date"
+          name="expiryDate"
+          control={control}
+          error={errors.expiryDate?.message}
+        />
       </div>
 
       <div className="flex justify-end">
