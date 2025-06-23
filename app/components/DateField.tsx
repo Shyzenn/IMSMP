@@ -1,41 +1,59 @@
-import { Input } from "@/components/ui/input";
-import { TAddProductSchema } from "@/lib/types";
-import React from "react";
-import { Control, Controller } from "react-hook-form";
+import { Controller, Control, FieldValues, Path } from "react-hook-form";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
 
-interface DateFieldProps {
-  label: string;
-  control: Control<TAddProductSchema>;
-  name: keyof TAddProductSchema;
+interface DateFieldProps<T extends FieldValues> {
+  control: Control<T>;
+  name: Path<T>;
+  label?: string;
   error?: string;
+  className: string;
 }
 
-const DateField = ({ label, control, name, error }: DateFieldProps) => {
+const DateField = <T extends FieldValues>({
+  control,
+  name,
+  label,
+  error,
+  className = "",
+}: DateFieldProps<T>) => {
   return (
-    <div>
-      <label className="text-sm font-medium">{label}</label>
+    <div className="flex flex-col gap-1">
+      {label && <label className="text-sm font-medium">{label}</label>}
       <Controller
-        control={control}
         name={name}
+        control={control}
         render={({ field }) => (
-          <div className="relative w-full">
-            <Input
-              type="date"
-              value={
-                field.value instanceof Date
-                  ? field.value.toISOString().split("T")[0]
-                  : ""
-              }
-              onChange={(e) => field.onChange(new Date(e.target.value))}
-              className="w-full cursor-pointer"
-              onClick={(e) =>
-                e.currentTarget.showPicker ? e.currentTarget.showPicker() : null
-              }
-            />
-          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className={className}>
+                {field.value
+                  ? format(new Date(field.value), "PPP")
+                  : "Pick a date"}
+                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={field.value}
+                onSelect={field.onChange}
+                className="rounded-md border shadow-sm"
+                captionLayout="dropdown"
+                toYear={new Date().getFullYear() + 50}
+              />
+            </PopoverContent>
+          </Popover>
         )}
       />
-      {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
     </div>
   );
 };

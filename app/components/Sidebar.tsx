@@ -7,27 +7,21 @@ import { useState } from "react";
 import { TbSettings2 } from "react-icons/tb";
 import { PiSignOutThin } from "react-icons/pi";
 import { useSidebar } from "@/app/(manager)/SidebarContext";
-import PharmacyIcon from "@/public/macoleens_logo.jpg";
+import PharmacyIcon from "@/public/macoleens_logo.png";
 import Image from "next/image";
 import { handleSignOut } from "../authActions";
 import { Links } from "@/lib/interfaces";
+import { isActive } from "@/lib/utils";
 
 const Sidebar = ({ links }: { links?: Links[] }) => {
   const { isOpen } = useSidebar();
   const [isHovered, setIsHovered] = useState(false);
   const pathname = usePathname();
 
-  const isActive = (hrefs?: string | string[]) => {
-    if (Array.isArray(hrefs)) {
-      return hrefs.some((href) => pathname.startsWith(href));
-    }
-    return pathname === hrefs;
-  };
-
   return (
     <div
       className={clsx(
-        "bg-white px-10 py-8 border-r h-svh fixed top-0 left-0 w-64 xl:relative xl:transform-none 2xl:w-64 transform transition-transform duration-500 ease-in-out xl:translate-x-0 z-40 2xl:px-8",
+        "bg-white px-10 py-8 border-r h-svh fixed top-0 left-0 w-64 xl:hidden xl:transform-none 2xl:w-64 transform transition-transform duration-500 ease-in-out xl:translate-x-0 z-40 2xl:px-8",
         {
           "translate-x-0": isOpen, // Open sidebar
           "-translate-x-full": !isOpen, // Close sidebar
@@ -83,12 +77,13 @@ const Sidebar = ({ links }: { links?: Links[] }) => {
           return (
             <Link
               key={link.name}
-              href={link.hrefs?.[0] || link.href || "/"}
+              href={link.href || "/"}
               className={clsx(
                 "flex items-center gap-2 rounded-md p-3 text-sm hover:bg-green-50 2xl:w-full",
                 {
                   "bg-green-500 hover:bg-green-500 text-white": isActive(
-                    link.hrefs || link.href
+                    pathname,
+                    link.href
                   ),
                   "xl:w-full": isHovered,
                 }

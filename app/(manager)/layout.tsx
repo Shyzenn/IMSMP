@@ -22,7 +22,7 @@ export default function AdminLayout({
         <SidebarProvider>
           <div className="flex">
             <Sidebar links={links} />
-            <div className="flex-1 flex flex-col min-h-screen overflow-y-auto">
+            <div className="flex-1 flex flex-col h-svh overflow-y-auto">
               <Header />
               <div className="flex-1 m-3">
                 <div className="w-full h-full"> {children}</div>

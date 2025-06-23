@@ -4,11 +4,11 @@ import { signUpSchema, TSignUpSchema } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { registerUser } from "@/lib/action";
 import { useState } from "react";
 import AddUserForm from "./AddUserForm";
 import AddButton from "./Button";
 import { FiPlus } from "react-icons/fi";
+import { registerUser } from "@/lib/action/add";
 
 const AddUser = () => {
   const [isOpen, setIsOpen] = useState(false);

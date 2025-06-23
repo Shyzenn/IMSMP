@@ -12,6 +12,7 @@ import {
 } from "chart.js";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
+import SalesGraphSkeleton from "./Skeleton";
 
 ChartJS.register(
   CategoryScale,
@@ -33,11 +34,7 @@ const fetchMostRequested = async (): Promise<RequestedProduct[]> => {
 };
 
 const SalesGraph = () => {
-  const {
-    data: most_requested = [],
-    isLoading,
-    isError,
-  } = useQuery({
+  const { data: most_requested = [], isLoading } = useQuery({
     queryFn: fetchMostRequested,
     queryKey: ["most_requested"],
   });
@@ -46,8 +43,7 @@ const SalesGraph = () => {
     .sort((a, b) => b.totalRequested - a.totalRequested)
     .slice(0, 5);
 
-  if (isLoading) return <p>Loading products...</p>;
-  if (isError) return <p>Failed to load products.</p>;
+  if (isLoading) return <SalesGraphSkeleton />;
 
   const labels = sorted.map((product) => product.name);
   const requestData = sorted.map((product) => product.totalRequested);

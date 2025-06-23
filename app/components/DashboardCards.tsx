@@ -9,7 +9,7 @@ const DashboardCards = ({ cards }: { cards: DashboardCardProps[] }) => {
         return (
           <div
             key={index}
-            className="shadow-sm bg-white flex-1 py-2 px-3 flex flex-col justify-between rounded-md"
+            className="shadow-md bg-white flex-1 py-2 px-3 flex flex-col justify-between rounded-md"
           >
             <div className="flex items-center justify-between">
               <p className="text-xl">{card.title}</p>

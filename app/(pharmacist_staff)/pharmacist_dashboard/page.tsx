@@ -9,11 +9,11 @@ export default async function Dashboard() {
       <ManagerDashboardCards />
       <div className="h-[35%] flex gap-x-4 w-full">
         <SalesGraph />
-        <div className="bg-white w-[45%] rounded-md">
+        <div className="bg-white w-[45%] rounded-md shadow-md">
           <ExpiryProducts />
         </div>
       </div>
-      <div className="bg-white h-[45%] rounded-md">
+      <div className="bg-white h-[40%] rounded-md shadow-md">
         <ManagerRecentReqTable />
       </div>
     </div>

@@ -4,22 +4,15 @@ import { IoCheckmarkDone } from "react-icons/io5";
 
 const NotificationList = ({
   notifications,
-  unreadCount,
   dropdown,
   connectionStatus,
 }: {
   notifications: Notification[];
-  unreadCount: number;
   dropdown: boolean;
   connectionStatus: "connected" | "disconnected" | "connecting";
 }) => {
   return (
     <>
-      {unreadCount > 0 && (
-        <div className="absolute bg-red-500 w-4 h-4 rounded-full -top-1 left-0 text-white text-center text-[10px]">
-          {unreadCount}
-        </div>
-      )}
       {dropdown && (
         <div className="bg-white w-[400px] h-auto absolute shadow-lg z-20 top-11 -right-24 rounded-md max-w-[500px] max-h-[95vh] overflow-auto">
           {notifications.length === 0 ? (

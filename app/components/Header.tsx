@@ -1,17 +1,18 @@
 "use client";
 
-import { AiOutlineUser } from "react-icons/ai";
-import { usePathname } from "next/navigation";
 import MobileMenu from "./MobileMenu";
 import { useSession } from "next-auth/react";
-import { capitalLetter, pageTitles } from "@/lib/utils";
 import { PiBellThin } from "react-icons/pi";
 import { memo, useEffect, useMemo, useState } from "react";
 import NotificationList from "./NotificationList";
 import { usePharmacistNotifications } from "../hooks/usePharmacistNotifications";
+import WalkInOrder from "./WalkInOrder";
+import Image from "next/image";
+import PharmacyIcon from "@/public/macoleens_logo.png";
+import HeaderLinks from "./HeaderLinks";
+import ProfileDropdown from "./ProfileDropdown";
 
 const Header = () => {
-  const pathname = usePathname();
   const { data: session } = useSession();
   const { notifications, setNotifications, connectionStatus } =
     usePharmacistNotifications(session?.user.id, session?.user.role);
@@ -19,8 +20,6 @@ const Header = () => {
   const MemoMobileMenu = memo(MobileMenu);
 
   const [dropdown, setDropdown] = useState(false);
-
-  const pageTitle = pageTitles[pathname] || "Dashboard";
 
   useEffect(() => {
     const fetchNotification = async () => {
@@ -48,34 +47,44 @@ const Header = () => {
   };
 
   return (
-    <div className="flex justify-between items-center shadow-md px-3 py-4 bg-white relative">
-      <p className="hidden xl:block">{pageTitle}</p>
+    <div className="flex justify-between items-center mx-10 py-8 relative">
+      <Image
+        src={PharmacyIcon}
+        alt="Macoleen's Pharmacy Icon"
+        width={150}
+        height={150}
+        className="hidden xl:block"
+      />{" "}
       <MemoMobileMenu />
+      <HeaderLinks session={session} />
       <div className="flex items-center relative">
         {session?.user.role === "Pharmacist_Staff" && (
-          <div className="relative">
-            {/*Notification*/}
-            <PiBellThin
-              className="mr-8 text-2xl cursor-pointer"
-              onClick={() => handleBellClick()}
-              role="button"
-              tabIndex={0}
-              aria-label="Notifications"
-            />
-            <NotificationList
-              dropdown={dropdown}
-              notifications={notifications}
-              unreadCount={unreadCount}
-              connectionStatus={connectionStatus}
-            />
-          </div>
+          <>
+            <WalkInOrder />
+            <div className="relative flex items-center mr-8">
+              {/*Notification*/}
+              <button
+                className="mr-text-2xl cursor-pointer8 bg-white p-2 rounded-full relative"
+                tabIndex={0}
+                aria-label="Notifications"
+                onClick={handleBellClick}
+              >
+                <PiBellThin className="text-2xl" />
+                {unreadCount > 0 && (
+                  <div className="absolute bg-red-500 w-4 h-4 rounded-full -top-1 right-0 text-white text-center text-[10px]">
+                    {unreadCount}
+                  </div>
+                )}
+              </button>
+              <NotificationList
+                dropdown={dropdown}
+                notifications={notifications}
+                connectionStatus={connectionStatus}
+              />
+            </div>
+          </>
         )}
-        <div className="flex items-center gap-1">
-          <AiOutlineUser className="text-2xl" />
-          {session?.user.username
-            ? capitalLetter(session.user.username)
-            : "Unknown User"}
-        </div>
+        <ProfileDropdown session={session} />
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { TAddProductSchema, TAddRequestOrderSchema, TSignUpSchema } from "@/lib/types";
+import { TAddProductSchema, TAddRequestOrderSchema, TEditProductSchema, TSignUpSchema, TWalkInOrderSchema } from "../types";
 
 //register user
 export const registerUser = async (data: TSignUpSchema) => {
@@ -38,6 +38,25 @@ export const addNewProduct = async (data: TAddProductSchema) => {
   return responseData;
 };
 
+// edit new product
+export const editNewProduct = async (data: TEditProductSchema) => {
+  const response = await fetch("/api/product/update", {
+    method: "PATCH",
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    // If the response is not OK, throw an error
+    const errorData = await response.json();
+    throw new Error(JSON.stringify(errorData));
+  }
+  const responseData = await response.json();
+  return responseData;
+};
+
 //add request order
 export const addRequesOrder = async (data:TAddRequestOrderSchema) => {
   const response = await fetch("/api/request_order", {
@@ -57,25 +76,23 @@ export const addRequesOrder = async (data:TAddRequestOrderSchema) => {
   return responseData;
 }
 
-import axios from "axios";
+// walk in order
+export const walkInOrder = async (data:TWalkInOrderSchema) => {
+  const response = await fetch("/api/walkin_order", {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "application/json",
+    }
+  })
 
-export const fetchOrderRequest = async () => {
-  const { data } = await axios.get("/api/request_order");
-  return Array.isArray(data) ? data : [];
-};
-  
-export const fetchLowStocks = async () => {
-  const { data } = await axios.get("api/low_stock");
-  return Array.isArray(data) ? data : [];
-};
+  if (!response.ok) {
+    // If the response is not OK, throw an error
+    const errorData = await response.json();
+    throw new Error(JSON.stringify(errorData));
+  }
+  const responseData = await response.json();
+  return responseData;
+}
 
-export const fetchManagerCardData = async () => {
-  const { data } = await axios.get("api/manager/manager_card");
-  return Array.isArray(data) ? data : [];
-};
-
-export const fetchExpiryProducts = async () => {
-  const { data } = await axios.get("api/manager/expiry_products");
-  return Array.isArray(data) ? data : [];
-};
 

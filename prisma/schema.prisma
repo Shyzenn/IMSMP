@@ -15,6 +15,7 @@ model User {
   createdAt     DateTime @default(now())
 
   OrderRequest  OrderRequest[]
+  WalkInTransaction   WalkInTransaction[]
   Product       Product[]
 
   SentNotification     Notification[] @relation("SentNotification")
@@ -40,6 +41,7 @@ model Product {
   createdAt       DateTime @default(now()) // Auto-generated timestamp
   updatedAt       DateTime @updatedAt // Auto-update timestamp
   orderItems      OrderItem[]
+  WalkInItem      WalkInItem[]
   Notification    Notification[]
   userId          String?
   user            User?       @relation(fields: [userId], references: [id])
@@ -66,6 +68,30 @@ model OrderItem {
   product    Product     @relation(fields: [productId], references: [id])
   productId  Int
 }
+
+model WalkInTransaction {
+  id             Int           @id @default(autoincrement())
+  customer_name  String?       
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  items          WalkInItem[]
+  totalAmount    Decimal       @default(0.00)
+  userId         String        // pharmacist who encoded the walk-in
+  user           User          @relation(fields: [userId], references: [id])
+  Notification Notification[]
+}
+
+model WalkInItem {
+  id            Int           @id @default(autoincrement())
+  quantity      Int
+  price         Decimal
+  total         Decimal        // quantity * price
+  product       Product        @relation(fields: [productId], references: [id])
+  productId     Int
+  transaction   WalkInTransaction @relation(fields: [transactionId], references: [id])
+  transactionId Int
+}
+
 
 enum Status {
   pending
@@ -101,6 +127,9 @@ model Notification {
 
   orderId      Int?
   order        OrderRequest?   @relation(fields: [orderId], references: [id])
+
+  walkInOrderId    Int?
+  walkInOrder      WalkInTransaction? @relation(fields: [walkInOrderId], references: [id])
 
   productId    Int?
   product      Product?        @relation(fields: [productId], references: [id])

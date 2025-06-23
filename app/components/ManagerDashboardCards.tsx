@@ -2,7 +2,6 @@
 
 import React from "react";
 import DashboardCards from "./DashboardCards";
-import { fetchManagerCardData } from "@/lib/action";
 import { useQuery } from "@tanstack/react-query";
 import {
   TbShoppingCart,
@@ -10,19 +9,23 @@ import {
   TbShoppingCartUp,
   TbShoppingCartX,
 } from "react-icons/tb";
+import axios from "axios";
+import { ManagerCardSkeleton } from "./Skeleton";
+
+const fetchManagerCardData = async () => {
+  const { data } = await axios.get("api/manager/manager_card");
+  return Array.isArray(data) ? data : [];
+};
 
 const ManagerDashboardCards = () => {
-  const {
-    data: managerCard = [],
-    isLoading,
-    isError,
-  } = useQuery({
+  const { data: managerCard = [], isLoading } = useQuery({
     queryFn: fetchManagerCardData,
     queryKey: ["manager_cards"],
   });
 
-  if (isLoading) return <p>Loading data...</p>;
-  if (isError) return <p>Failed to load data.</p>;
+  if (isLoading) {
+    return <ManagerCardSkeleton />;
+  }
 
   const [totalProducts, lowStockArray, highStockArray, expiring] = managerCard;
 

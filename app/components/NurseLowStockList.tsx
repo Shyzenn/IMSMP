@@ -4,12 +4,17 @@ import { Column } from "@/lib/interfaces";
 import React from "react";
 import TableComponent from "./TableComponent";
 import { useQuery } from "@tanstack/react-query";
-import { fetchLowStocks } from "@/lib/action";
+import axios from "axios";
 
 const columns: Column[] = [
   { label: "Medicine", accessor: "productName" },
   { label: "Stock Left", accessor: "quantity", align: "right" },
 ];
+
+const fetchLowStocks = async () => {
+  const { data } = await axios.get("api/low_stock");
+  return Array.isArray(data) ? data : [];
+};
 
 const NurseLowStockList = () => {
   const {

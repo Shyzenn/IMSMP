@@ -4,8 +4,9 @@ import { Column } from "@/lib/interfaces";
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import TableComponent from "./TableComponent";
-import { fetchExpiryProducts } from "@/lib/action";
 import { formattedDate } from "@/lib/utils";
+import axios from "axios";
+import { ExpiryProductsSkeleton } from "./Skeleton";
 
 const columns: Column[] = [
   { label: "Product name", accessor: "name" },
@@ -14,12 +15,13 @@ const columns: Column[] = [
   { label: "Categories", accessor: "category" },
 ];
 
+const fetchExpiryProducts = async () => {
+  const { data } = await axios.get("api/manager/expiry_products");
+  return Array.isArray(data) ? data : [];
+};
+
 const ExpiryProducts = () => {
-  const {
-    data: expiryProducts = [],
-    isError,
-    isLoading,
-  } = useQuery({
+  const { data: expiryProducts = [], isLoading } = useQuery({
     queryFn: fetchExpiryProducts,
     queryKey: ["expiry_products"],
   });
@@ -29,11 +31,10 @@ const ExpiryProducts = () => {
     expiryDate: formattedDate(product.expiryDate),
   }));
 
-  if (isLoading) return <p>Loading data...</p>;
-  if (isError) return <p>Failed to load data.</p>;
+  if (isLoading) return <ExpiryProductsSkeleton />;
 
   return (
-    <div className="mx-4 max-h-[260px] overflow-auto">
+    <div className="mx-4 max-h-[240px] overflow-auto">
       <TableComponent
         data={formattedData}
         columns={columns}

@@ -11,7 +11,7 @@ import { handleCredentialsSignIn } from "@/app/authActions";
 import { useState } from "react";
 import LoadingButton from "@/components/loading-button";
 import Image from "next/image";
-import MacoleenLogo from "@/public/macoleens_logo.jpg";
+import MacoleenLogo from "@/public/macoleens_logo.png";
 import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
 
 const Login = () => {

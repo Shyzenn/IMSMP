@@ -24,7 +24,7 @@ export default function AdminLayout({
             <Sidebar links={pharmacistLinks} />
             <div className="flex-1 flex flex-col h-svh overflow-y-auto">
               <Header />
-              <div className="flex-1 m-3">
+              <div className="flex-1 mx-10">
                 <div className="w-full h-full"> {children}</div>
               </div>
             </div>

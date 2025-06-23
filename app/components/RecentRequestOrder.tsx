@@ -1,40 +1,34 @@
 "use client";
 
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useMemo, useState } from "react";
 import TableComponent from "./TableComponent";
-import { Order, ProductData } from "@/lib/interfaces";
+import { Order } from "@/lib/interfaces";
 import { Input } from "@/components/ui/input";
 import { IoIosClose } from "react-icons/io";
-import { useFieldArray, useForm } from "react-hook-form";
+import { Path, useFieldArray, useForm } from "react-hook-form";
 import { addRequestOrderSchema, TAddRequestOrderSchema } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { addRequesOrder } from "@/lib/action";
 import toast from "react-hot-toast";
 import LoadingButton from "@/components/loading-button";
-import { useQuery } from "@tanstack/react-query";
-import { capitalLetter, columns, formattedDate } from "@/lib/utils";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { capitalLetter, formattedDate } from "@/lib/utils";
 import OrderDetailsModal from "./OrderDetailsModal";
-import { fetchOrderRequest } from "@/lib/action";
 import FormField from "./FormField";
+import { columns, fetchOrderRequest } from "./PharmacistRecentReqTable";
+import { addRequesOrder } from "@/lib/action/add";
+import CancelButton from "./CancelButton";
+import { useModal } from "../hooks/useModal";
+import { useProducts } from "../hooks/useProducts";
+import { useProductDropdown } from "../hooks/useProductDropDown";
+import { useProductForm } from "../hooks/useProductForm";
 
 const RecentRequestOrder = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [products, setProducts] = useState<ProductData[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<ProductData[]>([]);
-  const [dropdownIndex, setDropdownIndex] = useState<number | null>(null);
-  const dropdownRefs = useRef<(HTMLLIElement | null)[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
-  const [selectedQuantity, setSelectedQuantity] = useState<
-    Record<number, number>
-  >({});
+
+  const { isOpen, open, close } = useModal();
+  const { products } = useProducts();
 
   const {
     data: orderRequest = [],
@@ -43,7 +37,6 @@ const RecentRequestOrder = () => {
   } = useQuery({
     queryKey: ["request_order"],
     queryFn: fetchOrderRequest,
-    refetchInterval: isModalOpen ? false : 5000,
   });
 
   const formattedData = useMemo(
@@ -55,75 +48,6 @@ const RecentRequestOrder = () => {
     [orderRequest]
   );
 
-  const handleFocus = (index: number) => {
-    const top10 = products.slice(0, 10);
-    setFilteredProducts(top10);
-    setDropdownIndex(index);
-  };
-
-  const handleSelectProduct = (index: number, productName: string) => {
-    setValue(`products.${index}.productId`, capitalLetter(productName));
-    setDropdownIndex(null);
-
-    const selectedProduct = products.find(
-      (p) => capitalLetter(p.productName) === capitalLetter(productName)
-    );
-
-    if (selectedProduct) {
-      setSelectedQuantity((prev) => ({
-        ...prev,
-        [index]: Number(selectedProduct.quantity),
-      }));
-    }
-  };
-
-  const handleInputChangeProduct = (index: number, value: string) => {
-    const top10 = products.filter((product) =>
-      product.productName.toLowerCase().includes(value.toLowerCase())
-    );
-    setValue(`products.${index}.productId`, value);
-    setDropdownIndex(index);
-    setFilteredProducts(top10);
-  };
-
-  const fetchProducts = useCallback(async () => {
-    try {
-      const response = await fetch("api/product");
-      if (!response.ok) throw new Error("Failed to fetch products");
-
-      const data = await response.json();
-      if (Array.isArray(data) && data.length > 0) {
-        setProducts(
-          data.map((product) => ({
-            id: product.id,
-            productName: product.product_name,
-            quantity: product.quantity.toString(),
-          }))
-        );
-      }
-    } catch (error) {
-      console.error("Error fetching products", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownIndex !== null &&
-        dropdownRefs.current[dropdownIndex] &&
-        !dropdownRefs.current[dropdownIndex]?.contains(event.target as Node)
-      ) {
-        setDropdownIndex(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [dropdownIndex]);
-
   const {
     register,
     handleSubmit,
@@ -133,6 +57,7 @@ const RecentRequestOrder = () => {
     control,
     setValue,
     watch,
+    clearErrors,
   } = useForm<TAddRequestOrderSchema>({
     resolver: zodResolver(addRequestOrderSchema),
     mode: "onChange",
@@ -143,6 +68,20 @@ const RecentRequestOrder = () => {
       products: [{ productId: "", quantity: 0 }],
     },
   });
+
+  const {
+    dropdownIndex,
+    filteredProducts,
+    handleFocus,
+    handleSelectProduct,
+    handleInputChangeProduct,
+    selectedQuantity,
+    dropdownRefs,
+  } = useProductDropdown<TAddRequestOrderSchema>(
+    products,
+    setValue,
+    clearErrors
+  );
 
   const watchProducts = watch("products");
 
@@ -158,70 +97,46 @@ const RecentRequestOrder = () => {
     name: "products",
   });
 
-  const handleErrors = (errors: Record<string, string>) => {
-    Object.keys(errors).forEach((field) => {
-      setError(field as keyof TAddRequestOrderSchema, {
-        type: "server",
-        message: errors[field],
-      });
-    });
-  };
-
   const notify = () =>
     toast.success("Request Order Submitted successfully! 🎉", {
       icon: "✅",
     });
 
-  const onSubmit = async (data: TAddRequestOrderSchema) => {
-    let hasInvalidProduct = false;
+  const queryClient = useQueryClient();
 
-    data.products.forEach((product, index) => {
+  const { handleSubmitWrapper } = useProductForm<TAddRequestOrderSchema>(
+    setError,
+    () => {
+      reset();
+      notify();
+      close();
+      queryClient.invalidateQueries({ queryKey: ["request_order"] });
+    }
+  );
+
+  const onSubmit = (data: TAddRequestOrderSchema) => {
+    const hasInvalidProduct = data.products.some((product, index) => {
       const exists = products.some(
         (p) =>
-          capitalLetter(p.productName) ===
-          capitalLetter(product.productId.trim())
+          p.productName.toLowerCase() === product.productId.trim().toLowerCase()
       );
+
       if (!exists) {
-        setError(`products.${index}.productId`, {
-          type: "manual",
-          message: "Product does not exist",
-        });
-        hasInvalidProduct = true;
+        setError(
+          `products.${index}.productId` as Path<TAddRequestOrderSchema>,
+          {
+            type: "manual",
+            message: "Product does not exist",
+          }
+        );
       }
+
+      return !exists;
     });
 
-    if (hasInvalidProduct) {
-      return; // Don't submit
-    }
+    if (hasInvalidProduct) return;
 
-    try {
-      console.log("Submitting data:", data);
-      const responseData = await addRequesOrder(data);
-
-      if (responseData.errors) {
-        handleErrors(responseData.errors);
-      } else if (responseData.success) {
-        reset();
-        notify();
-        setIsModalOpen(false);
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        try {
-          const errorData = JSON.parse(error.message);
-          if (errorData.errors) {
-            handleErrors(errorData.errors);
-          } else {
-            alert("An unexpected error occurred.");
-          }
-        } catch {
-          alert("An unexpected error occurred.");
-        }
-      } else {
-        alert("An unexpected error occurred.");
-      }
-    }
-    console.log("Form Data:", data);
+    handleSubmitWrapper(() => addRequesOrder(data));
   };
 
   if (isLoading) return <p>Loading products...</p>;
@@ -233,7 +148,7 @@ const RecentRequestOrder = () => {
         <TableComponent
           requestOrderBtn={
             <button
-              onClick={() => setIsModalOpen(true)}
+              onClick={open}
               className="px-8 py-2 rounded-md text-white bg-green-500 hover:bg-green-600"
             >
               Request Order
@@ -258,7 +173,7 @@ const RecentRequestOrder = () => {
         setIsOrderModalOpen={setIsOrderModalOpen}
       />
 
-      {isModalOpen && (
+      {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
           <div className="bg-white w-full max-w-[500px] max-h-[95vh] rounded-md relative overflow-hidden">
             <p className="text-center font-semibold text-xl py-4">
@@ -464,16 +379,7 @@ const RecentRequestOrder = () => {
               </div>
 
               <div className="flex gap-6 bg-white border-t-2 p-4 absolute bottom-0 left-0 w-full justify-end">
-                <button
-                  type="button"
-                  className="border px-6 py-2 rounded-md hover:bg-gray-50"
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    reset();
-                  }}
-                >
-                  Cancel
-                </button>
+                <CancelButton setIsModalOpen={close} reset={reset} />
                 <button
                   type="submit"
                   className={`px-8 py-2 rounded-md text-white ${

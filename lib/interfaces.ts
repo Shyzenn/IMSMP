@@ -40,9 +40,10 @@ export interface TableComponentProps<T extends Record<string, unknown>> {
 }
 
 export interface ProductData {
-  id: string;
+  id: number;
   productName: string;
   quantity: number;
+  price?: number
 }
 
 export interface OrderItem {
@@ -63,8 +64,7 @@ export interface Order {
 
 export interface Links {
   name: string;
-  href?: string;
-  hrefs?: string[];
+  href: string;
   icon: IconType;
 }
 

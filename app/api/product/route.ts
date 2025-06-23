@@ -7,6 +7,7 @@ import { sendNotification } from "@/server";
 
 // create product
 export async function POST(req: Request) {
+
   try {
 
     const session = await auth()
@@ -18,6 +19,7 @@ export async function POST(req: Request) {
     const userId = session.user.id; 
 
     const body = await req.json();
+
     const { product_name, category, quantity, price, releaseDate, expiryDate } = body;
 
     // Validate input using Zod schema
@@ -39,12 +41,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ errors: zodErrors }, { status: 400 });
     }
 
-    const existingUser = await db.product.findFirst({
+    const existingProduct = await db.product.findFirst({
       where: {product_name},
     });
 
-    if (existingUser) {
-      if (existingUser.product_name === product_name) {
+    if (existingProduct) {
+      if (existingProduct.product_name === product_name) {
         zodErrors.product_name = "Product name is already taken";
       }
     }
