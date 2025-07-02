@@ -4,7 +4,7 @@ import { Column } from "@/lib/interfaces";
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import TableComponent from "./TableComponent";
-import { formattedDate } from "@/lib/utils";
+import { relativeTime } from "@/lib/utils";
 import axios from "axios";
 import { ExpiryProductsSkeleton } from "./Skeleton";
 
@@ -28,7 +28,7 @@ const ExpiryProducts = () => {
 
   const formattedData = expiryProducts.map((product) => ({
     ...product,
-    expiryDate: formattedDate(product.expiryDate),
+    expiryDate: relativeTime(product.expiryDate),
   }));
 
   if (isLoading) return <ExpiryProductsSkeleton />;

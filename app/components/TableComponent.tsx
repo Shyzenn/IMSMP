@@ -73,11 +73,11 @@ function TableComponent<T extends Record<string, unknown>>({
 
               let rowColor = "";
               if (diffInDays <= 7) {
-                rowColor = "bg-red-100";
+                rowColor = "bg-red-50";
               } else if (diffInDays <= 14) {
-                rowColor = "bg-orange-100";
+                rowColor = "bg-orange-50";
               } else if (diffInDays <= 21) {
-                rowColor = "bg-yellow-100";
+                rowColor = "bg-yellow-50";
               }
 
               return (

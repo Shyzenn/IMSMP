@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import TableComponent from "./TableComponent";
-import { formattedDate } from "@/lib/utils";
+import { relativeTime } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import OrderDetailsModal from "./OrderDetailsModal";
 import { Column, Order } from "@/lib/interfaces";
@@ -65,7 +65,7 @@ const ManagerRecentReqTable = () => {
     () =>
       orderRequest.map((order) => ({
         ...order,
-        createdAt: formattedDate(order.createdAt),
+        createdAt: relativeTime(order.createdAt),
       })),
     [orderRequest]
   );

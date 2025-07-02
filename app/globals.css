@@ -84,5 +84,24 @@ input[type="number"] {
   }
 }
 
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .print\:block {
+    display: block !important;
+  }
+
+  .print\:visible {
+    visibility: visible !important;
+  }
+}
+
+
 
 

@@ -1,22 +1,42 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { subDays, startOfMonth, startOfYear } from "date-fns";
 
-export async function GET() {
-    try {
-        const topProducts = await db.orderItem.groupBy({
-            by:['productId'],
-            _sum:{
-                quantity:true
-            },
-            orderBy:{
-                _sum:{
-                    quantity: 'desc'
-                }
-            },
-            take:5
-        })
+export async function GET(req: Request) {
+  try {
+    const url = new URL(req.url);
+    const filter = url.searchParams.get("filter");
 
-    // Fetch product details for each top product
+    let dateFilter: Date | undefined;
+
+    if (filter === "Last 7 Days") {
+      dateFilter = subDays(new Date(), 7);
+    } else if (filter === "This Month") {
+      dateFilter = startOfMonth(new Date());
+    } else if (filter === "This Year") {
+      dateFilter = startOfYear(new Date());
+    }
+
+    const topProducts = await db.orderItem.groupBy({
+      by: ["productId"],
+      _sum: { quantity: true },
+      where: dateFilter
+        ? {
+            order: {
+              createdAt: {
+                gte: dateFilter,
+              },
+            },
+          }
+        : undefined,
+      orderBy: {
+        _sum: {
+          quantity: "desc",
+        },
+      },
+      take: 5,
+    });
+
     const detailedTopProducts = await Promise.all(
       topProducts.map(async (item) => {
         const product = await db.product.findUnique({
@@ -26,7 +46,7 @@ export async function GET() {
         return {
           id: product?.id,
           name: product?.product_name,
-          totalRequested: item._sum.quantity ?? 0,
+          totalRequested: item._sum?.quantity ?? 0,
         };
       })
     );

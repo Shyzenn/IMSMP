@@ -19,6 +19,7 @@ export interface DashboardCardProps {
   icon: IconType;
   bgColor: string;
   textColor: string;
+  link:string
 }
 
 export interface Column {
@@ -57,7 +58,7 @@ export interface Order {
   patient_name: string;
   createdAt: string;
   status: string;
-  items: string;
+  items?: string;
   roomNumber: string
   itemDetails: OrderItem[];
 }

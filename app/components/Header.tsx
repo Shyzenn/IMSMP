@@ -11,6 +11,12 @@ import Image from "next/image";
 import PharmacyIcon from "@/public/macoleens_logo.png";
 import HeaderLinks from "./HeaderLinks";
 import ProfileDropdown from "./ProfileDropdown";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const Header = () => {
   const { data: session } = useSession();
@@ -63,19 +69,30 @@ const Header = () => {
             <WalkInOrder />
             <div className="relative flex items-center mr-8">
               {/*Notification*/}
-              <button
-                className="mr-text-2xl cursor-pointer8 bg-white p-2 rounded-full relative"
-                tabIndex={0}
-                aria-label="Notifications"
-                onClick={handleBellClick}
-              >
-                <PiBellThin className="text-2xl" />
-                {unreadCount > 0 && (
-                  <div className="absolute bg-red-500 w-4 h-4 rounded-full -top-1 right-0 text-white text-center text-[10px]">
-                    {unreadCount}
-                  </div>
-                )}
-              </button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      className={`mr-text-2xl cursor-pointer p-2 rounded-full relative 
+              hover:bg-gray-200 ${dropdown ? "bg-gray-200" : "bg-white"}`}
+                      tabIndex={0}
+                      aria-label="Notifications"
+                      onClick={handleBellClick}
+                    >
+                      <PiBellThin className="text-2xl" />
+                      {unreadCount > 0 && (
+                        <div className="absolute bg-red-500 w-4 h-4 rounded-full -top-1 right-0 text-white text-center text-[10px]">
+                          {unreadCount}
+                        </div>
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Notifications</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
               <NotificationList
                 dropdown={dropdown}
                 notifications={notifications}
@@ -84,7 +101,17 @@ const Header = () => {
             </div>
           </>
         )}
-        <ProfileDropdown session={session} />
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <ProfileDropdown session={session} />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Profile</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   );

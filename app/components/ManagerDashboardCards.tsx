@@ -36,6 +36,7 @@ const ManagerDashboardCards = () => {
       icon: TbShoppingCart,
       bgColor: "bg-blue-50",
       textColor: "text-blue-500",
+      link: "/pharmacist_inventory?query=&page=1&filter=all&sort=releaseDate&order=desc",
     },
     {
       title: "Low Stock",
@@ -43,6 +44,7 @@ const ManagerDashboardCards = () => {
       icon: TbShoppingCartDown,
       bgColor: "bg-orange-50",
       textColor: "text-orange-500",
+      link: "/pharmacist_inventory?query=&page=1&filter=all&sort=quantity&order=asc",
     },
     {
       title: "High Stock",
@@ -50,13 +52,15 @@ const ManagerDashboardCards = () => {
       icon: TbShoppingCartUp,
       bgColor: "bg-green-50",
       textColor: "text-green-500",
+      link: "/pharmacist_inventory?query=&page=1&filter=all&sort=quantity&order=desc",
     },
     {
-      title: "Expiry",
+      title: "Expiring Soon",
       value: expiring,
       icon: TbShoppingCartX,
       bgColor: "bg-red-50",
       textColor: "text-red-500",
+      link: "/pharmacist_inventory?query=&page=1&filter=all&sort=expiryDate&order=asc",
     },
   ];
 

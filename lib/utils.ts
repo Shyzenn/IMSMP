@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx"
+import { formatDistanceToNow } from "date-fns";
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
@@ -19,6 +20,10 @@ export function formattedDate(dateInput?: string | number | Date | null) {
     day: "numeric",
   });
 }
+
+export const relativeTime = (date: string | Date) => {
+  return formatDistanceToNow(new Date(date), { addSuffix: true });
+};
 
 export const pageTitles: Record<string, string> = {
     "/dashboard": "Dashboard",

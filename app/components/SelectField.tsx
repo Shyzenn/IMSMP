@@ -17,6 +17,7 @@ interface SelectFieldProps {
   option: { label: string; value: string }[];
   value?: string;
   onChange?: (value: string) => void;
+  defaultValue?: string;
 }
 
 const SelectField = ({
@@ -25,13 +26,15 @@ const SelectField = ({
   option,
   value,
   onChange,
+  defaultValue,
 }: SelectFieldProps) => {
   return (
     <Select
-      value={field?.value ?? value}
+      value={field?.value || value || undefined}
       onValueChange={field?.onChange ?? onChange}
+      defaultValue={defaultValue}
     >
-      <SelectTrigger className="w-full">
+      <SelectTrigger className="w-auto">
         <SelectValue placeholder={label} />
       </SelectTrigger>
       <SelectContent className="bg-white">
