@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 💊 Web-Based Inventory Management Information System for Macoleen’s Pharmacy
 
 This project is a Web-Based Inventory Management Information System (IMS) developed as a capstone project by students of the Kolehiyo ng Lungsod ng Dasmariñas, aimed at improving the inventory operations of Macoleen’s Pharmacy in Dasmariñas, Cavite.
