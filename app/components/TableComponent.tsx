@@ -7,6 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TableComponentProps } from "@/lib/interfaces";
+import { useSession } from "next-auth/react";
 
 function TableComponent<T extends Record<string, unknown>>({
   columns,
@@ -19,6 +20,9 @@ function TableComponent<T extends Record<string, unknown>>({
   noDataMessage,
   colorCodeExpiry = false,
 }: TableComponentProps<T>) {
+  const { data: session } = useSession();
+  const userRole = session?.user.role;
+
   return (
     <>
       <div
@@ -87,10 +91,18 @@ function TableComponent<T extends Record<string, unknown>>({
                       key={column.accessor}
                       className={`${
                         column.align === "right" ? "text-right" : "text-left"
-                      } ${interactiveRows ? "cursor-pointer" : ""}`}
+                      } ${
+                        interactiveRows && userRole !== "Cashier"
+                          ? "cursor-pointer"
+                          : ""
+                      }`}
                       onClick={() => {
-                        setIsOrderModalOpen?.(true);
-                        onRowClick?.(row);
+                        if (userRole === "Cashier") {
+                          onRowClick?.(row);
+                        } else {
+                          onRowClick?.(row);
+                          setIsOrderModalOpen?.(true);
+                        }
                       }}
                     >
                       {column.render

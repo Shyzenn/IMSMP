@@ -1,4 +1,4 @@
-import { pharmacistLinks } from "@/lib/links";
+import { cashierLinks, pharmacistLinks } from "@/lib/links";
 import { nurseLinks } from "@/lib/links";
 import { isActive } from "@/lib/utils";
 import { Session } from "next-auth";
@@ -9,6 +9,7 @@ import React from "react";
 const roleLinksMap: Record<string, { name: string; href: string }[]> = {
   Pharmacist_Staff: pharmacistLinks,
   Nurse: nurseLinks,
+  Cashier: cashierLinks,
 };
 
 const HeaderLinks = ({ session }: { session: Session | null }) => {

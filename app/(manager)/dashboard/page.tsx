@@ -1,7 +1,7 @@
 import ExpiryProducts from "@/app/components/ExpiryProducts";
 import ManagerDashboardCards from "@/app/components/ManagerDashboardCards";
 import ManagerRecentReqTable from "@/app/components/PharmacistRecentReqTable";
-import SalesGraph from "@/app/components/SalesGraph";
+import SalesGraph from "@/app/components/Top5RequestedProduct";
 
 export default async function Dashboard() {
   return (

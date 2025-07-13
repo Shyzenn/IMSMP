@@ -7,12 +7,9 @@ const DashboardCards = ({ cards }: { cards: DashboardCardProps[] }) => {
     <div className="flex gap-5 h-full">
       {cards.map((card, index) => {
         const Icon = card.icon;
-        return (
-          <Link
-            href={card.link}
-            key={index}
-            className="shadow-md bg-white flex-1 py-2 px-3 flex flex-col justify-between rounded-md"
-          >
+
+        const CardContent = (
+          <>
             <div className="flex items-center justify-between">
               <p className="text-xl">{card.title}</p>
             </div>
@@ -24,7 +21,24 @@ const DashboardCards = ({ cards }: { cards: DashboardCardProps[] }) => {
                 <Icon className="text-xl" />
               </div>
             </div>
+          </>
+        );
+
+        return card.link ? (
+          <Link
+            href={card.link}
+            key={index}
+            className="shadow-md bg-white flex-1 py-2 px-3 flex flex-col justify-between rounded-md"
+          >
+            {CardContent}
           </Link>
+        ) : (
+          <div
+            key={index}
+            className="shadow-md bg-white flex-1 py-2 px-3 flex flex-col justify-between rounded-md"
+          >
+            {CardContent}
+          </div>
         );
       })}
     </div>

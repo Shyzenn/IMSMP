@@ -56,10 +56,10 @@ export const config = {
     "/pharmacist_dashboard/:path*",
     "/auth/signin",
     "/settings/:path*",
-    "/pharmacist_inventory/:path",
-    "/pharmacist_transaction/:path",
-    "/pharmacist_order/:path", 
-    "/pharmacist_settings/:path"
+    "/pharmacist_inventory/:path*",
+    "/pharmacist_transaction/:path*",
+    "/pharmacist_order/:path*", 
+    "/pharmacist_settings/:path*"
   ],
 };
   

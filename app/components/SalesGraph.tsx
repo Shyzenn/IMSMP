@@ -1,76 +1,59 @@
 "use client";
 
-import { Bar } from "react-chartjs-2";
+import React, { useState } from "react";
+import SelectField from "./SelectField";
+import { Line } from "react-chartjs-2";
+import axios from "axios";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
-  Title,
+  LineElement,
+  PointElement,
   Tooltip,
   Legend,
+  Filler,
 } from "chart.js";
-import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import SalesGraphSkeleton from "./Skeleton";
-import SelectField from "./SelectField";
-import { useState } from "react";
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  BarElement,
-  Title,
+  LineElement,
+  PointElement,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 
-type RequestedProduct = {
-  name: string;
-  totalRequested: number;
-};
-
-const fetchMostRequested = async (
-  filter: string
-): Promise<RequestedProduct[]> => {
-  const { data } = await axios.get("/api/most_requested", {
+const fetchSales = async (filter: string) => {
+  const { data } = await axios.get("/api/request_order/sales", {
     params: { filter },
   });
   return Array.isArray(data) ? data : [];
 };
 
 const SalesGraph = () => {
-  const [filter, setFilter] = useState("Last 7 Days");
+  const [filter, setFilter] = useState("This Year");
 
-  const { data: most_requested = [], isLoading } = useQuery({
-    queryFn: () => fetchMostRequested(filter),
-    queryKey: ["most_requested", filter],
+  const { data: salesData = [], isLoading } = useQuery({
+    queryFn: () => fetchSales(filter),
+    queryKey: ["salesData", filter],
   });
-
-  const sorted = [...most_requested]
-    .sort((a, b) => b.totalRequested - a.totalRequested)
-    .slice(0, 5);
 
   if (isLoading) return <SalesGraphSkeleton />;
 
-  const labels = sorted.map((product) => product.name);
-  const requestData = sorted.map((product) => product.totalRequested);
-
   const data = {
-    labels,
+    labels: salesData.map((entry) => entry.date),
     datasets: [
       {
-        label: "Requests",
-        data: requestData,
-        backgroundColor: [
-          "#007bff",
-          "#339cff",
-          "#66baff",
-          "#99d8ff",
-          "#ccecff",
-        ],
-        borderRadius: 5,
-        barThickness: 20,
+        label: "Sales",
+        data: salesData.map((entry) => entry.totalSales),
+        fill: true,
+        borderColor: "#339cff",
+        backgroundColor: "rgba(51,156,255,0.1)",
+        tension: 0.4,
       },
     ],
   };
@@ -78,13 +61,11 @@ const SalesGraph = () => {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
-    indexAxis: "y" as const,
     plugins: {
       legend: { display: false },
-      title: { display: false },
     },
     scales: {
-      x: {
+      y: {
         beginAtZero: true,
         ticks: { precision: 0 },
       },
@@ -94,9 +75,7 @@ const SalesGraph = () => {
   return (
     <div className="bg-white w-full md:w-[60%] h-full rounded-md p-3 shadow-md flex flex-col">
       <div className="flex justify-between mb-2 w-full">
-        <p className="text-lg font-semibold w-[100%]">
-          Top 5 Most Requested Medicines
-        </p>
+        <p className="text-lg font-semibold">Sales</p>
         <SelectField
           label="Select a category"
           option={[
@@ -104,17 +83,18 @@ const SalesGraph = () => {
             { label: "This Month", value: "This Month" },
             { label: "This Year", value: "This Year" },
           ]}
-          defaultValue={filter}
           value={filter}
           onChange={(value) => setFilter(value)}
         />
       </div>
 
       <div className="h-full">
-        {sorted.length === 0 ? (
-          <p className="text-center text-gray-500 mt-2">No Data Available</p>
+        {salesData.length === 0 ? (
+          <p className="text-center text-sm text-gray-500">
+            No sales data available for this range.
+          </p>
         ) : (
-          <Bar options={options} data={data} />
+          <Line options={options} data={data} />
         )}
       </div>
     </div>

@@ -1,18 +1,20 @@
 import { Order, OrderItem } from "@/lib/interfaces";
 import { capitalLetter } from "@/lib/utils";
 import React, { Dispatch, SetStateAction } from "react";
-import { IoIosClose } from "react-icons/io";
 import { LuPrinter } from "react-icons/lu";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import CancelButton from "./CancelButton";
+import { useSession } from "next-auth/react";
+import { IoIosCloseCircleOutline } from "react-icons/io";
+import { useQueryClient } from "@tanstack/react-query";
 
 const OrderDetailsModal = ({
   isOrderModalOpen,
@@ -25,20 +27,58 @@ const OrderDetailsModal = ({
   setIsOrderModalOpen: Dispatch<SetStateAction<boolean>>;
   hasPrint?: boolean;
 }) => {
+  const { data: session } = useSession();
+
+  const queryClient = useQueryClient();
+
+  const handlePrint = async () => {
+    window.print();
+
+    const didPrint = confirm("Did the receipt print successfully?");
+    if (!didPrint || !selectedOrder) return;
+
+    const numericId = parseInt(selectedOrder.id.replace("ORD-", ""));
+    try {
+      await fetch(`/api/request_order/${numericId}/status`, {
+        method: "PUT",
+        body: JSON.stringify({ status: "for_payment" }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["request_order"] });
+      queryClient.invalidateQueries({ queryKey: ["order_cards"] });
+      queryClient.invalidateQueries({ queryKey: ["salesData", "This Year"] });
+
+      selectedOrder.status = "For Payment";
+      setIsOrderModalOpen(false);
+    } catch (error) {
+      console.error("Failed to update status after printing", error);
+    }
+  };
+
   return (
     <>
       {isOrderModalOpen && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
-          <div className="bg-white w-full max-w-[500px] max-h-[95vh] rounded-md relative overflow-auto p-4">
+          <div
+            className="print:block bg-white w-full max-w-[500px] max-h-[95vh] rounded-md relative overflow-auto p-4"
+            id="print-section"
+          >
             <div className="space-y-2 text-sm w-full">
-              <div className="flex justify-between items-center border-b-2 border-gray-100 pb-2">
-                <div className="flex flex-col gap-2">
-                  <p className="text-lg font-semibold">{selectedOrder.id}</p>
-                  <p className="">Order details</p>
+              <div className="flex justify-between items-center border-b-2 border-gray-100 pb-2 w-full">
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex flex-col gap-2">
+                    <p className="text-lg font-semibold">{selectedOrder.id}</p>
+                    <p className="">Order details</p>
+                  </div>
+                  {session?.user.role === "Cashier" && (
+                    <button onClick={() => setIsOrderModalOpen(false)}>
+                      <IoIosCloseCircleOutline className="text-2xl text-red-500" />
+                    </button>
+                  )}
                 </div>
-                <button onClick={() => setIsOrderModalOpen(false)}>
-                  <IoIosClose className="text-2xl text-red-500 cursor-pointer" />
-                </button>
               </div>
               <div className="flex flex-col gap-5 pb-2">
                 <div className="flex gap-2">
@@ -61,9 +101,6 @@ const OrderDetailsModal = ({
               </div>
               <div className="border-t-2 pt-4">
                 <Table>
-                  <TableCaption>
-                    A list of your recent request order.
-                  </TableCaption>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[100px]" colSpan={2}>
@@ -120,14 +157,22 @@ const OrderDetailsModal = ({
                   </TableFooter>
                 </Table>
               </div>
-              <div className="flex justify-end">
-                {hasPrint ? (
-                  <button className="bg-green-500 hover:bg-green-600 text-white px-8 py-2 rounded-md flex items-center gap-2">
-                    <LuPrinter />
-                    Print
-                  </button>
-                ) : null}
-              </div>
+              {session?.user.role === "Pharmacist_Staff" && (
+                <div className="flex justify-end">
+                  {hasPrint && (
+                    <div className="flex justify-end mt-4 print:hidden gap-4">
+                      <CancelButton setIsModalOpen={setIsOrderModalOpen} />
+                      <button
+                        onClick={handlePrint}
+                        className="bg-green-500 hover:bg-green-600 text-white px-8 py-2 rounded-md flex items-center gap-2"
+                      >
+                        <LuPrinter />
+                        Print
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

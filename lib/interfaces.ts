@@ -19,7 +19,7 @@ export interface DashboardCardProps {
   icon: IconType;
   bgColor: string;
   textColor: string;
-  link:string
+  link?:string 
 }
 
 export interface Column {

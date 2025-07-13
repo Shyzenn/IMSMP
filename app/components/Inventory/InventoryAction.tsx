@@ -1,6 +1,5 @@
 "use client";
 
-import React, { useState } from "react";
 import { CiEdit } from "react-icons/ci";
 import {
   Tooltip,
@@ -11,21 +10,20 @@ import {
 import { IoArchiveOutline } from "react-icons/io5";
 import { ProductProps } from "./InventoryTable";
 import EditProductForm from "./EditProductForm";
+import { useModal } from "@/app/hooks/useModal";
 
 const Action = ({ product }: { product: ProductProps }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { open, close, isOpen } = useModal();
 
   return (
     <>
-      {isModalOpen && (
-        <EditProductForm setIsModalOpen={setIsModalOpen} product={product} />
-      )}
+      {isOpen && <EditProductForm setIsModalOpen={close} product={product} />}
 
       <div className="flex text-xl gap-2">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button onClick={() => setIsModalOpen(true)}>
+              <button onClick={open}>
                 <CiEdit />
               </button>
             </TooltipTrigger>
@@ -37,7 +35,6 @@ const Action = ({ product }: { product: ProductProps }) => {
           <Tooltip>
             <TooltipTrigger asChild>
               <button>
-                {/* <Link href={`/admin/products/editProduct/${product.id}`}> */}
                 <IoArchiveOutline />
               </button>
             </TooltipTrigger>

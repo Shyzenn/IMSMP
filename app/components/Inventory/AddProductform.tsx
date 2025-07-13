@@ -117,7 +117,11 @@ const AddProductForm = () => {
                   }`}
                   type="submit"
                 >
-                  {isSubmitting ? <LoadingButton /> : "Confirm"}
+                  {isSubmitting ? (
+                    <LoadingButton color="text-white" />
+                  ) : (
+                    "Confirm"
+                  )}
                 </button>
               </div>
             </form>

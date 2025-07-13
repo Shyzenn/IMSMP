@@ -1,7 +1,7 @@
 import { addRequestOrderSchema } from "@/lib/types";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { capitalLetter } from "@/lib/utils";
+import formatStatus, { capitalLetter } from "@/lib/utils";
 import { auth } from "@/auth";
 import { NotificationType } from "@prisma/client";
 import { sendNotification } from "@/server";
@@ -101,6 +101,7 @@ export async function POST(req: Request) {
 
 
 export async function GET() {
+
   try {
     const orders = await db.orderRequest.findMany({
       include: {
@@ -113,7 +114,7 @@ export async function GET() {
       orderBy: {
         createdAt: 'desc',
       },
-      take:10
+      take:50
     });
 
     const formattedOrders = orders.map((order) => { 
@@ -125,8 +126,8 @@ export async function GET() {
         id: customId,
         patient_name: `${order.patient_name ? capitalLetter(order.patient_name) : 'Unknown'}`,
         roomNumber: `${order.room_number ? capitalLetter(order.room_number) : 'Unknown'}`,
-        createdAt: order.createdAt.toISOString(),
-        status: capitalLetter(order.status),
+        createdAt: order.createdAt,
+        status: formatStatus(order.status),
         items: `${totalItems} item${totalItems !== 1 ? 's' : ''}`, 
         itemDetails: order.items.map((item) => ({
           productName: item.product.product_name,

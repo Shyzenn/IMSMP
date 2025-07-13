@@ -89,18 +89,32 @@ input[type="number"] {
     visibility: hidden;
   }
 
+  #print-section,
+  #print-section * {
+    visibility: visible;
+  }
+
+  #print-section {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 20px;
+  }
+
   .print\:hidden {
     display: none !important;
   }
-
-  .print\:block {
-    display: block !important;
+  .overflow-auto {
+    max-height: none !important;
+    overflow: visible !important;
   }
-
-  .print\:visible {
-    visibility: visible !important;
+   @page {
+    size: auto;
+    margin: 0;
   }
 }
+
 
 
 

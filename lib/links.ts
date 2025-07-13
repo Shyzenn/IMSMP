@@ -49,3 +49,13 @@ export const pharmacistLinks = [
   },
   { name: "Transaction", href: "/pharmacist_transaction", icon: GrTransaction },
 ]
+
+export const cashierLinks = [
+  {
+    name: "Dashboard",
+    href: "/cashier_dashboard",
+    icon: RiDashboardHorizontalLine,
+
+  },
+  { name: "Transaction", href: "/cashier_transaction", icon: GrTransaction }
+]

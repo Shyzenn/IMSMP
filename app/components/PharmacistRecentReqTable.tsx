@@ -2,14 +2,23 @@
 
 import React, { useMemo, useState } from "react";
 import TableComponent from "./TableComponent";
-import { relativeTime } from "@/lib/utils";
+import { formattedDate } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import OrderDetailsModal from "./OrderDetailsModal";
 import { Column, Order } from "@/lib/interfaces";
-import { CheckCircle, Clock, LoaderCircle } from "lucide-react";
+import { CheckCircle, Clock } from "lucide-react";
 import axios from "axios";
 import { RecentRequestOrderSkeleton } from "./Skeleton";
-export const columns: Column[] = [
+import LoadingButton from "@/components/loading-button";
+import { useSession } from "next-auth/react";
+import CashierReqOrderAction from "./CashierReqOrderAction";
+
+export const fetchOrderRequest = async () => {
+  const { data } = await axios.get("/api/request_order");
+  return Array.isArray(data) ? data : [];
+};
+
+export const baseColumns: Column[] = [
   { label: "Order ID", accessor: "id" },
   { label: "Customer Name", accessor: "patient_name" },
   { label: "Date Placed", accessor: "createdAt" },
@@ -31,7 +40,7 @@ export const columns: Column[] = [
       } else if (status === "For Payment") {
         bg = "bg-yellow-100";
         text = "text-yellow-700";
-        icon = <LoaderCircle className="w-4 h-4 text-yellow-500" />;
+        icon = <LoadingButton color="text-yellow-400" />;
       }
 
       return (
@@ -46,14 +55,11 @@ export const columns: Column[] = [
   },
 ];
 
-export const fetchOrderRequest = async () => {
-  const { data } = await axios.get("/api/request_order");
-  return Array.isArray(data) ? data : [];
-};
-
 const ManagerRecentReqTable = () => {
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const { data: session } = useSession();
+  const userRole = session?.user.role;
 
   const { data: orderRequest = [], isLoading } = useQuery({
     queryKey: ["request_order"],
@@ -61,14 +67,49 @@ const ManagerRecentReqTable = () => {
     refetchInterval: 5000,
   });
 
-  const formattedData = useMemo(
-    () =>
-      orderRequest.map((order) => ({
-        ...order,
-        createdAt: relativeTime(order.createdAt),
-      })),
-    [orderRequest]
-  );
+  const columns: Column[] = useMemo(() => {
+    if (userRole === "Cashier") {
+      return [
+        ...baseColumns,
+        {
+          label: "Action",
+          accessor: "action",
+          align: "right",
+          render: (row) => {
+            const originalOrder = orderRequest.find((o) => o.id === row.id);
+
+            return (originalOrder && row.status === "For Payment") ||
+              row.status === "Paid" ? (
+              <CashierReqOrderAction
+                orderId={originalOrder.id}
+                onView={() => {
+                  setSelectedOrder(originalOrder);
+                  setIsOrderModalOpen(true);
+                }}
+                status={row.status}
+              />
+            ) : null;
+          },
+        },
+      ];
+    }
+
+    return baseColumns;
+  }, [userRole, orderRequest]);
+
+  const formattedData = useMemo(() => {
+    const filtered =
+      userRole === "Cashier"
+        ? orderRequest.filter(
+            (order) => order.status === "For Payment" || order.status === "Paid"
+          )
+        : orderRequest;
+
+    return filtered.map((order) => ({
+      ...order,
+      createdAt: formattedDate(order.createdAt),
+    }));
+  }, [orderRequest, userRole]);
 
   if (isLoading) return <RecentRequestOrderSkeleton />;
 
@@ -80,7 +121,9 @@ const ManagerRecentReqTable = () => {
           data={formattedData}
           columns={columns}
           setIsOrderModalOpen={setIsOrderModalOpen}
-          onRowClick={(row) => setSelectedOrder(row)}
+          onRowClick={(row) => {
+            setSelectedOrder(row);
+          }}
           interactiveRows={true}
           noDataMessage={
             orderRequest.length === 0 ? "No Recent Order" : undefined

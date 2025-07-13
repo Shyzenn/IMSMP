@@ -150,7 +150,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
               type="submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? <LoadingButton /> : "Sign Up"}
+              {isSubmitting ? <LoadingButton color="text-white" /> : "Sign Up"}
             </Button>
           </form>
         </CardContent>

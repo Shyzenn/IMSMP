@@ -14,7 +14,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { capitalLetter, formattedDate } from "@/lib/utils";
 import OrderDetailsModal from "./OrderDetailsModal";
 import FormField from "./FormField";
-import { columns, fetchOrderRequest } from "./PharmacistRecentReqTable";
+import { baseColumns, fetchOrderRequest } from "./PharmacistRecentReqTable";
 import { addRequesOrder } from "@/lib/action/add";
 import CancelButton from "./CancelButton";
 import { useModal } from "../hooks/useModal";
@@ -156,7 +156,7 @@ const RecentRequestOrder = () => {
           }
           title="Recent Request Order"
           data={formattedData}
-          columns={columns}
+          columns={baseColumns}
           setIsOrderModalOpen={setIsOrderModalOpen}
           onRowClick={(row) => setSelectedOrder(row)}
           interactiveRows={true}
@@ -389,7 +389,11 @@ const RecentRequestOrder = () => {
                   }`}
                   disabled={isQuantityExceeded || isSubmitting}
                 >
-                  {isSubmitting ? <LoadingButton /> : "Submit"}
+                  {isSubmitting ? (
+                    <LoadingButton color="text-white" />
+                  ) : (
+                    "Submit"
+                  )}
                 </button>
               </div>
             </form>

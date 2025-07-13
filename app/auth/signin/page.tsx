@@ -106,7 +106,11 @@ const Login = () => {
               type="submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? <LoadingButton /> : "Sign in"}
+              {isSubmitting ? (
+                <LoadingButton color={"text-white"} />
+              ) : (
+                "Sign in"
+              )}
             </Button>
           </form>
         </CardContent>

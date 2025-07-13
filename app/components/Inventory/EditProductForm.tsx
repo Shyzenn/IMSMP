@@ -131,7 +131,7 @@ const EditProductForm = ({
               }`}
               type="submit"
             >
-              {isSubmitting ? <LoadingButton /> : "Save"}
+              {isSubmitting ? <LoadingButton color="text-white" /> : "Save"}
             </button>
           </div>
         </form>
