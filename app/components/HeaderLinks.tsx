@@ -1,4 +1,4 @@
-import { cashierLinks, pharmacistLinks } from "@/lib/links";
+import { cashierLinks, managerLinks, pharmacistLinks } from "@/lib/links";
 import { nurseLinks } from "@/lib/links";
 import { isActive } from "@/lib/utils";
 import { Session } from "next-auth";
@@ -10,6 +10,7 @@ const roleLinksMap: Record<string, { name: string; href: string }[]> = {
   Pharmacist_Staff: pharmacistLinks,
   Nurse: nurseLinks,
   Cashier: cashierLinks,
+  Manager: managerLinks,
 };
 
 const HeaderLinks = ({ session }: { session: Session | null }) => {
@@ -26,7 +27,7 @@ const HeaderLinks = ({ session }: { session: Session | null }) => {
           <li key={link.name} className="relative">
             <Link
               href={link.href || "/"}
-              className={`px-6 py-2 rounded-full text-sm transition-colors duration-300 relative
+              className={`px-6 py-2 rounded-full text-sm transition-colors duration-300 relative hover:text-green-600
                 ${active ? "text-green-600 font-medium" : "text-gray-600"}
                 after:absolute after:left-1/2 after:bottom-1 after:h-[2px] 
                 after:bg-green-600 after:transition-all after:duration-300 

@@ -70,29 +70,23 @@ export function RecentRequestOrderSkeleton() {
   );
 }
 
-export function TableRowSkeleton() {
+export function TableRowSkeleton({
+  headerLabel,
+}: {
+  headerLabel: { key: string; label: string }[];
+}) {
   return (
     <>
       <div className=" bg-white animate-pulse mx-4 min-h-[300px] max-h-[300px]">
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-100">
-              <TableHead className="text-black font-semibold">
-                Product
-              </TableHead>
-              <TableHead className="text-black font-semibold">
-                Quantity
-              </TableHead>
-              <TableHead className="text-black font-semibold">
-                Category
-              </TableHead>
-              <TableHead className="text-black font-semibold">Price</TableHead>
-              <TableHead className="text-black font-semibold">
-                Release Date
-              </TableHead>
-              <TableHead className="text-black font-semibold">
-                Expiry Date
-              </TableHead>
+              {Array.isArray(headerLabel) &&
+                headerLabel.map((col) => (
+                  <TableHead className="text-black font-semibold" key={col.key}>
+                    {col.label}
+                  </TableHead>
+                ))}
             </TableRow>
           </TableHeader>
           <TableBody>

@@ -1,3 +1,4 @@
+import { Status } from "@prisma/client";
 import { clsx, type ClassValue } from "clsx"
 import { formatDistanceToNow } from "date-fns";
 import { twMerge } from "tailwind-merge"
@@ -34,6 +35,35 @@ export default function formatStatus(rawStatus: string) {
 
   return statusMap[rawStatus] || capitalLetter(rawStatus);
 }
+
+export type TransactionFilter =
+  | "all"
+  | "walk_in"
+  | "request_order"
+  | "paid"
+  | "pending"
+  | "for_payment";
+
+export const isWalkInFilterEnabled = (filter: TransactionFilter) => {
+  return filter === "all" || filter === "paid" || filter === "walk_in";
+};
+
+export const isRequestOrderFilterEnabled = (filter: TransactionFilter) => {
+  return (
+    filter === "all" ||
+    filter === "paid" ||
+    filter === "pending" ||
+    filter === "for_payment" ||
+    filter === "request_order"
+  );
+};
+
+export const mapStatus = (filter: TransactionFilter): Status | undefined => {
+  if (filter === "paid") return Status.paid;
+  if (filter === "pending") return Status.pending;
+  if (filter === "for_payment") return Status.for_payment;
+  return undefined;
+};
 
 export const pageTitles: Record<string, string> = {
     "/dashboard": "Dashboard",

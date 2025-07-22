@@ -14,6 +14,7 @@ import { useSession } from "next-auth/react";
 import CashierReqOrderAction from "./CashierReqOrderAction";
 
 export const fetchOrderRequest = async () => {
+  console.log("fetching /api/request_order");
   const { data } = await axios.get("/api/request_order");
   return Array.isArray(data) ? data : [];
 };

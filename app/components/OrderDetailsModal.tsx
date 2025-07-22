@@ -28,6 +28,7 @@ const OrderDetailsModal = ({
   hasPrint?: boolean;
 }) => {
   const { data: session } = useSession();
+  const userRole = session?.user.role;
 
   const queryClient = useQueryClient();
 
@@ -73,7 +74,9 @@ const OrderDetailsModal = ({
                     <p className="text-lg font-semibold">{selectedOrder.id}</p>
                     <p className="">Order details</p>
                   </div>
-                  {session?.user.role === "Cashier" && (
+                  {(userRole === "Cashier" ||
+                    userRole === "Manager" ||
+                    userRole === "Nurse") && (
                     <button onClick={() => setIsOrderModalOpen(false)}>
                       <IoIosCloseCircleOutline className="text-2xl text-red-500" />
                     </button>

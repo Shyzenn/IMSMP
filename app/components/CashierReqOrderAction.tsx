@@ -1,5 +1,4 @@
 import { IoMdCheckmark, IoMdClose, IoMdEye } from "react-icons/io";
-import ConfirmationModal from "./ConfirmationModal";
 import ActionButton from "./ActionButton";
 import { Button } from "@/components/ui/button";
 import { useModal } from "../hooks/useModal";
@@ -23,7 +22,7 @@ const CashierReqOrderAction = ({
 
   const queryClient = useQueryClient();
 
-  const { mutate, isPending, isSuccess, isError, error } = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: async () => {
       const numericId = parseInt(orderId.replace("ORD-", ""));
       const res = await fetch(`/api/request_order/${numericId}/status`, {

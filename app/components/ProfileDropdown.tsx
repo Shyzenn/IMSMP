@@ -43,7 +43,7 @@ const ProfileDropdown = ({ session }: { session: Session | null }) => {
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <Link href={"/pharmacist_settings"}>
+          <Link href={"/manager_settings"}>
             <DropdownMenuItem>Settings</DropdownMenuItem>
           </Link>
 

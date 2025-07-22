@@ -38,7 +38,7 @@ const Search = ({ placeholder }: { placeholder: string }) => {
       <CiSearch className="text-xl text-gray-400" />
       <input
         placeholder={placeholder}
-        className="w-full py-2 outline-none"
+        className="w-full py-2 outline-none bg-gray-50"
         value={searchTerm}
         onChange={(e) => {
           setSearchTerm(e.target.value); // Update state on change

@@ -3,11 +3,199 @@
 import { Decimal } from "@prisma/client/runtime/library";
 import { Category, Prisma } from "@prisma/client";
 import { db } from "../db";
+import { OrderItem } from "../interfaces";
+import formatStatus, { isRequestOrderFilterEnabled, isWalkInFilterEnabled, mapStatus, TransactionFilter } from "../utils";
 
+type CombinedTransaction = {
+  id: number;
+  customer: string;
+  quantity: number;
+  price: number;
+  total: number;
+  status: string;
+  createdAt: Date;
+  source: "Walk In" | "Request Order";
+  orderItems: OrderItem[]
+};
 
 // Search and pagination
 const ITEMS_PER_PAGE = 14;
 
+// Transaction
+export const getTransactionList = async (
+  query: string,
+  currentPage: number,
+  filter: string,
+  sortBy: string = "createdAt", 
+  sortOrder: "asc" | "desc" = "desc"
+): Promise<CombinedTransaction[]> => {
+  const ITEMS_PER_PAGE = 14;
+  const skip = (currentPage - 1) * ITEMS_PER_PAGE;
+  const safeQuery = typeof query === "string" ? query.toLowerCase().trim() : "";
+
+  const whereRequestOrder: Prisma.OrderRequestWhereInput = {
+    AND: [
+      query && { patient_name: { contains: safeQuery } },
+      filter !== "all" && { status: mapStatus(filter as TransactionFilter) },
+    ].filter(Boolean) as Prisma.OrderRequestWhereInput[],
+  };
+
+  const includeWalkIn = isWalkInFilterEnabled(filter as TransactionFilter);
+  const includeRequest = isRequestOrderFilterEnabled(filter as TransactionFilter);
+
+  const validSortFields = ["customer", "createdAt", "quantity", "total"];
+  const safeSortBy = validSortFields.includes(sortBy) ? sortBy : "createdAt";
+  const safeSortByRequest = sortBy === "customer_name" ? "patient_name" : safeSortBy;
+  const safeSortByWalkIn = sortBy === "customer_name" ? "customer_name" : safeSortBy;
+  const dbSortableFields = ["createdAt", "customer_name"];
+  const isDbSortable = dbSortableFields.includes(sortBy);
+
+ const [requestOrders, walkinOrders] = await Promise.all([
+  includeRequest ?
+    db.orderRequest.findMany({
+      where: whereRequestOrder,
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      }, 
+    orderBy: isDbSortable ? { [safeSortByRequest]: sortOrder } : { createdAt: "desc" },
+    }): Promise.resolve([]),
+    (filter === "all" || filter === "paid" || includeWalkIn)
+    ? db.walkInTransaction.findMany({
+       where: {
+        AND: [
+          ...(query ? [{ customer_name: { contains: safeQuery } }] : []),
+            ].filter(Boolean)
+        },
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
+          },
+        },
+       orderBy: isDbSortable ? { [safeSortByWalkIn]: sortOrder } : { createdAt: "desc" },
+      })
+    : Promise.resolve([]),
+    ]);
+
+
+  const formattedWalkIn = walkinOrders.map((tx) => ({
+    id: tx.id,
+    customer: tx.customer_name?.trim() || "Unknown",
+    createdAt: tx.createdAt,
+    status: "Paid",
+    source: "Walk In" as const,
+    quantity: tx.items.reduce((sum, item) => sum + item.quantity, 0),
+    price: tx.items.reduce((sum, item) => sum + item.price.toNumber(), 0),
+    total: tx.totalAmount.toNumber(),
+    orderItems: tx.items.map((item) => ({
+      productName: item.product.product_name,
+      quantity: item.quantity,
+      price: item.price.toNumber(),
+    })),
+  }));
+
+  const formattedRequest = requestOrders.map((tx) => ({
+    id: tx.id,
+    customer: tx.patient_name || "Unknown",
+    createdAt: tx.createdAt,
+    status: formatStatus(tx.status),
+    source: "Request Order" as const,
+    quantity: tx.items.reduce((sum, item) => sum + item.quantity, 0),
+    price: tx.items.reduce((sum, item) => sum + item.product.price.toNumber(), 0),
+    total: tx.items.reduce(
+      (sum, item) => sum + item.quantity * item.product.price.toNumber(),
+      0
+    ),
+    orderItems: tx.items.map((item) => ({
+      productName: item.product.product_name,
+      quantity: item.quantity,
+      price: item.product.price.toNumber(),
+    })),
+  }));
+
+  const combined = [...formattedWalkIn, ...formattedRequest];
+
+ const sorted = combined.sort((a, b) => {
+  let fieldA: string | number | Date;
+  let fieldB: string | number | Date;
+
+    switch (sortBy) {
+      case "customer_name":
+        fieldA = a.customer.toLowerCase();
+        fieldB = b.customer.toLowerCase();
+        break;
+      case "createdAt":
+        fieldA = a.createdAt;
+        fieldB = b.createdAt;
+        break;
+      case "quantity":
+        fieldA = a.quantity;
+        fieldB = b.quantity;
+        break;
+      case "total":
+        fieldA = a.total;
+        fieldB = b.total;
+        break;
+      default:
+        fieldA = a.createdAt;
+        fieldB = b.createdAt;
+    }
+
+    if (fieldA < fieldB) return sortOrder === "asc" ? -1 : 1;
+    if (fieldA > fieldB) return sortOrder === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const paginated = sorted.slice(skip, skip + ITEMS_PER_PAGE);
+
+  return paginated;
+};
+
+
+export async function fetchTransactionPages(query: string, filter: string) {
+  const safeQuery = query.toLowerCase().trim();
+
+  const whereRequestOrder = {
+    AND: [
+      query && { patient_name: { contains: safeQuery } },
+      ["pending", "for_payment", "paid"].includes(filter) && { status: mapStatus(filter as TransactionFilter) }
+    ].filter(Boolean) as Prisma.OrderRequestWhereInput[],
+  };
+
+  const whereWalkIn = {
+    AND: [
+      query && { customer_name: { contains: safeQuery } },
+    ].filter(Boolean) as Prisma.WalkInTransactionWhereInput[],
+  };
+
+  let total;
+
+  if (filter === "walk_in") {
+    total = await db.walkInTransaction.count({ where: whereWalkIn });
+  } else if (["pending", "for_payment", "paid"].includes(filter)) {
+    total = await db.orderRequest.count({ where: whereRequestOrder });
+  } else {
+    const [walkinCount, requestCount] = await Promise.all([
+      isWalkInFilterEnabled(filter as TransactionFilter)
+        ? db.walkInTransaction.count({ where: whereWalkIn })
+        : Promise.resolve(0),
+      isRequestOrderFilterEnabled(filter as TransactionFilter)
+        ? db.orderRequest.count({ where: whereRequestOrder })
+        : Promise.resolve(0),
+    ]);
+    total = walkinCount + requestCount;
+  }
+
+  return Math.ceil(total / 14);
+}
+
+
+//Inventory
 export const getProductList = async (
   query: string,
   currentPage: number,

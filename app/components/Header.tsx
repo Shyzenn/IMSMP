@@ -20,6 +20,7 @@ import {
 
 const Header = () => {
   const { data: session } = useSession();
+  const userRole = session?.user.role;
   const { notifications, setNotifications, connectionStatus } =
     usePharmacistNotifications(session?.user.id, session?.user.role);
 
@@ -64,42 +65,41 @@ const Header = () => {
       <MemoMobileMenu />
       <HeaderLinks session={session} />
       <div className="flex items-center relative">
-        {session?.user.role === "Pharmacist_Staff" && (
-          <>
-            <WalkInOrder />
-            <div className="relative flex items-center mr-8">
-              {/*Notification*/}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      className={`mr-text-2xl cursor-pointer p-2 rounded-full relative 
-              hover:bg-gray-200 ${dropdown ? "bg-gray-200" : "bg-white"}`}
-                      tabIndex={0}
-                      aria-label="Notifications"
-                      onClick={handleBellClick}
-                    >
-                      <PiBellThin className="text-2xl" />
-                      {unreadCount > 0 && (
-                        <div className="absolute bg-red-500 w-4 h-4 rounded-full -top-1 right-0 text-white text-center text-[10px]">
-                          {unreadCount}
-                        </div>
-                      )}
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Notifications</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+        {userRole === "Pharmacist_Staff" && <WalkInOrder />}
 
-              <NotificationList
-                dropdown={dropdown}
-                notifications={notifications}
-                connectionStatus={connectionStatus}
-              />
-            </div>
-          </>
+        {(userRole === "Pharmacist_Staff" || userRole === "Manager") && (
+          <div className="relative flex items-center mr-8">
+            {/*Notification*/}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className={`mr-text-2xl cursor-pointer p-2 rounded-full relative 
+              hover:bg-gray-200 ${dropdown ? "bg-gray-200" : "bg-white"}`}
+                    tabIndex={0}
+                    aria-label="Notifications"
+                    onClick={handleBellClick}
+                  >
+                    <PiBellThin className="text-2xl" />
+                    {unreadCount > 0 && (
+                      <div className="absolute bg-red-500 w-4 h-4 rounded-full -top-1 right-0 text-white text-center text-[10px]">
+                        {unreadCount}
+                      </div>
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Notifications</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <NotificationList
+              dropdown={dropdown}
+              notifications={notifications}
+              connectionStatus={connectionStatus}
+            />
+          </div>
         )}
 
         <TooltipProvider>

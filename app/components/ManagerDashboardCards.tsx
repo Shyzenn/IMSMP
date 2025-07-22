@@ -11,6 +11,7 @@ import {
 } from "react-icons/tb";
 import axios from "axios";
 import { ManagerCardSkeleton } from "./Skeleton";
+import { useSession } from "next-auth/react";
 
 const fetchManagerCardData = async () => {
   const { data } = await axios.get("api/manager/manager_card");
@@ -18,6 +19,9 @@ const fetchManagerCardData = async () => {
 };
 
 const ManagerDashboardCards = () => {
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
+
   const { data: managerCard = [], isLoading } = useQuery({
     queryFn: fetchManagerCardData,
     queryKey: ["manager_cards"],
@@ -29,6 +33,11 @@ const ManagerDashboardCards = () => {
 
   const [totalProducts, lowStockArray, highStockArray, expiring] = managerCard;
 
+  const basePath =
+    userRole === "Pharmacist_Staff"
+      ? "pharmacist_inventory"
+      : "manager_inventory";
+
   const managerCards = [
     {
       title: "Product",
@@ -36,7 +45,8 @@ const ManagerDashboardCards = () => {
       icon: TbShoppingCart,
       bgColor: "bg-blue-50",
       textColor: "text-blue-500",
-      link: "/pharmacist_inventory?query=&page=1&filter=all&sort=releaseDate&order=desc",
+
+      link: `${basePath}?query=&page=1&filter=all&sort=releaseDate&order=desc`,
     },
     {
       title: "Low Stock",
@@ -44,7 +54,7 @@ const ManagerDashboardCards = () => {
       icon: TbShoppingCartDown,
       bgColor: "bg-orange-50",
       textColor: "text-orange-500",
-      link: "/pharmacist_inventory?query=&page=1&filter=all&sort=quantity&order=asc",
+      link: `/${basePath}?query=&page=1&filter=all&sort=quantity&order=asc`,
     },
     {
       title: "High Stock",
@@ -52,7 +62,7 @@ const ManagerDashboardCards = () => {
       icon: TbShoppingCartUp,
       bgColor: "bg-green-50",
       textColor: "text-green-500",
-      link: "/pharmacist_inventory?query=&page=1&filter=all&sort=quantity&order=desc",
+      link: `/${basePath}?query=&page=1&filter=all&sort=quantity&order=desc`,
     },
     {
       title: "Expiring Soon",
@@ -60,7 +70,7 @@ const ManagerDashboardCards = () => {
       icon: TbShoppingCartX,
       bgColor: "bg-red-50",
       textColor: "text-red-500",
-      link: "/pharmacist_inventory?query=&page=1&filter=all&sort=expiryDate&order=asc",
+      link: `/${basePath}?query=&page=1&filter=all&sort=expiryDate&order=asc`,
     },
   ];
 

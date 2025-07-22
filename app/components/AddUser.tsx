@@ -87,8 +87,8 @@ const AddUser = () => {
       <AddButton
         onClick={() => setIsOpen(true)}
         label="Add User"
-        icon={<FiPlus />}
-        className=""
+        icon={<FiPlus className="text-lg" />}
+        className="px-8 flex items-center py-2 gap-2"
       />
     </>
   );

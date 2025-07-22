@@ -343,7 +343,11 @@ const WalkInOrder = () => {
                   }`}
                   disabled={isQuantityExceeded || isSubmitting}
                 >
-                  {isSubmitting ? <LoadingButton /> : "Submit"}
+                  {isSubmitting ? (
+                    <LoadingButton color="text-white" />
+                  ) : (
+                    "Submit"
+                  )}
                 </button>
               </div>
             </form>

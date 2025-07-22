@@ -35,6 +35,22 @@ export const nurseLinks = [
   },
 ];
 
+export const managerLinks = [
+  
+  {
+    name: "Dashboard",
+    href: "/dashboard",
+    icon: RiDashboardHorizontalLine,
+  },
+  {
+    name: "Inventory",
+    href: "/manager_inventory",
+    icon: MdOutlineInventory2,
+  },
+
+  { name: "Transaction", href: "/transaction", icon: GrTransaction },
+]
+
 export const pharmacistLinks = [
   
   {
