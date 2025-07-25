@@ -12,13 +12,20 @@ import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { ManagerCardSkeleton } from "./Skeleton";
 
-const fetchOrderCardData = async () => {
+type OrderCardData = {
+  totalRevenue: number;
+  totalSalesToday: number;
+  totalOrders: number;
+  forPayment: number;
+};
+
+const fetchOrderCardData = async (): Promise<OrderCardData> => {
   const { data } = await axios.get("api/request_order/sales_cards");
-  return Array.isArray(data) ? data : [];
+  return data;
 };
 
 const CashierDashboardCards = () => {
-  const { data: orderCard = [], isLoading } = useQuery({
+  const { data: orderCard = {} as OrderCardData, isLoading } = useQuery({
     queryFn: fetchOrderCardData,
     queryKey: ["order_cards"],
     refetchInterval: 5000,
@@ -28,7 +35,12 @@ const CashierDashboardCards = () => {
     return <ManagerCardSkeleton />;
   }
 
-  const [totalRevenue, totalSalesToday, totalOrders, forPayment] = orderCard;
+  const {
+    totalRevenue = 0,
+    totalSalesToday = 0,
+    totalOrders = 0,
+    forPayment = 0,
+  } = orderCard;
 
   const cashierCards = [
     {

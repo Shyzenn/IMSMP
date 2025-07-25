@@ -17,21 +17,39 @@ export async function GET(req: Request) {
   }
 
   try {
-    const paidOrders = await db.orderRequest.findMany({
-      where: {
-        status: "paid",
-        createdAt: {
-          gte: fromDate,
-        },
-      },
-      include: {
-        items: {
-          include: {
-            product: true,
+
+    const [paidOrders, paidWalkIns] = await Promise.all([
+      db.orderRequest.findMany({
+        where: {
+          status: "paid",
+          createdAt: {
+            gte: fromDate,
           },
         },
-      },
-    });
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      }),
+      db.walkInTransaction.findMany({
+        where: {
+          status: "paid",
+          createdAt: {
+            gte: fromDate,
+          },
+        },
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      }),
+    ])
 
     const dailySalesMap = new Map<string, number>();
 
@@ -42,6 +60,17 @@ export async function GET(req: Request) {
         return sum + price * item.quantity;
       }, 0);
 
+      dailySalesMap.set(dateStr, (dailySalesMap.get(dateStr) || 0) + total);
+    }
+
+     for (const order of paidWalkIns) {
+      const dateStr = order.createdAt.toISOString().split("T")[0];
+      const total = order.items.reduce((sum, item) => {
+        const price = typeof item.product.price === "number"
+          ? item.product.price
+          : Number(item.product.price);
+        return sum + price * item.quantity;
+      }, 0);
       dailySalesMap.set(dateStr, (dailySalesMap.get(dateStr) || 0) + total);
     }
 

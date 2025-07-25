@@ -22,7 +22,6 @@ model User {
   ReceivedNotification Notification[] @relation("ReceivedNotification")
 }
 
-
 enum Role {
   Pharmacist_Staff
   Nurse
@@ -74,6 +73,7 @@ model WalkInTransaction {
   customer_name  String?       
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+  status         Status
   items          WalkInItem[]
   totalAmount    Decimal       @default(0.00)
   userId         String        // pharmacist who encoded the walk-in
@@ -91,7 +91,6 @@ model WalkInItem {
   transaction   WalkInTransaction @relation(fields: [transactionId], references: [id])
   transactionId Int
 }
-
 
 enum Status {
   pending

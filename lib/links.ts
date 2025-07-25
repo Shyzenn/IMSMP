@@ -29,8 +29,13 @@ export const nurseLinks = [
     icon: RiDashboardHorizontalLine,
   },
   {
+    name: "Inventory",
+    href: "/nurse_inventory",
+    icon: MdOutlineInventory2,
+  },
+  {
     name: "Transaction",
-    href: "/(nurse)/transaction",
+    href: "/nurse_transaction",
     icon: GrTransaction,
   },
 ];

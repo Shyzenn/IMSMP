@@ -31,7 +31,7 @@ const NurseLowStockList = () => {
 
   return (
     <div className="bg-white w-[40%] rounded-md h-full">
-      <div className="max-h-[260px] overflow-auto mx-4">
+      <div className="max-h-[230px] overflow-auto mx-4">
         <TableComponent
           data={lowStocks}
           columns={columns}

@@ -67,6 +67,7 @@ export async function POST(req: Request) {
           customer_name,
           totalAmount: grandTotal,
           userId,
+          status: "paid",
           items: { create: orderItems },
         },
       });

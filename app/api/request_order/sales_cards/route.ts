@@ -7,64 +7,109 @@ export async function GET() {
     const today = new Date();
 
     // Fetch all paid orders
-    const paidOrders = await db.orderRequest.findMany({
-      where: { status: "paid" },
-      include: {
-        items: {
-          include: { product: true },
+    const [paidOrderRequest, paidWalkIn] = await Promise.all([
+      db.orderRequest.findMany({
+        where: { status: "paid" },
+        include: {
+          items: {
+            include: { product: true },
+          },
         },
-      },
-    });
+      }),
+      db.walkInTransaction.findMany({
+        where: { status: "paid" },
+        include: {
+          items: {
+            include: { product: true },
+          },
+        },
+      })
+    ])
 
     // Calculate total revenue
-    const totalRevenue = paidOrders.reduce((acc, order) => {
+    const orderRequesttotalRevenue = paidOrderRequest.reduce((acc, order) => {
       const orderTotal = order.items.reduce((sum, item) => {
-        return sum + Number(item.product.price) * item.quantity;
+        return sum + (Number(item.product.price) || 0) * item.quantity;
       }, 0);
       return acc + orderTotal;
     }, 0);
+
+    const walkInttotalRevenue = paidWalkIn.reduce((acc, order) => {
+      const orderTotal = order.items.reduce((sum, item) => {
+        return sum + (Number(item.product.price) || 0) * item.quantity;
+      }, 0);
+      return acc + orderTotal;
+    }, 0);
+
+    const totalRevenue = orderRequesttotalRevenue + walkInttotalRevenue
 
     // Fetch all orders made today
-    const ordersToday = await db.orderRequest.findMany({
-      where: {
-        createdAt: {
-          gte: startOfDay(today),
-          lte: endOfDay(today),
+    const [orderRequestordersToday, walkInordersToday] = await Promise.all([
+      db.orderRequest.findMany({
+        where: {
+          createdAt: {
+            gte: startOfDay(today),
+            lte: endOfDay(today),
+          },
+          status: "paid",
         },
-        status: "paid",
-      },
-      include: {
-        items: {
-          include: { product: true },
+        include: {
+          items: {
+            include: { product: true },
+          },
         },
-      },
-    });
+      }),
 
-    const totalSalesToday = ordersToday.reduce((acc, order) => {
+      db.walkInTransaction.findMany({
+        where: {
+          createdAt: {
+            gte: startOfDay(today),
+            lte: endOfDay(today),
+          },
+          status: "paid",
+        },
+        include: {
+          items: {
+            include: { product: true },
+          },
+        },
+      })
+    ])
+
+    const OrderRequesttotalSalesToday = orderRequestordersToday.reduce((acc, order) => {
       const orderTotal = order.items.reduce((sum, item) => {
-        return sum + Number(item.product.price) * item.quantity;
+        return sum + (Number(item.product.price) || 0) * item.quantity;
       }, 0);
       return acc + orderTotal;
     }, 0);
 
+    const walkIntotalSalesToday = walkInordersToday.reduce((acc, order) => {
+      const orderTotal = order.items.reduce((sum, item) => {
+        return sum + (Number(item.product.price) || 0) * item.quantity;
+      }, 0);
+      return acc + orderTotal;
+    }, 0);
+
+    const totalSalesToday = OrderRequesttotalSalesToday + walkIntotalSalesToday
+
     // Count all orders
-    const totalOrders = await db.orderRequest.count();
+    const [orderRequesttotalOrders, walkIntotalOrders] = await Promise.all([
+        db.orderRequest.count(), db.walkInTransaction.count()
+    ])
+
+    const totalOrders = orderRequesttotalOrders + walkIntotalOrders
 
     // Count all pending payment
     const forPayment = await db.orderRequest.count({
       where: { status: "for_payment" },
     });
 
-    const data = await Promise.all([
-            totalRevenue,
-            totalSalesToday,
-            totalOrders,
-            forPayment
-        ])
-
-    return NextResponse.json(
-      data, {status: 200}
-    );
+    return NextResponse.json({
+      totalRevenue,
+      totalSalesToday,
+      totalOrders,
+      forPayment,
+    }, { status: 200 });
 
   } catch (error) {
     console.error("Error fetching cards data", error);

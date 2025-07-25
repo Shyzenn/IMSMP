@@ -31,9 +31,7 @@ async function Transaction(props: {
   const filter = searchParams?.filter;
 
   if (!filter || !page) {
-    redirect(
-      `/pharmacist_transaction?page=1&filter=all&sort=createdAt&order=desc`
-    );
+    redirect(`/nurse_transaction?page=1&filter=all&sort=createdAt&order=desc`);
   }
 
   const sortBy = searchParams?.sort || "createdAt";

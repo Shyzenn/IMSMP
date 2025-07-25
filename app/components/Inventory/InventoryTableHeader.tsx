@@ -6,6 +6,7 @@ import React from "react";
 import { LuArrowDownUp } from "react-icons/lu";
 
 const sortableHeaders = [
+  { key: "number", label: "No." },
   { key: "product_name", label: "Product" },
   { key: "quantity", label: "Quantity" },
   { key: "price", label: "Price" },

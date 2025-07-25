@@ -4,7 +4,7 @@ import { Decimal } from "@prisma/client/runtime/library";
 import { Category, Prisma } from "@prisma/client";
 import { db } from "../db";
 import { OrderItem } from "../interfaces";
-import formatStatus, { isRequestOrderFilterEnabled, isWalkInFilterEnabled, mapStatus, TransactionFilter } from "../utils";
+import formatStatus, { isRequestOrderFilterEnabled, isWalkInFilterEnabled, ITEMS_PER_PAGE, mapStatus, TransactionFilter } from "../utils";
 
 type CombinedTransaction = {
   id: number;
@@ -18,9 +18,6 @@ type CombinedTransaction = {
   orderItems: OrderItem[]
 };
 
-// Search and pagination
-const ITEMS_PER_PAGE = 14;
-
 // Transaction
 export const getTransactionList = async (
   query: string,
@@ -29,15 +26,23 @@ export const getTransactionList = async (
   sortBy: string = "createdAt", 
   sortOrder: "asc" | "desc" = "desc"
 ): Promise<CombinedTransaction[]> => {
-  const ITEMS_PER_PAGE = 14;
   const skip = (currentPage - 1) * ITEMS_PER_PAGE;
   const safeQuery = typeof query === "string" ? query.toLowerCase().trim() : "";
+
+  const statusFilter = mapStatus(filter as TransactionFilter);
 
   const whereRequestOrder: Prisma.OrderRequestWhereInput = {
     AND: [
       query && { patient_name: { contains: safeQuery } },
-      filter !== "all" && { status: mapStatus(filter as TransactionFilter) },
+      statusFilter && { status: statusFilter },
     ].filter(Boolean) as Prisma.OrderRequestWhereInput[],
+  };
+
+  const whereWalkIn: Prisma.WalkInTransactionWhereInput = {
+    AND: [
+      query && { customer_name: { contains: safeQuery } },
+      statusFilter && { status: statusFilter },
+    ].filter(Boolean) as Prisma.WalkInTransactionWhereInput[],
   };
 
   const includeWalkIn = isWalkInFilterEnabled(filter as TransactionFilter);
@@ -50,44 +55,32 @@ export const getTransactionList = async (
   const dbSortableFields = ["createdAt", "customer_name"];
   const isDbSortable = dbSortableFields.includes(sortBy);
 
- const [requestOrders, walkinOrders] = await Promise.all([
-  includeRequest ?
-    db.orderRequest.findMany({
-      where: whereRequestOrder,
-      include: {
-        items: {
+  const [requestOrders, walkinOrders] = await Promise.all([
+    includeRequest
+      ? db.orderRequest.findMany({
+          where: whereRequestOrder,
           include: {
-            product: true,
+            items: { include: { product: true } },
           },
-        },
-      }, 
-    orderBy: isDbSortable ? { [safeSortByRequest]: sortOrder } : { createdAt: "desc" },
-    }): Promise.resolve([]),
-    (filter === "all" || filter === "paid" || includeWalkIn)
-    ? db.walkInTransaction.findMany({
-       where: {
-        AND: [
-          ...(query ? [{ customer_name: { contains: safeQuery } }] : []),
-            ].filter(Boolean)
-        },
-        include: {
-          items: {
-            include: {
-              product: true,
-            },
+          orderBy: isDbSortable ? { [safeSortByRequest]: sortOrder } : { createdAt: "desc" },
+        })
+      : Promise.resolve([]),
+    includeWalkIn
+      ? db.walkInTransaction.findMany({
+          where: whereWalkIn,
+          include: {
+            items: { include: { product: true } },
           },
-        },
-       orderBy: isDbSortable ? { [safeSortByWalkIn]: sortOrder } : { createdAt: "desc" },
-      })
-    : Promise.resolve([]),
-    ]);
-
+          orderBy: isDbSortable ? { [safeSortByWalkIn]: sortOrder } : { createdAt: "desc" },
+        })
+      : Promise.resolve([]),
+  ]);
 
   const formattedWalkIn = walkinOrders.map((tx) => ({
     id: tx.id,
     customer: tx.customer_name?.trim() || "Unknown",
     createdAt: tx.createdAt,
-    status: "Paid",
+    status: formatStatus(tx.status),
     source: "Walk In" as const,
     quantity: tx.items.reduce((sum, item) => sum + item.quantity, 0),
     price: tx.items.reduce((sum, item) => sum + item.price.toNumber(), 0),
@@ -120,9 +113,9 @@ export const getTransactionList = async (
 
   const combined = [...formattedWalkIn, ...formattedRequest];
 
- const sorted = combined.sort((a, b) => {
-  let fieldA: string | number | Date;
-  let fieldB: string | number | Date;
+  const sorted = combined.sort((a, b) => {
+    let fieldA: string | number | Date;
+    let fieldB: string | number | Date;
 
     switch (sortBy) {
       case "customer_name":
@@ -151,33 +144,32 @@ export const getTransactionList = async (
     return 0;
   });
 
-  const paginated = sorted.slice(skip, skip + ITEMS_PER_PAGE);
-
-  return paginated;
+  return sorted.slice(skip, skip + ITEMS_PER_PAGE);
 };
-
 
 export async function fetchTransactionPages(query: string, filter: string) {
   const safeQuery = query.toLowerCase().trim();
+  const statusFilter = mapStatus(filter as TransactionFilter);
 
-  const whereRequestOrder = {
+  const whereRequestOrder: Prisma.OrderRequestWhereInput = {
     AND: [
       query && { patient_name: { contains: safeQuery } },
-      ["pending", "for_payment", "paid"].includes(filter) && { status: mapStatus(filter as TransactionFilter) }
+      statusFilter && { status: statusFilter },
     ].filter(Boolean) as Prisma.OrderRequestWhereInput[],
   };
 
-  const whereWalkIn = {
+  const whereWalkIn: Prisma.WalkInTransactionWhereInput = {
     AND: [
       query && { customer_name: { contains: safeQuery } },
+      statusFilter && { status: statusFilter },
     ].filter(Boolean) as Prisma.WalkInTransactionWhereInput[],
   };
 
-  let total;
+  let total: number;
 
   if (filter === "walk_in") {
     total = await db.walkInTransaction.count({ where: whereWalkIn });
-  } else if (["pending", "for_payment", "paid"].includes(filter)) {
+  } else if (filter === "request_order") {
     total = await db.orderRequest.count({ where: whereRequestOrder });
   } else {
     const [walkinCount, requestCount] = await Promise.all([
@@ -193,6 +185,7 @@ export async function fetchTransactionPages(query: string, filter: string) {
 
   return Math.ceil(total / 14);
 }
+
 
 
 //Inventory

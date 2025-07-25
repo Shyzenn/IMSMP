@@ -15,7 +15,7 @@ export interface RequestFormData {
 
 export interface DashboardCardProps {
   title: string;
-  value: number;
+  value: number | string;
   icon: IconType;
   bgColor: string;
   textColor: string;

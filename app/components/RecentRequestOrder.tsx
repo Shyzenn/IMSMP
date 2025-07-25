@@ -144,7 +144,7 @@ const RecentRequestOrder = () => {
 
   return (
     <>
-      <div className="mx-4 max-h-[320px] overflow-auto">
+      <div className="mx-4 max-h-[300px] overflow-auto">
         <TableComponent
           requestOrderBtn={
             <button

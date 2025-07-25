@@ -55,6 +55,7 @@ export default async function InventoryTable({
                     : ""
                 }`}
               >
+                <TableCell>{`PRD-0${product.id}`}</TableCell>
                 <TableCell>{capitalLetter(product.product_name)}</TableCell>
                 <TableCell>{product.quantity}</TableCell>
                 <TableCell>{`₱${product.price}`}</TableCell>
