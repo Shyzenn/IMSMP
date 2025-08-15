@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { capitalLetter } from "@/lib/utils";
 import React from "react";
 import { Control, Controller, FieldValues, Path } from "react-hook-form";
 
@@ -15,6 +16,8 @@ type CategoryFieldProps<T extends FieldValues = FieldValues> = {
   control: Control<T>;
   name: Path<T>;
   error?: string;
+  categoryLabel: string;
+  items: string[];
 };
 
 const CategoryField = <T extends FieldValues>({
@@ -22,6 +25,8 @@ const CategoryField = <T extends FieldValues>({
   error,
   label,
   name,
+  categoryLabel,
+  items,
 }: CategoryFieldProps<T>) => {
   return (
     <div className="w-full">
@@ -31,7 +36,7 @@ const CategoryField = <T extends FieldValues>({
         name={name}
         render={({ field }) => (
           <Select
-            value={field.value ?? ""}
+            value={field.value}
             onValueChange={(val) => field.onChange(val)}
           >
             <SelectTrigger className="w-full">
@@ -39,13 +44,12 @@ const CategoryField = <T extends FieldValues>({
             </SelectTrigger>
             <SelectContent className="bg-white">
               <SelectGroup>
-                <SelectLabel>Category</SelectLabel>
-                <SelectItem value="ANTIBIOTIC" className="hover:bg-gray-100">
-                  Antibiotic
-                </SelectItem>
-                <SelectItem value="PAIN_RELIEVER" className="hover:bg-gray-100">
-                  Pain reliever
-                </SelectItem>
+                <SelectLabel>{categoryLabel}</SelectLabel>
+                {items.map((item) => (
+                  <SelectItem key={item} value={item}>
+                    {capitalLetter(item.replace("_", " "))}
+                  </SelectItem>
+                ))}
               </SelectGroup>
             </SelectContent>
           </Select>

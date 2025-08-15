@@ -2,7 +2,6 @@ import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { FieldValues, Path, UseFormSetError } from "react-hook-form";
 
-
 export function useProductForm<T extends FieldValues>(
   setError: UseFormSetError<T>,
   onSuccess?: () => void

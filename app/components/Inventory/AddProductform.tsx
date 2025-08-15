@@ -67,9 +67,14 @@ const AddProductForm = () => {
                   label="Product Name"
                   error={errors.product_name?.message}
                 >
-                  <Input {...register("product_name")} />
+                  <Input
+                    {...register("product_name")}
+                    placeholder="Enter product name"
+                  />
                 </FormField>
                 <CategoryField
+                  categoryLabel="Select a category"
+                  items={["PAIN_RELIEVER", "ANTIBIOTIC"]}
                   label="Category"
                   control={control}
                   name="category"
@@ -77,7 +82,11 @@ const AddProductForm = () => {
                 />
                 <div className="flex w-full gap-2">
                   <FormField label="Quantity" error={errors.quantity?.message}>
-                    <Input {...register("quantity")} type="number" />
+                    <Input
+                      {...register("quantity")}
+                      type="number"
+                      placeholder="Enter quantity"
+                    />
                   </FormField>
                   <FormField label="Price" error={errors.price?.message}>
                     <Input
@@ -85,6 +94,7 @@ const AddProductForm = () => {
                       type="number"
                       step="0.01"
                       min="0"
+                      placeholder="Enter price"
                     />
                   </FormField>
                 </div>

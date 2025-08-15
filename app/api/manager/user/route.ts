@@ -16,7 +16,7 @@ export async function GET() {
             id: user.id,
             username:capitalLetter(user.username),
             password: "*********",
-            userType: user.role ? user.role.replace("_", " ") : "N/A",
+            role: user.role ? user.role.replace("_", " ") : "N/A",
             action:"Edit"
         }))
 

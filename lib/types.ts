@@ -17,6 +17,30 @@ export const signUpSchema = z
 
 export type TSignUpSchema = z.infer<typeof signUpSchema>;
 
+export const editUserSchema = (isResetPassword: boolean) =>
+  z
+    .object({
+      id: z.string(),
+      username: z.string().min(1, "Username is required"),
+      role: z.string().min(1, "Role is required"),
+      password: isResetPassword
+        ? z.string().min(8, "Password must be at least 8 characters")
+        : z.string().optional(),
+      confirmPassword: isResetPassword
+        ? z.string().min(8, "Password must be at least 8 characters")
+        : z.string().optional(),
+    })
+    .refine(
+      (data) =>
+        !isResetPassword || data.password === data.confirmPassword,
+      {
+        message: "Passwords do not match",
+        path: ["confirmPassword"],
+      }
+    );
+
+export type TEditUserSchema = z.infer<ReturnType<typeof editUserSchema>>;
+
 // Login Form
 export const signInSchema = object({
   username: z.string().min(4, "Username must contain at least 4 characters"),

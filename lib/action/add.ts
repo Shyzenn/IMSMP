@@ -1,4 +1,4 @@
-import { TAddProductSchema, TAddRequestOrderSchema, TEditProductSchema, TSignUpSchema, TWalkInOrderSchema } from "../types";
+import { TAddProductSchema, TAddRequestOrderSchema, TEditProductSchema, TEditUserSchema, TSignUpSchema, TWalkInOrderSchema } from "../types";
 
 //register user
 export const registerUser = async (data: TSignUpSchema) => {
@@ -56,6 +56,26 @@ export const editNewProduct = async (data: TEditProductSchema) => {
   const responseData = await response.json();
   return responseData;
 };
+
+// edit user
+export const editUser = async (data: TEditUserSchema) => {
+  const response = await fetch("/api/user/update", {
+    method: "PATCH",
+    body: JSON.stringify(data),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    // If the response is not OK, throw an error
+    const errorData = await response.json();
+    throw new Error(JSON.stringify(errorData));
+  }
+  const responseData = await response.json();
+  return responseData;
+};
+
 
 //add request order
 export const addRequesOrder = async (data:TAddRequestOrderSchema) => {

@@ -70,13 +70,14 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
               </FormField>
 
               <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="password">Types</Label>
                 <Controller
                   control={control}
                   name="role"
                   render={({ field }) => (
                     <SelectField
                       field={field}
-                      label="Types"
+                      label="select user type"
                       option={[
                         { label: "Manager", value: "Manager" },
                         { label: "Nurse", value: "Nurse" },
@@ -146,7 +147,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
               </div>
             </div>
             <Button
-              className="w-full py-5 mt-14 text-center bg-green-500 text-white"
+              className="w-full py-5 mt-8 text-center bg-green-500 text-white hover:bg-green-600"
               type="submit"
               disabled={isSubmitting}
             >

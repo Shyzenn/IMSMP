@@ -79,6 +79,7 @@ export interface Notification {
 }
 
 export type UserFormValues = {
+  id?: string
   username: string;
   role: "Pharmacist_Staff" | "Nurse" | "Manager" | "Cashier";
   password: string;

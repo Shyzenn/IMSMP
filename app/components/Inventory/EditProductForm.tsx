@@ -79,6 +79,8 @@ const EditProductForm = ({
               control={control}
               name="category"
               error={errors.category?.message}
+              categoryLabel={product.category}
+              items={["PAIN_RELIEVER", "ANTIBIOTIC"]}
             />
             <div className="flex w-full gap-2">
               <FormField label="Quantity" error={errors.quantity?.message}>
