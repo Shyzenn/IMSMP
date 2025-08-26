@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { db } from "./lib/db";
+import { db, prisma } from "./lib/db";
 import bcrypt from "bcryptjs";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 
@@ -14,7 +14,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
       credentials: {
-        username: { label: "Username", type: "text", placeholder: "username" },
+        email: { label: "Email", type: "email", placeholder: "example@email.com" },
         password: {
           label: "Password",
           type: "password",
@@ -24,15 +24,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       async authorize(credentials) {
         if (
           !credentials ||
-          typeof credentials.username !== "string" ||
+          typeof credentials.email !== "string" ||
           typeof credentials.password !== "string"
         ) {
           throw new Error("Invalid email or password.");
         }
 
         const user = await db.user.findUnique({
-          where: { username: credentials.username },
+          where: { email: credentials.email },
         });
+
+        if (user?.status === "DISABLE") {
+          throw new Error("DISABLED_ACCOUNT"); 
+        }
 
         if (user && typeof credentials.password === "string") {
           const isPasswordCorrect = await bcrypt.compare(
@@ -42,8 +46,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           if (isPasswordCorrect) {
             return {
               id: user.id.toString(),
-              username: user.username,
+              email: user.email,
               role: user.role,
+              status: user.status
             };
           }
         }
@@ -53,22 +58,42 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
  callbacks: {
-  async jwt({ token, user, trigger, session }) {
-    if (user) {
-      token.id = user.id as string;
-      token.role = user.role as string;
-      token.username = user.username as string;
-    }
-    if (trigger === "update" && session) {
-      token = { ...token, ...session };
-    }
-    return token;
-  },
-  async session({ session, token }) {
-    session.user.id = token.id;
-    session.user.role = token.role;
-    session.user.username = token.username;
-    return session;
-  },
-}
-});
+    async jwt({ token, user, trigger, session }) {
+      if (user) {
+        token.id = user.id as string;
+        token.role = user.role as string;
+        token.email = user.email as string;
+        token.status = user.status as string
+      }
+      if (trigger === "update" && session) {
+        token = { ...token, ...session };
+      }
+      return token;
+    },
+    async session({ session, token }) {
+       const dbUser = await db.user.findUnique({
+          where: { id: token.id as string },
+          select: { username: true },
+        });
+
+        session.user.id = token.id;
+        session.user.role = token.role;
+        session.user.email = token.email;
+        session.user.status = token.status;
+        session.user.username = dbUser?.username || null;
+        return session;
+    },
+    async signIn({ user }) {
+      
+      if (user.status === "DISABLE") {
+      return false
+      }
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { isOnline: true },
+      });
+      return true;
+    },
+
+  }
+}); 

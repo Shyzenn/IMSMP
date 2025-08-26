@@ -1,9 +1,14 @@
+"use client";
+
 import React from "react";
 import InventoryFilter from "./InventoryFilter";
 import AddProductForm from "./AddProductform";
 import Search from "../Search";
+import { useSession } from "next-auth/react";
 
 const InventoryHeader = () => {
+  const { data: session } = useSession();
+
   return (
     <div className="mb-4 flex items-center justify-between">
       <p className="text-2xl font-semibold">Inventory</p>
@@ -13,9 +18,13 @@ const InventoryHeader = () => {
       <div>
         <InventoryFilter />
       </div>
-      <div>
-        <AddProductForm />
-      </div>
+
+      {(session?.user.role === "Manager" ||
+        session?.user.role === "Pharmacist_Staff") && (
+        <div>
+          <AddProductForm />
+        </div>
+      )}
     </div>
   );
 };

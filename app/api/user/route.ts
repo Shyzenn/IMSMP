@@ -2,18 +2,24 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { signUpSchema } from "@/lib/types";
+import { Prisma, UserStatus } from "@prisma/client";
+import { randomInt } from "crypto";
+import { sendOTPEmail } from "@/lib/mailer";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { username, role, password, confirmPassword } = body;
+    const { username, email, role, password, status } = body;
+    const otp = String(randomInt(10000000, 99999999)); // 8-digit
+    const hashedOtp = await bcrypt.hash(otp, 10);
 
     // Validate input using Zod schema
     const result = signUpSchema.safeParse({
       username,
+      email,
       role,
       password,
-      confirmPassword,
+      status
     });
 
     // Create an object to store validation errors
@@ -23,9 +29,11 @@ export async function POST(req: Request) {
         zodErrors[issue.path[0]] = issue.message;
       });
     }
+    
+    const normalizedUsername = username.toLowerCase();
 
     const existingUser = await db.user.findFirst({
-      where: {username},
+      where: { username: normalizedUsername },
     });
 
     if (existingUser) {
@@ -39,18 +47,40 @@ export async function POST(req: Request) {
     }
 
     // Hash the password using bcrypt
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create a new user in the database
-    await db.user.create({
-      data: {
-        username,
-        role,
-        password: hashedPassword,
-      },
+    try {
+      await db.user.create({
+        data: {
+          username: normalizedUsername,
+          email,
+          role,
+          password: hashedOtp, 
+          status: (status as UserStatus) ?? UserStatus.ACTIVE,
+          otp: null,
+          otpExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24hrs expiration
+        },
+      });
+
+    await sendOTPEmail(email, otp);
+
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === "P2002") {
+          return NextResponse.json(
+            { errors: { username: "Username is already taken" } },
+            { status: 400 }
+          );
+        }
+      }
+      throw error;
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "User created successfully. An OTP has been sent to their email for verification.",
     });
 
-    return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof Error) {
       console.error("Error in POST /api/user:", error.message);

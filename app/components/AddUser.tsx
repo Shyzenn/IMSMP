@@ -9,19 +9,16 @@ import AddUserForm from "./AddUserForm";
 import AddButton from "./Button";
 import { FiPlus } from "react-icons/fi";
 import { registerUser } from "@/lib/action/add";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const AddUser = () => {
   const [isOpen, setIsOpen] = useState(false);
-
-  const notify = () =>
-    toast.success("User added successfully! 🎉", {
-      icon: "✅",
-    });
+  const queryClient = useQueryClient();
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     setError,
     control,
     reset,
@@ -29,43 +26,47 @@ const AddUser = () => {
     resolver: zodResolver(signUpSchema),
   });
 
-  const handleErrors = (errors: Record<string, string>) => {
-    Object.keys(errors).forEach((field) => {
-      setError(field as keyof TSignUpSchema, {
-        type: "server",
-        message: errors[field],
-      });
-    });
-  };
-
-  const onSubmit = async (data: TSignUpSchema) => {
-    try {
-      const responseData = await registerUser(data);
-
+  const mutation = useMutation({
+    mutationFn: registerUser,
+    onSuccess: (responseData) => {
       if (responseData.errors) {
-        handleErrors(responseData.errors);
+        Object.keys(responseData.errors).forEach((field) => {
+          setError(field as keyof TSignUpSchema, {
+            type: "server",
+            message: responseData.errors[field],
+          });
+        });
       } else if (responseData.success) {
         setIsOpen(false);
         reset();
-        notify();
+        toast.success("User added successfully! 🎉", {
+          icon: "✅",
+        });
+
+        queryClient.invalidateQueries({ queryKey: ["users"] });
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        try {
-          const errorData = JSON.parse(error.message);
-          if (errorData.errors) {
-            handleErrors(errorData.errors);
-          } else {
-            alert("An unexpected error occurred.");
-          }
-        } catch {
-          alert("An unexpected error occurred.");
+    },
+    onError: (error) => {
+      try {
+        const errorData = JSON.parse(error.message);
+        if (errorData.errors) {
+          Object.keys(errorData.errors).forEach((field) => {
+            setError(field as keyof TSignUpSchema, {
+              type: "server",
+              message: errorData.errors[field],
+            });
+          });
+        } else {
+          toast.error("An unexpected error occurred.");
         }
-      } else {
-        alert("An unexpected error occurred.");
+      } catch {
+        toast.error("An unexpected error occurred.");
       }
-    }
-    console.log("Submitted data:", data);
+    },
+  });
+
+  const onSubmit = (data: TSignUpSchema) => {
+    mutation.mutate(data);
   };
 
   return (
@@ -78,7 +79,7 @@ const AddUser = () => {
             register={register}
             handleSubmit={handleSubmit}
             errors={errors}
-            isSubmitting={isSubmitting}
+            isSubmitting={mutation.isPending}
             control={control}
             setIsOpen={setIsOpen}
           />

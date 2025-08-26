@@ -58,16 +58,16 @@ const Login = () => {
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid w-full items-center gap-4">
               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  {...register("username")}
-                  id="username"
-                  placeholder="username"
-                  type="text"
+                  {...register("email")}
+                  id="email"
+                  placeholder="example@email.com"
+                  type="email"
                 />
-                {errors.username && (
+                {errors.email && (
                   <p className="mt-2 text-sm text-red-500">
-                    {errors.username.message}
+                    {errors.email.message}
                   </p>
                 )}
               </div>

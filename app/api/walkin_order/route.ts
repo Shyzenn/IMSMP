@@ -73,6 +73,16 @@ export async function POST(req: Request) {
       });
     });
 
+    await db.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: "Walkin Paid",
+        entityType: "WalkInOrder",
+        entityId: newOrder.id,
+        description: `User ${session.user.username} (${session.user.role}) created an order for walk in customer "${customer_name}" with ${products.length} item(s).`,
+      },
+    });
+
     // Notify all managers (outside transaction)
     const managers = await db.user.findMany({
       where: { role: "Manager" },

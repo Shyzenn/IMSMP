@@ -5,14 +5,18 @@ export const signUpSchema = z
   .object({
     username: z.string().min(4, "Username must contain at least 4 characters"),
     role: z.enum(["Pharmacist_Staff", "Nurse","Manager", "Cashier"], { message: "User Type is required." }),
-    password: z.string().min(8, "Password must contain at least 8 characters"),
-    confirmPassword: z
+    email: z
       .string()
-      .min(8, "Confirm Password must contain at least 8 characters"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
+      .min(1, "Email is required")
+      .email("Invalid email address"),
+  //   password: z.string().min(8, "Password must contain at least 8 characters"),
+  //   confirmPassword: z
+  //     .string()
+  //     .min(8, "Confirm Password must contain at least 8 characters"),
+  // })
+  // .refine((data) => data.password === data.confirmPassword, {
+  //   message: "Passwords do not match",
+  //   path: ["confirmPassword"],
   });
 
 export type TSignUpSchema = z.infer<typeof signUpSchema>;
@@ -43,11 +47,14 @@ export type TEditUserSchema = z.infer<ReturnType<typeof editUserSchema>>;
 
 // Login Form
 export const signInSchema = object({
-  username: z.string().min(4, "Username must contain at least 4 characters"),
+  email: z
+      .string()
+      .min(1, "Email is required")
+      .email("Invalid email address"),
   password: string({ required_error: "Password is required" })
-    .min(1, "Password is required")
-    .min(8, "Password must be more than 8 characters")
-    .max(32, "Password must be less than 32 characters"),
+      .min(1, "Password is required")
+      .min(6, "Password must be more than 8 characters")
+      .max(32, "Password must be less than 32 characters"),
 });
 
 export type TSignInSchema = z.infer<typeof signInSchema>;

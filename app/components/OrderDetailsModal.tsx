@@ -48,6 +48,17 @@ const OrderDetailsModal = ({
         },
       });
 
+      await fetch("/api/audit-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "Order Printed",
+          entityType: "Order",
+          entityId: selectedOrder.id,
+          description: `${userRole} prints the order ${selectedOrder.id}`,
+        }),
+      });
+
       queryClient.invalidateQueries({ queryKey: ["request_order"] });
       queryClient.invalidateQueries({ queryKey: ["order_cards"] });
       queryClient.invalidateQueries({ queryKey: ["salesData", "This Year"] });
@@ -81,6 +92,13 @@ const OrderDetailsModal = ({
                       <IoIosCloseCircleOutline className="text-2xl text-red-500" />
                     </button>
                   )}
+
+                  {userRole === "Pharmacist_Staff" &&
+                    selectedOrder.status !== "Pending" && (
+                      <button onClick={() => setIsOrderModalOpen(false)}>
+                        <IoIosCloseCircleOutline className="text-2xl text-red-500" />
+                      </button>
+                    )}
                 </div>
               </div>
               <div className="flex flex-col gap-5 pb-2">
@@ -160,22 +178,23 @@ const OrderDetailsModal = ({
                   </TableFooter>
                 </Table>
               </div>
-              {session?.user.role === "Pharmacist_Staff" && (
-                <div className="flex justify-end">
-                  {hasPrint && (
-                    <div className="flex justify-end mt-4 print:hidden gap-4">
-                      <CancelButton setIsModalOpen={setIsOrderModalOpen} />
-                      <button
-                        onClick={handlePrint}
-                        className="bg-green-500 hover:bg-green-600 text-white px-8 py-2 rounded-md flex items-center gap-2"
-                      >
-                        <LuPrinter />
-                        Print
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+              {session?.user.role === "Pharmacist_Staff" &&
+                selectedOrder.status === "Pending" && (
+                  <div className="flex justify-end">
+                    {hasPrint && (
+                      <div className="flex justify-end mt-4 print:hidden gap-4">
+                        <CancelButton setIsModalOpen={setIsOrderModalOpen} />
+                        <button
+                          onClick={handlePrint}
+                          className="bg-green-500 hover:bg-green-600 text-white px-8 py-2 rounded-md flex items-center gap-2"
+                        >
+                          <LuPrinter />
+                          Print
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
             </div>
           </div>
         </div>

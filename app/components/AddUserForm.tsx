@@ -1,13 +1,13 @@
-"use client";
+// "use client";
 
 import LoadingButton from "@/components/loading-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
+// import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
 import { RxCross2 } from "react-icons/rx";
-import { useState } from "react";
+// import { useState } from "react";
 import {
   Control,
   Controller,
@@ -39,8 +39,8 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
   control,
   isSubmitting,
 }) => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  // const [showPassword, setShowPassword] = useState(false);
+  // const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   return (
     <>
@@ -66,6 +66,15 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
                   id="username"
                   placeholder="username"
                   type="text"
+                />
+              </FormField>
+
+              <FormField label="Email" error={errors.email?.message}>
+                <Input
+                  {...register("email")}
+                  id="email"
+                  placeholder="example@email.com"
+                  type="email"
                 />
               </FormField>
 
@@ -97,7 +106,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
                 )}
               </div>
 
-              <div className="flex flex-col space-y-1.5 relative">
+              {/* <div className="flex flex-col space-y-1.5 relative">
                 <Label htmlFor="password">Password</Label>
                 <Input
                   {...register("password")}
@@ -144,7 +153,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
                     {`${errors.confirmPassword.message}`}
                   </p>
                 )}
-              </div>
+              </div> */}
             </div>
             <Button
               className="w-full py-5 mt-8 text-center bg-green-500 text-white hover:bg-green-600"

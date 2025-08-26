@@ -82,6 +82,9 @@ export type UserFormValues = {
   id?: string
   username: string;
   role: "Pharmacist_Staff" | "Nurse" | "Manager" | "Cashier";
-  password: string;
-  confirmPassword: string;
+  password?: string;
+  confirmPassword?: string;
+  status?: "DISABLE" | "ACTIVE"
+  isOnline?: "Offline" | "Online"
+  email: string
 };

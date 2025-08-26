@@ -8,18 +8,45 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  username      String   @unique
+  id            String       @id @default(uuid())
+  username      String       @unique
   role          Role
+  email         String       @unique
   password      String
-  createdAt     DateTime @default(now())
+
+  otp           String?
+  otpExpiresAt  DateTime?
+  createdAt     DateTime     @default(now())
+  status        UserStatus   @default(ACTIVE)
 
   OrderRequest  OrderRequest[]
   WalkInTransaction   WalkInTransaction[]
+  
   Product       Product[]
+  AuditLog      AuditLog[]
+  lastSeen      DateTime     @default(now()) @updatedAt
+  isOnline      Boolean      @default(false)
 
   SentNotification     Notification[] @relation("SentNotification")
   ReceivedNotification Notification[] @relation("ReceivedNotification")
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLE
+}
+
+model AuditLog {
+  id          Int       @id @default(autoincrement())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+
+  action      String    // e.g. CREATE_ORDER, UPDATE_USER
+  entityType  String    // e.g. User, Order, Product
+  entityId    Int?      // The affected record (nullable in case it's a general action)
+  description String?   // Human-readable summary
+
+  createdAt   DateTime  @default(now())
 }
 
 enum Role {

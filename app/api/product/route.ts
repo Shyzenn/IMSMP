@@ -58,8 +58,8 @@ export async function POST(req: Request) {
     const releaseDateUTC = new Date(releaseDate).toISOString();
     const expiryDateUTC = new Date(expiryDate).toISOString();
 
-    // Create a new user in the database
-    await db.product.create({
+    // Create a new product in the database
+   const newProduct = await db.product.create({
       data: {
         product_name,
         category,
@@ -68,6 +68,16 @@ export async function POST(req: Request) {
         releaseDate: releaseDateUTC,
         expiryDate: expiryDateUTC,
         userId
+      },
+    });
+
+    await db.auditLog.create({
+      data: {
+        userId,
+        action: "Product Created",
+        entityType: "Product",
+        entityId: newProduct.id,
+        description: `Product "${newProduct.product_name}" created by ${session.user.username} (${session.user.role})`,
       },
     });
 

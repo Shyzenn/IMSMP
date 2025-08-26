@@ -26,7 +26,7 @@ export const relativeTime = (date: string | Date) => {
   return formatDistanceToNow(new Date(date), { addSuffix: true });
 };
 
-export const ITEMS_PER_PAGE = 14;
+export const ITEMS_PER_PAGE = 25;
 
 export default function formatStatus(rawStatus: string) {
   const statusMap: Record<string, string> = {

@@ -54,6 +54,7 @@ export const managerLinks = [
   },
 
   { name: "Transaction", href: "/transaction", icon: GrTransaction },
+   { name: "Audit Log", href: "/audit_log", icon: GrTransaction },
 ]
 
 export const pharmacistLinks = [

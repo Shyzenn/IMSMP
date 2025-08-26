@@ -49,6 +49,16 @@ export async function POST(req: Request) {
       },
     });
 
+    await db.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: "Requested",
+        entityType: "OrderRequest",
+        entityId: newOrder.id,
+        description: `User ${session.user.username} (${session.user.role}) created an order for patient "${patient_name}" in room ${room_number} with ${products.length} item(s).`,
+      },
+    });
+
     // 🛎️ Send notification to the Manager(s)
     const pharmacists = await db.user.findMany({
       where: {role: "Pharmacist_Staff"}

@@ -42,7 +42,7 @@ async function Transaction(props: {
 
   return (
     <div
-      className="p-6 bg-white overflow-auto relative"
+      className="p-6 bg-white overflow-auto rounded-md"
       style={{ height: "calc(94vh - 70px)" }}
     >
       <TransactionHeader />
@@ -60,7 +60,7 @@ async function Transaction(props: {
           />
         </Suspense>
       </div>
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+      <div className="mt-6 flex items-center justify-center">
         <Pagination totalPages={totalPages} />
       </div>
     </div>

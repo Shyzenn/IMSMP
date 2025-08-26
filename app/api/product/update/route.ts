@@ -1,3 +1,4 @@
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { editProductSchema } from "@/lib/types";
 import { NextResponse } from "next/server";
@@ -5,7 +6,16 @@ import { NextResponse } from "next/server";
 // update new product
 export async function PATCH(req: Request) {
   try {
-     const body = await req.json();
+
+     const session = await auth()
+
+     if (!session || !session.user?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 400 });
+    }
+
+    const userId = session.user.id; 
+
+    const body = await req.json();
     const { id, product_name, category, quantity, price, releaseDate, expiryDate } = body;
 
     // Validate input using Zod schema
@@ -39,7 +49,7 @@ export async function PATCH(req: Request) {
     const expiryDateUTC = new Date(expiryDate).toISOString();
 
     // Update a new product in the database
-    await db.product.update({
+   const editProduct = await db.product.update({
       where:{id},
       data: {
         product_name,
@@ -51,12 +61,22 @@ export async function PATCH(req: Request) {
       },
     });
 
+    await db.auditLog.create({
+      data: {
+        userId,
+        action: "Product Edited",
+        entityType: "Product",
+        entityId: editProduct.id,
+        description: `Product "${editProduct.product_name}" edited by ${session.user.username} (${session.user.role})`,
+      },
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof Error) {
       console.error("Error in POST /api/product:", error.message);
       return NextResponse.json(
-        { message: "Failed to create product", error: error.message },
+        { message: "Failed to edit product", error: error.message },
         { status: 500 }
       );
     } else {

@@ -1,3 +1,4 @@
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -5,6 +6,15 @@ export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+
+    const session = await auth();
+
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 400 });
+    }
+
+    const userId = session.user.id; 
+
   const { id } = await context.params;
 
   const numericId = parseInt(id.replace("ORD-", ""));
@@ -50,6 +60,16 @@ export async function PUT(
           })
         }
       }
+
+      await db.auditLog.create({
+        data: {
+          userId: userId,
+          action: "Paid",
+          entityType: "OrderRequest",
+          entityId: updatedOrder.id,
+          description: `Order ${updatedOrder.id} marked as ${status.toUpperCase()} by User ${session.user.username}`,
+        },
+      });
 
     // try {
     //   await db.orderRequest.update({

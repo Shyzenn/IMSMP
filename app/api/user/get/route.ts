@@ -1,5 +1,4 @@
 import { db } from "@/lib/db";
-import { capitalLetter } from "@/lib/utils";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -14,10 +13,12 @@ export async function GET() {
 
         const formattedProducts = users.map((user) => ({
             id: user.id,
-            username:capitalLetter(user.username),
+            username:user.username,
             password: "*********",
             role: user.role ? user.role.replace("_", " ") : "N/A",
-            action:"Edit"
+            action:"Edit",
+            status: user.status,
+            isOnline: user.isOnline
         }))
 
         return NextResponse.json(formattedProducts, {status:200})

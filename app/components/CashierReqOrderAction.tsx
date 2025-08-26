@@ -1,4 +1,4 @@
-import { IoMdCheckmark, IoMdClose, IoMdEye } from "react-icons/io";
+import { IoMdCheckmark, IoMdEye } from "react-icons/io";
 import ActionButton from "./ActionButton";
 import { Button } from "@/components/ui/button";
 import { useModal } from "../hooks/useModal";
@@ -65,11 +65,6 @@ const CashierReqOrderAction = ({
             icon={IoMdCheckmark}
             color="hover:bg-green-300"
             onClick={handleCheckmarkClick}
-          />
-          <ActionButton
-            icon={IoMdClose}
-            onClick={() => {}}
-            color="hover:bg-red-300"
           />
         </>
       )}

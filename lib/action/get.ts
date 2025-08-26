@@ -6,6 +6,55 @@ import { db } from "../db";
 import { OrderItem } from "../interfaces";
 import formatStatus, { isRequestOrderFilterEnabled, isWalkInFilterEnabled, ITEMS_PER_PAGE, mapStatus, TransactionFilter } from "../utils";
 
+// Audit Log
+export const getAuditLogList = async (query: string = "", currentPage: number = 1) => {
+  const page = Number.isFinite(Number(currentPage)) ? Number(currentPage) : 1;
+  const offset = (page - 1) * ITEMS_PER_PAGE;
+
+
+  let where: Prisma.AuditLogWhereInput = {};
+
+  if (query.trim()) {
+    const safeQuery = query.toLowerCase().trim();
+    where = {
+      OR: [
+        { action: { contains: safeQuery } },
+        { description: { contains: safeQuery } },
+        { entityType: { contains: safeQuery } },
+        { user: { username: { contains: safeQuery } } },
+      ],
+    };
+  }
+
+  return await db.auditLog.findMany({
+    where,
+    include: { user: { select: { username: true } } },
+    orderBy: { createdAt: "desc" },
+    take: ITEMS_PER_PAGE,
+    skip: offset,
+  });
+};
+
+export async function fetchAuditPages(query: string) {
+  const safeQuery = typeof query === "string" ? query.toLowerCase().trim() : "";
+
+  const where: Prisma.AuditLogWhereInput = safeQuery
+    ? {
+        OR: [
+          { action: { contains: safeQuery } },
+          { description: { contains: safeQuery } },
+          { entityType: { contains: safeQuery } },
+          { user: { username: { contains: safeQuery } } },
+        ],
+      }
+    : {};
+
+  const totalAudit = await db.auditLog.count({ where });
+
+  return Math.ceil(totalAudit / ITEMS_PER_PAGE); 
+}
+
+// Transaction
 type CombinedTransaction = {
   id: number;
   customer: string;
@@ -18,7 +67,6 @@ type CombinedTransaction = {
   orderItems: OrderItem[]
 };
 
-// Transaction
 export const getTransactionList = async (
   query: string,
   currentPage: number,
@@ -185,8 +233,6 @@ export async function fetchTransactionPages(query: string, filter: string) {
 
   return Math.ceil(total / 14);
 }
-
-
 
 //Inventory
 export const getProductList = async (
