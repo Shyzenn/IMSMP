@@ -37,7 +37,17 @@ export async function PATCH(req: Request) {
         }, { status: 400 });
     }
     
-    const updateData: Prisma.UserUpdateInput = { username, role };
+        const roleMap: Record<string, string> = {
+          "Pharmacist Staff": "Pharmacist_Staff",
+          Nurse: "Nurse",
+          Manager: "Manager",
+          Cashier: "Cashier",
+        };
+
+        const updateData: Prisma.UserUpdateInput = { 
+          username, 
+          role: roleMap[role] || role, 
+        };
 
     if (isResetPassword) {
       const hashedPassword = await bcrypt.hash(password, 10);

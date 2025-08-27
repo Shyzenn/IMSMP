@@ -64,7 +64,7 @@ export async function PUT(
       await db.auditLog.create({
         data: {
           userId: userId,
-          action: "Paid",
+          action: "Status Update",
           entityType: "OrderRequest",
           entityId: updatedOrder.id,
           description: `Order ${updatedOrder.id} marked as ${status.toUpperCase()} by User ${session.user.username}`,

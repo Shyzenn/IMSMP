@@ -18,9 +18,10 @@ model User {
   otpExpiresAt  DateTime?
   createdAt     DateTime     @default(now())
   status        UserStatus   @default(ACTIVE)
+  mustChangePassword   Boolean @default(true)
 
   OrderRequest  OrderRequest[]
-  WalkInTransaction   WalkInTransaction[]
+  WalkInTransaction    WalkInTransaction[]
   
   Product       Product[]
   AuditLog      AuditLog[]

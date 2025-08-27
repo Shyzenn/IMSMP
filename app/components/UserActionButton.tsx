@@ -41,11 +41,11 @@ const UserActionButton = ({ user }: { user: UserFormValues }) => {
   });
 
   const handleBan = () => {
-    updateUserStatus.mutate({ id: user.id, status: "DISABLE" });
+    updateUserStatus.mutate({ id: user.id!, status: "DISABLE" });
   };
 
   const handleActivate = () => {
-    updateUserStatus.mutate({ id: user.id, status: "ACTIVE" });
+    updateUserStatus.mutate({ id: user.id!, status: "ACTIVE" });
   };
 
   return (

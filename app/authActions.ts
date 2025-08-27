@@ -24,6 +24,7 @@ export async function handleCredentialsSignIn({
         status: true,
         password: true,       
         otpExpiresAt: true,
+        mustChangePassword: true
       },
     });
 
@@ -61,6 +62,19 @@ export async function handleCredentialsSignIn({
       return { message: "Invalid OTP" };
     }
 
+    if (user.mustChangePassword) {
+      return { redirectUrl: "/change-password" };
+    }
+
+    await db.auditLog.create({
+      data: {
+        userId: user.id,
+        action: "Login",
+        entityType: "Session",
+        description: `User ${user.username} (${user.role}) signed in.`,
+      },
+    });
+
     // Role-based redirects
     if (user.role === "Manager") return { redirectUrl: "/dashboard" };
     if (user.role === "Nurse") return { redirectUrl: "/request-order" };
@@ -70,10 +84,14 @@ export async function handleCredentialsSignIn({
     return { message: "Login successful" };
   } catch (error) {
     if (error instanceof AuthError) {
-      return { message: "Authentication error" };
+      if (error.type === "CredentialsSignin") {
+        return { message: "Wrong password" }; 
+      }
+      return { message: error.message }; 
     }
     throw error;
   }
+
 }
 
 
@@ -96,7 +114,7 @@ export async function handleSignOut() {
         userId: session.user.id,
         action: "Logout",
         entityType: "Session",
-        description: `User ${session.user.email} logged out.`,
+        description: `User ${session.user.username} (${session.user.role}) signed out.`,
       },
     });
   }

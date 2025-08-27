@@ -15,6 +15,7 @@ import CancelButton from "./CancelButton";
 import { useSession } from "next-auth/react";
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 
 const OrderDetailsModal = ({
   isOrderModalOpen,
@@ -27,6 +28,7 @@ const OrderDetailsModal = ({
   setIsOrderModalOpen: Dispatch<SetStateAction<boolean>>;
   hasPrint?: boolean;
 }) => {
+  const [isConfirmOpen, setIsConfirmOpen] = React.useState(false);
   const { data: session } = useSession();
   const userRole = session?.user.role;
 
@@ -34,40 +36,7 @@ const OrderDetailsModal = ({
 
   const handlePrint = async () => {
     window.print();
-
-    const didPrint = confirm("Did the receipt print successfully?");
-    if (!didPrint || !selectedOrder) return;
-
-    const numericId = parseInt(selectedOrder.id.replace("ORD-", ""));
-    try {
-      await fetch(`/api/request_order/${numericId}/status`, {
-        method: "PUT",
-        body: JSON.stringify({ status: "for_payment" }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      await fetch("/api/audit-log", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "Order Printed",
-          entityType: "Order",
-          entityId: selectedOrder.id,
-          description: `${userRole} prints the order ${selectedOrder.id}`,
-        }),
-      });
-
-      queryClient.invalidateQueries({ queryKey: ["request_order"] });
-      queryClient.invalidateQueries({ queryKey: ["order_cards"] });
-      queryClient.invalidateQueries({ queryKey: ["salesData", "This Year"] });
-
-      selectedOrder.status = "For Payment";
-      setIsOrderModalOpen(false);
-    } catch (error) {
-      console.error("Failed to update status after printing", error);
-    }
+    setIsConfirmOpen(true);
   };
 
   return (
@@ -195,6 +164,72 @@ const OrderDetailsModal = ({
                     )}
                   </div>
                 )}
+            </div>
+          </div>
+        </div>
+      )}
+      {isConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white p-6 rounded-lg shadow-md w-[90%] max-w-sm flex items-start flex-col">
+            <h2 className="text-lg font-semibold mb-2">Confirm Print</h2>
+            <p className="text-sm text-gray-600 mb-4 text-start">
+              Did the receipt print successfully?
+            </p>
+            <div className="flex gap-2 justify-end w-full mt-4">
+              <Button variant="outline" onClick={() => setIsConfirmOpen(false)}>
+                No
+              </Button>
+              <Button
+                onClick={async () => {
+                  setIsConfirmOpen(false);
+                  if (!selectedOrder) return;
+
+                  const numericId = parseInt(
+                    selectedOrder.id.replace("ORD-", "")
+                  );
+                  try {
+                    await fetch(`/api/request_order/${numericId}/status`, {
+                      method: "PUT",
+                      body: JSON.stringify({ status: "for_payment" }),
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                    });
+
+                    await fetch("/api/audit-log", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        action: "Order Printed",
+                        entityType: "Order",
+                        entityId: selectedOrder.id,
+                        description: `${userRole} prints the order ${selectedOrder.id}`,
+                      }),
+                    });
+
+                    queryClient.invalidateQueries({
+                      queryKey: ["request_order"],
+                    });
+                    queryClient.invalidateQueries({
+                      queryKey: ["order_cards"],
+                    });
+                    queryClient.invalidateQueries({
+                      queryKey: ["salesData", "This Year"],
+                    });
+
+                    selectedOrder.status = "For Payment";
+                    setIsOrderModalOpen(false);
+                  } catch (error) {
+                    console.error(
+                      "Failed to update status after printing",
+                      error
+                    );
+                  }
+                }}
+                className="bg-green-700 hover:bg-green-600 text-white"
+              >
+                Yes
+              </Button>
             </div>
           </div>
         </div>

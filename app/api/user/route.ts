@@ -56,6 +56,7 @@ export async function POST(req: Request) {
           email,
           role,
           password: hashedOtp, 
+          mustChangePassword: true,
           status: (status as UserStatus) ?? UserStatus.ACTIVE,
           otp: null,
           otpExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24hrs expiration

@@ -121,8 +121,8 @@ const UserEditModal = ({
               control={control}
               name="role"
               error={errors.role?.message}
-              categoryLabel={user.role}
-              items={["Nurse", "Pharmacist_Staff", "Manager", "Cashier"]}
+              categoryLabel={user.role.replace("_", " ")}
+              items={["Nurse", "Pharmacist Staff", "Manager", "Cashier"]}
             />
           </div>
 

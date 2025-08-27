@@ -9,6 +9,7 @@ export const signUpSchema = z
       .string()
       .min(1, "Email is required")
       .email("Invalid email address"),
+      
   //   password: z.string().min(8, "Password must contain at least 8 characters"),
   //   confirmPassword: z
   //     .string()
@@ -20,6 +21,34 @@ export const signUpSchema = z
   });
 
 export type TSignUpSchema = z.infer<typeof signUpSchema>;
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z
+      .string()
+      .trim()
+      .min(8, "Password must contain at least 8 characters"),
+    newPassword: z
+      .string()
+      .trim()
+      .min(8, "Password must contain at least 8 characters"),
+    confirmPassword: z
+      .string()
+      .trim()
+      .min(8, "Confirm Password must contain at least 8 characters"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match",
+  })
+  .refine((data) => data.newPassword !== data.currentPassword, {
+    path: ["newPassword"],
+    message: "New password must be different from current password",
+  });
+
+
+
+export type TChangePasswordSchema = z.infer<typeof changePasswordSchema>;
 
 export const editUserSchema = (isResetPassword: boolean) =>
   z
