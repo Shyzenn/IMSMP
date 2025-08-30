@@ -3,17 +3,9 @@ import { TableRowSkeleton } from "@/app/components/Skeleton";
 import TransactionHeader from "@/app/components/transaction/Header";
 import TransactionTable from "@/app/components/transaction/table/Table";
 import { fetchTransactionPages } from "@/lib/action/get";
+import { transactionSkeletonHeaders } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import React, { Suspense } from "react";
-
-const skeletonHeaders = [
-  { key: "customer_name", label: "Customer Name" },
-  { key: "createdAt", label: "Created At" },
-  { key: "quantity", label: "Quantity" },
-  { key: "total", label: "Total Price" },
-  { key: "type", label: "Type" },
-  { key: "status", label: "Status" },
-];
 
 async function Transaction(props: {
   searchParams?: Promise<{
@@ -44,14 +36,16 @@ async function Transaction(props: {
 
   return (
     <div
-      className="p-6 bg-white overflow-auto relative"
+      className="p-6 bg-white overflow-auto rounded-md"
       style={{ height: "calc(94vh - 70px)" }}
     >
       <TransactionHeader />
       <div className="mt-4">
         <Suspense
           key={`${query}-${currentPage}-${sortBy}-${sortOrder}`}
-          fallback={<TableRowSkeleton headerLabel={skeletonHeaders} />}
+          fallback={
+            <TableRowSkeleton headerLabel={transactionSkeletonHeaders} />
+          }
         >
           <TransactionTable
             query={query}
@@ -62,7 +56,7 @@ async function Transaction(props: {
           />
         </Suspense>
       </div>
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+      <div className="mt-6 flex items-center justify-center">
         <Pagination totalPages={totalPages} />
       </div>
     </div>

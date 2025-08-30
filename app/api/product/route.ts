@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { addProductSchema } from "@/lib/types";
 import { auth } from "@/auth";
 import { NotificationType } from "@prisma/client";
-import { sendNotification } from "@/server";
 
 // create product
 export async function POST(req: Request) {
@@ -99,13 +98,13 @@ export async function POST(req: Request) {
 
     await db.notification.createMany({data: notifications})
 
-     for (const notification of notifications) {
-        sendNotification(notification.recipientId, {
-          title: notification.title,
-          message: notification.message,
-          type: notification.type,
-        });
-      }
+    //  for (const notification of notifications) {
+    //     sendNotification(notification.recipientId, {
+    //       title: notification.title,
+    //       message: notification.message,
+    //       type: notification.type,
+    //     });
+    //   }
 
     return NextResponse.json({ success: true });
   } catch (error) {

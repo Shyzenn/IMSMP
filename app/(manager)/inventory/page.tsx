@@ -22,7 +22,7 @@ async function Inventory(props: {
   const filter = searchParams?.filter;
 
   if (!filter || !page) {
-    redirect(`/manager_inventory?query=&page=1&filter=all&sort=releaseDate&order=desc
+    redirect(`/inventory?query=&page=1&filter=all&sort=releaseDate&order=desc
 `);
   }
 

@@ -49,7 +49,7 @@ export const managerLinks = [
   },
   {
     name: "Inventory",
-    href: "/manager_inventory",
+    href: "/inventory",
     icon: MdOutlineInventory2,
   },
 

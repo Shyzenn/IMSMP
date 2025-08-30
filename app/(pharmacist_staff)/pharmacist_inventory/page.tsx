@@ -8,13 +8,13 @@ import InventoryHeader from "@/app/components/Inventory/InventoryHeader";
 import { inventorySkeletonHeaders } from "@/lib/utils";
 
 async function Inventory(props: {
-  searchParams?: Promise<{
+  searchParams?: {
     query?: string;
     page?: string;
     filter?: string;
     sort?: string;
     order?: string;
-  }>;
+  };
 }) {
   const searchParams = await props.searchParams;
   const query = searchParams?.query || "";
@@ -25,6 +25,7 @@ async function Inventory(props: {
     redirect(`/pharmacist_inventory?query=&page=1&filter=all&sort=releaseDate&order=desc
 `);
   }
+
   const sortBy = searchParams?.sort || "createdAt";
   const sortOrder = (searchParams?.order as "asc" | "desc") || "desc";
 
@@ -33,8 +34,8 @@ async function Inventory(props: {
 
   return (
     <div
-      className="p-6 bg-white overflow-auto relative"
-      style={{ height: "calc(94vh - 64px)" }}
+      className="p-6 bg-white overflow-auto rounded-md"
+      style={{ height: "calc(94vh - 70px)" }}
     >
       <InventoryHeader />
 
@@ -51,7 +52,7 @@ async function Inventory(props: {
             sortOrder={sortOrder}
           />
         </Suspense>
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+        <div className="mt-6 flex items-center justify-center">
           <Pagination totalPages={totalPages} />
         </div>
       </div>

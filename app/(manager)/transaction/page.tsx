@@ -3,17 +3,9 @@ import { TableRowSkeleton } from "@/app/components/Skeleton";
 import TransactionHeader from "@/app/components/transaction/Header";
 import TransactionTable from "@/app/components/transaction/table/Table";
 import { fetchTransactionPages } from "@/lib/action/get";
+import { transactionSkeletonHeaders } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import React, { Suspense } from "react";
-
-const skeletonHeaders = [
-  { key: "customer_name", label: "Customer Name" },
-  { key: "createdAt", label: "Created At" },
-  { key: "quantity", label: "Quantity" },
-  { key: "total", label: "Total Price" },
-  { key: "type", label: "Type" },
-  { key: "status", label: "Status" },
-];
 
 async function Transaction(props: {
   searchParams?: Promise<{
@@ -49,7 +41,9 @@ async function Transaction(props: {
       <div className="mt-4">
         <Suspense
           key={`${query}-${currentPage}-${sortBy}-${sortOrder}`}
-          fallback={<TableRowSkeleton headerLabel={skeletonHeaders} />}
+          fallback={
+            <TableRowSkeleton headerLabel={transactionSkeletonHeaders} />
+          }
         >
           <TransactionTable
             query={query}

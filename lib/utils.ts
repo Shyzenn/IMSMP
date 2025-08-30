@@ -123,3 +123,12 @@ export const inventorySkeletonHeaders = [
   { key: "category", label: "Category" },
   { key: "Action", label: "Actions" },
 ];
+
+export const transactionSkeletonHeaders = [
+  { key: "customer_name", label: "Customer Name" },
+  { key: "createdAt", label: "Created At" },
+  { key: "quantity", label: "Quantity" },
+  { key: "total", label: "Total Price" },
+  { key: "type", label: "Type" },
+  { key: "status", label: "Status" },
+];
