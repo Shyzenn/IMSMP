@@ -5,6 +5,7 @@ import Pagination from "@/app/components/Pagination";
 import { fetchProductsPages } from "@/lib/action/get";
 import { redirect } from "next/navigation";
 import InventoryHeader from "@/app/components/Inventory/InventoryHeader";
+import { inventorySkeletonHeaders } from "@/lib/utils";
 
 async function Inventory(props: {
   searchParams?: Promise<{
@@ -40,7 +41,7 @@ async function Inventory(props: {
       <div className="overflow-x-auto">
         <Suspense
           key={`${currentPage}-${query}-${filter}-${sortBy}-${sortOrder}`}
-          fallback={<TableRowSkeleton />}
+          fallback={<TableRowSkeleton headerLabel={inventorySkeletonHeaders} />}
         >
           <InventoryTable
             query={query}

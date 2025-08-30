@@ -50,7 +50,10 @@ const NotificationList = ({
                 const messageData = safeJsonParse(notification.message);
 
                 return (
-                  <div key={notification.id} className="px-4 py-2 border-b">
+                  <div
+                    key={`${notification.id}-${notification.createdAt}`}
+                    className="px-4 py-2 border-b"
+                  >
                     <p>{notification.title}</p>
 
                     {notification.type === "ORDER_REQUEST" && (

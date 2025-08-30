@@ -1,54 +1,46 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Notification } from "@/lib/interfaces";
 
 export function usePharmacistNotifications(userId?: string, role?: string) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<
-    "connected" | "disconnected" | "connecting"
-  >("connecting");
-  const socketRef = useRef<WebSocket | null>(null);
+    "connected" | "disconnected"
+  >("disconnected");
 
   useEffect(() => {
-    if (!(userId && role === "Pharmacist_Staff")) return;
+    if (!userId || !role) return;
 
-    const socket = new WebSocket("ws://localhost:4001");
+    fetch("/api/notifications")
+      .then((res) => res.json())
+      .then((data) => setNotifications(data))
+      .catch((err) => console.error("Fetch error:", err));
 
-    socket.onopen = () => {
-      socket.send(JSON.stringify({ type: "AUTH", userId }));
+    // Live SSE connection (per-user)
+    const eventSource = new EventSource(`/api/events?userId=${userId}`);
+
+    eventSource.onopen = () => {
       setConnectionStatus("connected");
     };
 
-    socket.onclose = () => {
-      setConnectionStatus("disconnected");
-    };
-
-    socket.onmessage = (event: MessageEvent) => {
+    eventSource.onmessage = (event) => {
+      console.log("🔔 SSE message:", event.data);
       try {
-        const data = JSON.parse(event.data);
-        if (data.type === "NOTIFICATION") {
-          const notification: Notification = {
-            ...data.payload,
-            id: Date.now().toString(),
-            read: false,
-          };
-          setNotifications((prev) => [notification, ...prev]);
-        }
-      } catch (error) {
-        console.error("WebSocket error:", error);
+        const notif = JSON.parse(event.data);
+        // prepend new notification
+        setNotifications((prev) => [notif, ...prev]);
+      } catch (e) {
+        console.error("Invalid SSE data:", event.data);
+        console.log(e)
       }
     };
 
-    const pingInterval = setInterval(() => {
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.send(`{"event":"ping"}`);
-      }
-    }, 29000);
-
-    socketRef.current = socket;
+    eventSource.onerror = () => {
+      setConnectionStatus("disconnected");
+      eventSource.close();
+    };
 
     return () => {
-      clearInterval(pingInterval);
-      socketRef.current?.close();
+      eventSource.close();
     };
   }, [userId, role]);
 

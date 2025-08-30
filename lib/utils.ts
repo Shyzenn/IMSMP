@@ -114,3 +114,12 @@ export const isActive = (pathname: string, href: string) => {
   return pathname === href || pathname.startsWith(href);
 };
 
+export const inventorySkeletonHeaders = [
+  { key: "product_name", label: "Product" },
+  { key: "quantity", label: "Quantity" },
+  { key: "price", label: "Price" },
+  { key: "releaseDate", label: "Release Date" },
+  { key: "expiryDate", label: "Expiry Date" },
+  { key: "category", label: "Category" },
+  { key: "Action", label: "Actions" },
+];

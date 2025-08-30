@@ -3,9 +3,10 @@ import { db } from "@/lib/db";
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params; 
     const { status } = await req.json();
 
     if (!["ACTIVE", "DISABLE"].includes(status)) {
@@ -16,7 +17,7 @@ export async function PATCH(
     }
 
     const user = await db.user.update({
-      where: { id: params.id },
+      where: { id },
       data: { status },
     });
 
