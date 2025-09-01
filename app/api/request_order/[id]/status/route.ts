@@ -15,21 +15,21 @@ export async function PUT(
 
     const userId = session.user.id; 
 
-  const { id } = await context.params;
+    const { id } = await context.params;
 
-  const numericId = parseInt(id.replace("ORD-", ""));
-  if (!numericId) {
-    return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
-  }
+    const numericId = parseInt(id.replace("ORD-", ""));
+    if (!numericId) {
+      return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
+    }
 
-  const { status } = await req.json();
+    const { status } = await req.json();
 
-  if (!status || !["for_payment", "paid"].includes(status)) {
-    return NextResponse.json(
-      { message: "Invalid or missing status" },
-      { status: 400 }
-    );
-  }
+    if (!status || !["for_payment", "paid"].includes(status)) {
+      return NextResponse.json(
+        { message: "Invalid or missing status" },
+        { status: 400 }
+      );
+    }
 
   try {
     // Update order status

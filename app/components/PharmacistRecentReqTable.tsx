@@ -5,13 +5,14 @@ import TableComponent from "./TableComponent";
 import { formattedDate } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import OrderDetailsModal from "./OrderDetailsModal";
-import { Column, Order } from "@/lib/interfaces";
+import { Column } from "@/lib/interfaces";
 import { CheckCircle, Clock } from "lucide-react";
 import axios from "axios";
 import { RecentRequestOrderSkeleton } from "./Skeleton";
 import LoadingButton from "@/components/loading-button";
 import { useSession } from "next-auth/react";
 import CashierReqOrderAction from "./CashierReqOrderAction";
+import { OrderView } from "./transaction/cashier/CashierAction";
 
 export const fetchOrderRequest = async () => {
   console.log("fetching /api/request_order");
@@ -58,7 +59,7 @@ export const baseColumns: Column[] = [
 
 const ManagerRecentReqTable = () => {
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<OrderView | null>(null);
   const { data: session } = useSession();
   const userRole = session?.user.role;
 
@@ -80,8 +81,10 @@ const ManagerRecentReqTable = () => {
             const originalOrder = orderRequest.find((o) => o.id === row.id);
 
             return (originalOrder && row.status === "For Payment") ||
-              row.status === "Paid" ? (
+              row.status === "Paid" ||
+              row.status === "Pending" ? (
               <CashierReqOrderAction
+                showCheckbox={true}
                 orderId={originalOrder.id}
                 onView={() => {
                   setSelectedOrder(originalOrder);
@@ -101,9 +104,7 @@ const ManagerRecentReqTable = () => {
   const formattedData = useMemo(() => {
     const filtered =
       userRole === "Cashier"
-        ? orderRequest.filter(
-            (order) => order.status === "For Payment" || order.status === "Paid"
-          )
+        ? orderRequest.filter((order) => order.status)
         : orderRequest;
 
     return filtered.map((order) => ({

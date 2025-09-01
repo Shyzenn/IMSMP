@@ -10,7 +10,7 @@ import {
 import DashboardCards from "./DashboardCards";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
-import { ManagerCardSkeleton } from "./Skeleton";
+import { CardSkeleton } from "./Skeleton";
 
 type OrderCardData = {
   totalRevenue: number;
@@ -32,7 +32,7 @@ const CashierDashboardCards = () => {
   });
 
   if (isLoading) {
-    return <ManagerCardSkeleton />;
+    return <CardSkeleton />;
   }
 
   const {

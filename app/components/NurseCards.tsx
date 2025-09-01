@@ -10,7 +10,7 @@ import {
   TbShoppingCartX,
 } from "react-icons/tb";
 import axios from "axios";
-import { ManagerCardSkeleton } from "./Skeleton";
+import { CardSkeleton } from "./Skeleton";
 
 const fetchNurseCards = async () => {
   const { data } = await axios.get("api/nurse_cards");
@@ -24,7 +24,7 @@ const NurseCards = () => {
   });
 
   if (isLoading) {
-    return <ManagerCardSkeleton />;
+    return <CardSkeleton />;
   }
 
   const [totalOrders, pending, for_payment, paid] = nurseCardsData;

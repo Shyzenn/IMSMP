@@ -71,8 +71,8 @@ const TopMedicine = () => {
   if (isLoading) return <ExpiryProductsSkeleton />;
 
   return (
-    <div className="bg-white w-[40%] rounded-md h-full">
-      <div className=" flex justify-between p-2 w-full h-auto">
+    <>
+      <div className="flex justify-between p-2 w-full h-auto">
         <p className="text-lg font-semibold">Top Selling Medicine</p>
         <SelectField
           label="Select a category"
@@ -94,7 +94,7 @@ const TopMedicine = () => {
           <Doughnut options={options} data={chartData} />
         )}
       </div>
-    </div>
+    </>
   );
 };
 

@@ -5,6 +5,7 @@ import React from "react";
 import TableComponent from "./TableComponent";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { ExpiryProductsSkeleton } from "./Skeleton";
 
 const columns: Column[] = [
   { label: "Medicine", accessor: "productName" },
@@ -17,20 +18,15 @@ const fetchLowStocks = async () => {
 };
 
 const NurseLowStockList = () => {
-  const {
-    data: lowStocks = [],
-    isLoading,
-    isError,
-  } = useQuery({
+  const { data: lowStocks = [], isLoading } = useQuery({
     queryFn: fetchLowStocks,
     queryKey: ["low_stock"],
   });
 
-  if (isLoading) return <p>Loading products...</p>;
-  if (isError) return <p>Failed to load products.</p>;
+  if (isLoading) return <ExpiryProductsSkeleton />;
 
   return (
-    <div className="bg-white w-[40%] rounded-md h-full">
+    <div className="mx-4 max-h-[240px] overflow-auto">
       <div className="max-h-[230px] overflow-auto mx-4">
         <TableComponent
           data={lowStocks}

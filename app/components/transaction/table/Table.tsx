@@ -4,6 +4,7 @@ import { getTransactionList } from "@/lib/action/get";
 import { formattedDate } from "@/lib/utils";
 import TransactionTableHeader from "./TransactionHeader";
 import EmptyTable from "../../EmptyTable";
+import CashierAction from "../cashier/CashierAction";
 
 const TransactionTable = async ({
   query,
@@ -34,16 +35,18 @@ const TransactionTable = async ({
         <Table>
           <TransactionTableHeader />
           <TableBody>
-            {transactions.map((transaction, i) => (
-              <TableRow key={i}>
-                <TableCell>{`ORD-0${transaction.id}`}</TableCell>
+            {transactions.map((transaction) => (
+              <TableRow key={transaction.id}>
+                <TableCell>{`ORD-${transaction.id}`}</TableCell>
                 <TableCell>{transaction.customer}</TableCell>
                 <TableCell>{formattedDate(transaction.createdAt)}</TableCell>
-
                 <TableCell>{transaction.quantity}</TableCell>
                 <TableCell>{`₱${transaction.total}`}</TableCell>
                 <TableCell>{transaction.source}</TableCell>
                 <TableCell>{transaction.status}</TableCell>
+                <TableCell>
+                  <CashierAction transaction={transaction} />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

@@ -68,6 +68,7 @@ const TransactionTableHeader = () => {
         </TableHead>
 
         <TableHead className="text-black font-semibold">Status</TableHead>
+        <TableHead className="text-black font-semibold">Actions</TableHead>
       </TableRow>
     </TableHeader>
   );

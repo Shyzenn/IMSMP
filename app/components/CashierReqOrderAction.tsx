@@ -8,10 +8,12 @@ const CashierReqOrderAction = ({
   onView,
   orderId,
   status,
+  showCheckbox,
 }: {
   onView: () => void;
   orderId: string;
   status: string;
+  showCheckbox?: boolean;
 }) => {
   const { open, close, isOpen } = useModal();
 
@@ -48,7 +50,7 @@ const CashierReqOrderAction = ({
 
   return (
     <div className="flex gap-2 justify-end">
-      {status === "Paid" ? (
+      {status === "Paid" || status === "Pending" ? (
         <ActionButton
           icon={IoMdEye}
           onClick={onView}
@@ -61,11 +63,13 @@ const CashierReqOrderAction = ({
             onClick={onView}
             color="hover:bg-slate-300"
           />
-          <ActionButton
-            icon={IoMdCheckmark}
-            color="hover:bg-green-300"
-            onClick={handleCheckmarkClick}
-          />
+          {showCheckbox && (
+            <ActionButton
+              icon={IoMdCheckmark}
+              color="hover:bg-green-300"
+              onClick={handleCheckmarkClick}
+            />
+          )}
         </>
       )}
 

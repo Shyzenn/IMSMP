@@ -102,9 +102,9 @@ export function TableRowSkeleton({
   );
 }
 
-export function ManagerCardSkeleton() {
+export function CardSkeleton() {
   return (
-    <div className="flex gap-5 h-full">
+    <div className="flex gap-5 h-[250px]">
       {Array.from({ length: 4 }).map((_, index) => (
         <div
           key={index}

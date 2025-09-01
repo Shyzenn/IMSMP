@@ -26,7 +26,9 @@ export interface Column {
   label: string;
   accessor: string;
   align?: "right" | "left";
-  render?: (row: Record<string, unknown>) => React.ReactNode;}
+  render?: (row: Record<string, unknown>) => React.ReactNode;
+   showCheckbox?: boolean;
+}
 
 export interface TableComponentProps<T extends Record<string, unknown>> {
   columns: Column[];

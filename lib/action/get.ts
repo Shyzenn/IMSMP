@@ -55,17 +55,20 @@ export async function fetchAuditPages(query: string) {
 }
 
 // Transaction
-type CombinedTransaction = {
-  id: number;
+export type CombinedTransaction = {
+  id: string; 
   customer: string;
+  patient_name?: string;
+  roomNumber?: number;
   quantity: number;
   price: number;
   total: number;
   status: string;
   createdAt: Date;
   source: "Walk In" | "Request Order";
-  orderItems: OrderItem[]
+  itemDetails: OrderItem[];
 };
+
 
 export const getTransactionList = async (
   query: string,
@@ -124,42 +127,60 @@ export const getTransactionList = async (
       : Promise.resolve([]),
   ]);
 
-  const formattedWalkIn = walkinOrders.map((tx) => ({
-    id: tx.id,
-    customer: tx.customer_name?.trim() || "Unknown",
-    createdAt: tx.createdAt,
-    status: formatStatus(tx.status),
-    source: "Walk In" as const,
-    quantity: tx.items.reduce((sum, item) => sum + item.quantity, 0),
-    price: tx.items.reduce((sum, item) => sum + item.price.toNumber(), 0),
-    total: tx.totalAmount.toNumber(),
-    orderItems: tx.items.map((item) => ({
-      productName: item.product.product_name,
-      quantity: item.quantity,
-      price: item.price.toNumber(),
-    })),
-  }));
+   const formattedWalkIn: CombinedTransaction[] = walkinOrders.map((tx) => {
+      const items = tx.items ?? [];
 
-  const formattedRequest = requestOrders.map((tx) => ({
-    id: tx.id,
-    customer: tx.patient_name || "Unknown",
-    createdAt: tx.createdAt,
-    status: formatStatus(tx.status),
-    source: "Request Order" as const,
-    quantity: tx.items.reduce((sum, item) => sum + item.quantity, 0),
-    price: tx.items.reduce((sum, item) => sum + item.product.price.toNumber(), 0),
-    total: tx.items.reduce(
-      (sum, item) => sum + item.quantity * item.product.price.toNumber(),
-      0
-    ),
-    orderItems: tx.items.map((item) => ({
-      productName: item.product.product_name,
-      quantity: item.quantity,
-      price: item.product.price.toNumber(),
-    })),
-  }));
+      return {
+        id: `WALK-${tx.id}`,
+        customer: tx.customer_name?.trim() || "Unknown",
+        patient_name: undefined, // not applicable
+        roomNumber: undefined,   // not applicable
+        createdAt: tx.createdAt,
+        status: formatStatus(tx.status),
+        source: "Walk In",
+        quantity: items.reduce((sum, item) => sum + item.quantity, 0),
+        price: items.reduce((sum, item) => sum + item.price.toNumber(), 0),
+        total: tx.totalAmount?.toNumber?.() ?? 0,
+        itemDetails: items.map((item) => ({
+          productName: item.product?.product_name ?? "Unknown",
+          quantity: item.quantity,
+          price: item.product?.price?.toNumber?.() ?? 0,
+        })),
+      };
+    });
 
-  const combined = [...formattedWalkIn, ...formattedRequest];
+    const formattedRequest: CombinedTransaction[] = requestOrders.map((tx) => {
+      const items = tx.items ?? [];
+
+      return {
+        id: `REQ-${tx.id}`,
+        customer: tx.patient_name || "Unknown",
+        patient_name: tx.patient_name ?? "N/A",
+        roomNumber: tx.room_number ? Number(tx.room_number) : undefined,
+        createdAt: tx.createdAt,
+        status: formatStatus(tx.status),
+        source: "Request Order",
+        quantity: items.reduce((sum, item) => sum + item.quantity, 0),
+        price: items.reduce(
+          (sum, item) => sum + (item.product?.price?.toNumber?.() ?? 0),
+          0
+        ),
+        total: items.reduce(
+          (sum, item) =>
+            sum + item.quantity * (item.product?.price?.toNumber?.() ?? 0),
+          0
+        ),
+        itemDetails: items.map((item) => ({
+          productName: item.product?.product_name ?? "Unknown",
+          quantity: item.quantity,
+          price: item.product?.price?.toNumber?.() ?? 0,
+        })),
+      };
+    });
+
+  // Merge into unified list
+  const combined: CombinedTransaction[] = [...formattedWalkIn, ...formattedRequest];
+
 
   const sorted = combined.sort((a, b) => {
     let fieldA: string | number | Date;
@@ -231,7 +252,7 @@ export async function fetchTransactionPages(query: string, filter: string) {
     total = walkinCount + requestCount;
   }
 
-  return Math.ceil(total / 14);
+  return Math.ceil(total / ITEMS_PER_PAGE);
 }
 
 //Inventory

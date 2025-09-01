@@ -21,6 +21,7 @@ import { useModal } from "../hooks/useModal";
 import { useProducts } from "../hooks/useProducts";
 import { useProductDropdown } from "../hooks/useProductDropDown";
 import { useProductForm } from "../hooks/useProductForm";
+import { RecentRequestOrderSkeleton } from "./Skeleton";
 
 const RecentRequestOrder = () => {
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
@@ -139,7 +140,7 @@ const RecentRequestOrder = () => {
     handleSubmitWrapper(() => addRequesOrder(data));
   };
 
-  if (isLoading) return <p>Loading products...</p>;
+  if (isLoading) return <RecentRequestOrderSkeleton />;
   if (isError) return <p>Failed to load products.</p>;
 
   return (

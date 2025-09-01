@@ -1,4 +1,4 @@
-import { Order, OrderItem } from "@/lib/interfaces";
+import { OrderItem } from "@/lib/interfaces";
 import { capitalLetter } from "@/lib/utils";
 import React, { Dispatch, SetStateAction } from "react";
 import { LuPrinter } from "react-icons/lu";
@@ -16,6 +16,7 @@ import { useSession } from "next-auth/react";
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { OrderView } from "./transaction/cashier/CashierAction";
 
 const OrderDetailsModal = ({
   isOrderModalOpen,
@@ -24,7 +25,7 @@ const OrderDetailsModal = ({
   hasPrint,
 }: {
   isOrderModalOpen: boolean;
-  selectedOrder: Order | null;
+  selectedOrder: OrderView | null;
   setIsOrderModalOpen: Dispatch<SetStateAction<boolean>>;
   hasPrint?: boolean;
 }) => {
@@ -71,19 +72,33 @@ const OrderDetailsModal = ({
                 </div>
               </div>
               <div className="flex flex-col gap-5 pb-2">
-                <div className="flex gap-2">
-                  <p>Patient Name:</p>
-                  <p className="font-semibold">{selectedOrder.patient_name}</p>
-                </div>
-                <div className="flex gap-2">
-                  <p>Room Number:</p>
-                  <p className="font-semibold">{selectedOrder.roomNumber}</p>
-                </div>
+                {selectedOrder.source === "Walk In" ? (
+                  <div className="flex gap-2">
+                    <p>Customer Name:</p>
+                    <p className="font-semibold">{selectedOrder.customer}</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-2">
+                      <p>Patient Name:</p>
+                      <p className="font-semibold">
+                        {selectedOrder.patient_name}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <p>Room Number:</p>
+                      <p className="font-semibold">
+                        {selectedOrder.roomNumber}
+                      </p>
+                    </div>
+                  </>
+                )}
                 <div className="flex gap-2">
                   <p>Created At:</p>
-                  <p className="font-semibold">{selectedOrder.createdAt}</p>
+                  <p className="font-semibold">
+                    {selectedOrder.createdAt.toLocaleString()}
+                  </p>
                 </div>
-
                 <div className="flex gap-2">
                   <p>Status:</p>
                   <p className="font-semibold">{selectedOrder.status}</p>

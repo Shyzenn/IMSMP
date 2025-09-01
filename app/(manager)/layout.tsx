@@ -4,7 +4,7 @@ import Header from "../components/Header";
 import { SidebarProvider } from "../(manager)/SidebarContext";
 import ReactQueryProvider from "./QueryClientProvider";
 import Sidebar from "../components/Sidebar";
-import { nurseLinks } from "@/lib/links";
+import { managerLinks } from "@/lib/links";
 
 export const metadata: Metadata = {
   title: "Macoleen's Pharmacy",
@@ -21,7 +21,7 @@ export default function AdminLayout({
       <div className={`antialiased bg-background bg-gray-100`}>
         <SidebarProvider>
           <div className="flex">
-            <Sidebar links={nurseLinks} />
+            <Sidebar links={managerLinks} />
             <div className="flex-1 flex flex-col h-svh overflow-y-auto">
               <Header />
               <div className="flex-1 mx-10">

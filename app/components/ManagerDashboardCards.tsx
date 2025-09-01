@@ -10,7 +10,7 @@ import {
   TbShoppingCartX,
 } from "react-icons/tb";
 import axios from "axios";
-import { ManagerCardSkeleton } from "./Skeleton";
+import { CardSkeleton } from "./Skeleton";
 import { useSession } from "next-auth/react";
 
 const fetchManagerCardData = async () => {
@@ -28,7 +28,7 @@ const ManagerDashboardCards = () => {
   });
 
   if (isLoading) {
-    return <ManagerCardSkeleton />;
+    return <CardSkeleton />;
   }
 
   const [totalProducts, lowStockArray, highStockArray, expiring] = managerCard;

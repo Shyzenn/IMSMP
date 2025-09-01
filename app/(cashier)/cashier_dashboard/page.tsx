@@ -9,7 +9,9 @@ export default async function Dashboard() {
       <CashierDashboardCards />
       <div className="h-[35%] flex gap-x-4 w-full">
         <SalesGraph />
-        <TopMedicine />
+        <div className="bg-white w-[35%] rounded-md shadow-md">
+          <TopMedicine />
+        </div>
       </div>
       <div className="bg-white h-[40%] rounded-md shadow-md">
         <ManagerRecentReqTable />
