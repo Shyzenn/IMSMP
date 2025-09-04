@@ -34,9 +34,7 @@ const ManagerDashboardCards = () => {
   const [totalProducts, lowStockArray, highStockArray, expiring] = managerCard;
 
   const basePath =
-    userRole === "Pharmacist_Staff"
-      ? "pharmacist_inventory"
-      : "manager_inventory";
+    userRole === "Pharmacist_Staff" ? "pharmacist_inventory" : "inventory";
 
   const managerCards = [
     {

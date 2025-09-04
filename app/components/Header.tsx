@@ -3,7 +3,7 @@
 import MobileMenu from "./MobileMenu";
 import { useSession } from "next-auth/react";
 import { PiBellThin } from "react-icons/pi";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import NotificationList from "./NotificationList";
 import { usePharmacistNotifications } from "../hooks/usePharmacistNotifications";
 import WalkInOrder from "./WalkInOrder";
@@ -27,12 +27,17 @@ const Header = () => {
   const MemoMobileMenu = memo(MobileMenu);
 
   const [dropdown, setDropdown] = useState(false);
+  const prevNotificationsCount = useRef(0);
+
+  // audio element
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const fetchNotification = async () => {
       const response = await fetch("api/notifications");
       const data = await response.json();
       setNotifications(data);
+      prevNotificationsCount.current = data.length; // set initial count
     };
 
     if (session?.user.id) {
@@ -43,6 +48,29 @@ const Header = () => {
   const unreadCount = useMemo(() => {
     return notifications.filter((n) => !n.read).length;
   }, [notifications]);
+
+  // Play bell sound when new notification arrives
+  useEffect(() => {
+    if (userRole === "Pharmacist_Staff" && notifications.length > 0) {
+      const hasUnread = notifications.some((n) => !n.read);
+      if (hasUnread && audioRef.current) {
+        audioRef.current.loop = true; // keep ringing until cleared
+        audioRef.current.play().catch(() => {});
+      }
+    }
+  }, [notifications, userRole]);
+
+  // Stop the loop when notifications are marked read
+  useEffect(() => {
+    if (
+      userRole === "Pharmacist_Staff" &&
+      unreadCount === 0 &&
+      audioRef.current
+    ) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0; // reset
+    }
+  }, [unreadCount, userRole]);
 
   const handleBellClick = () => {
     setDropdown(!dropdown);
@@ -61,7 +89,7 @@ const Header = () => {
         width={150}
         height={150}
         className="hidden xl:block"
-      />{" "}
+      />
       <MemoMobileMenu />
       <HeaderLinks session={session} />
       <div className="flex items-center relative">
@@ -69,7 +97,7 @@ const Header = () => {
 
         {(userRole === "Pharmacist_Staff" || userRole === "Manager") && (
           <div className="relative flex items-center mr-8">
-            {/*Notification*/}
+            {/* Notification */}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -99,6 +127,9 @@ const Header = () => {
               notifications={notifications}
               connectionStatus={connectionStatus}
             />
+
+            {/* Hidden audio element */}
+            <audio ref={audioRef} src="/sounds/bell.mp3" preload="auto" />
           </div>
         )}
 

@@ -6,7 +6,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { capitalLetter } from "@/lib/utils";
@@ -15,10 +14,15 @@ import Image from "next/image";
 import { Session } from "next-auth";
 import Link from "next/link";
 import { handleSignOut } from "../authActions";
+import { useModal } from "../hooks/useModal";
+import EditProfileModal from "./EditProfileModal";
 
 const ProfileDropdown = ({ session }: { session: Session | null }) => {
+  const { open, close, isOpen } = useModal();
+
   return (
     <div>
+      {isOpen && <EditProfileModal close={close} />}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="w-9 h-9 p-2 rounded-full bg-white relative">
@@ -37,17 +41,13 @@ const ProfileDropdown = ({ session }: { session: Session | null }) => {
               : "Unknown"}
           </DropdownMenuLabel>
           <DropdownMenuGroup>
-            <DropdownMenuItem>
-              Profile
-              <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-            </DropdownMenuItem>
+            <DropdownMenuItem onClick={open}>Profile</DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <Link href={"/manager_settings"}>
             <DropdownMenuItem>Settings</DropdownMenuItem>
           </Link>
 
-          <DropdownMenuItem>Support</DropdownMenuItem>
           <DropdownMenuSeparator />
           <form
             action={handleSignOut}
@@ -58,7 +58,6 @@ const ProfileDropdown = ({ session }: { session: Session | null }) => {
               className="w-full text-left text-sm flex justify-between cursor-default"
             >
               Log out
-              <DropdownMenuShortcut>⇧⌘L</DropdownMenuShortcut>
             </button>
           </form>
         </DropdownMenuContent>

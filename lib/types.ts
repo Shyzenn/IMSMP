@@ -74,6 +74,18 @@ export const editUserSchema = (isResetPassword: boolean) =>
 
 export type TEditUserSchema = z.infer<ReturnType<typeof editUserSchema>>;
 
+// Edit User Profile
+export const editUserProfileSchema = z.object({
+    profilePicture: z.string().optional(),
+    username: z.string().min(1, "Username is required"),
+    email: z
+      .string()
+      .min(1, "Email is required")
+      .email("Invalid email address"),
+});
+
+export type TeditUserProfileSchema = z.infer<typeof editUserProfileSchema>;
+
 // Login Form
 export const signInSchema = object({
   email: z

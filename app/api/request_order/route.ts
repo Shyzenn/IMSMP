@@ -59,7 +59,7 @@ export async function POST(req: Request) {
       },
     });
 
-    // 🛎️ Send notification to the Manager(s)
+    // Send notification to the Pharmacist Staff
     const pharmacists = await db.user.findMany({
       where: {role: "Pharmacist_Staff"}
     })
