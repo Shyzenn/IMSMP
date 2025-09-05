@@ -8,13 +8,13 @@ import InventoryHeader from "@/app/components/Inventory/InventoryHeader";
 import { inventorySkeletonHeaders } from "@/lib/utils";
 
 async function Inventory(props: {
-  searchParams?: {
+  searchParams?: Promise<{
     query?: string;
     page?: string;
     filter?: string;
     sort?: string;
     order?: string;
-  };
+  }>;
 }) {
   const searchParams = await props.searchParams;
   const query = searchParams?.query || "";
