@@ -27,8 +27,8 @@ const ProfileDropdown = ({ session }: { session: Session | null }) => {
         <DropdownMenuTrigger asChild>
           <button className="w-9 h-9 p-2 rounded-full bg-white relative">
             <Image
-              src={DefaultUserImage}
-              alt="Default User Image"
+              src={session?.user?.profileImage || DefaultUserImage}
+              alt="User Profile Image"
               fill
               className="object-cover rounded-full"
             />

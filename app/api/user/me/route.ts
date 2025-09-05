@@ -33,3 +33,36 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
 }
+
+export async function PUT(req: Request) {
+  try {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+
+    if (!token || !token.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { username, email, profileImage } = await req.json();
+
+    const updatedUser = await db.user.update({
+      where: { email: token.email },
+      data: {
+        username,
+        email,
+        profileImage,
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+        profileImage: true,
+      },
+    });
+
+    return NextResponse.json(updatedUser);
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+  }
+}

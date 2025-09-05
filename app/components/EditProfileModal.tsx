@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import DefaultUserImage from "@/public/defaultUserImg.jpg";
 import { CiCamera } from "react-icons/ci";
 import FormField from "./FormField";
@@ -14,17 +14,23 @@ import { editUserProfileSchema, TeditUserProfileSchema } from "@/lib/types";
 import axios from "axios";
 import toast from "react-hot-toast";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 const EditProfileModal = ({ close }: { close: () => void }) => {
-  const [loadingUser, setLoadingUser] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const {
     register,
     reset,
+    setValue,
+    watch,
     formState: { errors, isSubmitting, isDirty },
     handleSubmit,
   } = useForm<TeditUserProfileSchema>({
     resolver: zodResolver(editUserProfileSchema),
   });
+
+  const profileImage = watch("profileImage");
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -34,24 +40,55 @@ const EditProfileModal = ({ close }: { close: () => void }) => {
           reset({
             username: data.username,
             email: data.email,
+            profileImage: data.profileImage || "",
           });
         }
       } catch (error) {
         console.error("Failed to fetch user", error);
-      } finally {
-        setLoadingUser(false);
       }
     };
     fetchUser();
   }, [reset]);
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append(
+        "upload_preset",
+        process.env.NEXT_PUBLIC_CLOUDINARY_PRESET as string
+      );
+
+      const res = await axios.post(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUDNAME}/image/upload`,
+        formData
+      );
+
+      const imageUrl = res.data.secure_url;
+      setValue("profileImage", imageUrl, { shouldDirty: true });
+    } catch (error) {
+      console.error("Image upload failed", error);
+      toast.error("Failed to upload image");
+    }
+  };
+
   const notify = useCallback(() => {
     toast.success("Profile edited successfully! 🎉", { icon: "✅" });
   }, []);
 
+  const { update } = useSession();
+
   const onSubmit = async (formData: TeditUserProfileSchema) => {
     try {
       await axios.put("/api/user/me", formData);
+
+      await update({
+        ...formData,
+      });
+
       notify();
       close();
     } catch (error) {
@@ -59,14 +96,6 @@ const EditProfileModal = ({ close }: { close: () => void }) => {
       toast.error("Something went wrong");
     }
   };
-
-  if (loadingUser) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
-        <div className="bg-white p-6 rounded-md">Loading user...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
@@ -76,17 +105,29 @@ const EditProfileModal = ({ close }: { close: () => void }) => {
       >
         {/* PROFILE PICTURE */}
         <div className="flex items-center justify-center flex-col gap-4">
-          <p className="text-xl font-semibold">Edit Profile</p>
+          <p className="text-xl font-semibold border-b w-full text-center pb-2">
+            Edit Profile
+          </p>
           <div className="w-32 h-32 p-2 rounded-full bg-white relative">
             <Image
-              src={DefaultUserImage}
-              alt="Default User Image"
+              src={profileImage || DefaultUserImage}
+              alt="User Profile"
               fill
               className="object-cover rounded-full"
             />
-            <div className="absolute bottom-3 right-1 p-2 bg-gray-500 w-8 h-8 rounded-full cursor-pointer hover:bg-gray-400">
+            <div
+              className="absolute bottom-3 right-1 p-2 bg-gray-500 w-8 h-8 rounded-full cursor-pointer hover:bg-gray-400"
+              onClick={() => fileInputRef.current?.click()}
+            >
               <CiCamera className="text-white text-lg text-center" />
             </div>
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+              hidden
+            />
           </div>
         </div>
 

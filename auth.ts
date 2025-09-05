@@ -48,7 +48,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               id: user.id.toString(),
               email: user.email,
               role: user.role,
-              status: user.status
+              status: user.status,
+              profileImage: user.profileImage
             };
           }
         }
@@ -64,6 +65,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.role = user.role as string;
         token.email = user.email as string;
         token.status = user.status as string
+        token.profileImage = user.profileImage as string
       }
       if (trigger === "update" && session) {
         token = { ...token, ...session };
@@ -81,6 +83,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.email = token.email;
         session.user.status = token.status;
         session.user.username = dbUser?.username || null;
+        session.user.profileImage = token.profileImage as string | null;
         return session;
     },
     async signIn({ user }) {

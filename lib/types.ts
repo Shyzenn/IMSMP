@@ -76,7 +76,7 @@ export type TEditUserSchema = z.infer<ReturnType<typeof editUserSchema>>;
 
 // Edit User Profile
 export const editUserProfileSchema = z.object({
-    profilePicture: z.string().optional(),
+    profileImage: z.string().optional(),
     username: z.string().min(1, "Username is required"),
     email: z
       .string()
