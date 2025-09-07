@@ -8,12 +8,14 @@ import AuditLogTableHeader from "./Header";
 
 export default async function AuditLogTable({
   query = "",
+  filter = "all",
   currentPage = 1,
 }: {
   query?: string;
+  filter?: string;
   currentPage?: number;
 }) {
-  const auditLogs = await getAuditLogList(query, currentPage);
+  const auditLogs = await getAuditLogList(query, filter, currentPage);
 
   return (
     <>
@@ -29,7 +31,6 @@ export default async function AuditLogTable({
                 <TableCell>{auditLog.action}</TableCell>
                 <TableCell>{auditLog.description}</TableCell>
                 <TableCell>{formattedDate(auditLog.createdAt)}</TableCell>
-
                 <TableCell>{auditLog.user?.username ?? "-"}</TableCell>
                 <TableCell>{auditLog.entityType}</TableCell>
                 <TableCell>

@@ -22,9 +22,11 @@ const AuditFilter = () => {
       onChange={handleTypeChange}
       option={[
         { label: "All", value: "all" },
-        { label: "Logout", value: "logout" },
-        { label: "Login", value: "login" },
-        { label: "Paid", value: "paid" },
+        { label: "Change Password", value: "ChangePassword" },
+        { label: "Order Request", value: "OrderRequest" },
+        { label: "Product", value: "Product" },
+        { label: "Session", value: "Session" },
+        { label: "Walkin Order", value: "WalkInOrder" },
       ]}
     />
   );

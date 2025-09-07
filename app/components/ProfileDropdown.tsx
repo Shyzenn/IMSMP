@@ -25,7 +25,7 @@ const ProfileDropdown = ({ session }: { session: Session | null }) => {
       {isOpen && <EditProfileModal close={close} />}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="w-9 h-9 p-2 rounded-full bg-white relative">
+          <button className="w-10 h-10 p-2 rounded-full bg-white relative">
             <Image
               src={session?.user?.profileImage || DefaultUserImage}
               alt="User Profile Image"

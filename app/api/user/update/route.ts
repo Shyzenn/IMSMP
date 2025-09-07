@@ -1,17 +1,16 @@
 import { db } from "@/lib/db";
 import {editUserSchema } from "@/lib/types";
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 import { Prisma } from "@prisma/client";
 
 // update user
 export async function PATCH(req: Request) {
   try {
      const body = await req.json();
-    const { id, username, password, role, isResetPassword} = body;
+    const { id, role} = body;
 
     // Validate input with conditional schema
-    const result = editUserSchema(isResetPassword).safeParse(body);
+    const result = editUserSchema().safeParse(body);
 
     // Create an object to store validation errors
     const zodErrors: Record<string, string> = {};
@@ -20,21 +19,6 @@ export async function PATCH(req: Request) {
         zodErrors[issue.path[0]] = issue.message;
       });
       return NextResponse.json({ errors: zodErrors }, { status: 400 });
-    }
-
-    const existingUser = await db.user.findFirst({
-        where: {
-            username,
-            NOT: { id },
-        },
-    });
-
-    if (existingUser) {
-        return NextResponse.json({  
-            errors: {
-            User_name: "Username is already taken",
-            },
-        }, { status: 400 });
     }
     
         const roleMap: Record<string, string> = {
@@ -45,14 +29,8 @@ export async function PATCH(req: Request) {
         };
 
         const updateData: Prisma.UserUpdateInput = { 
-          username, 
           role: roleMap[role] || role, 
         };
-
-    if (isResetPassword) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      updateData.password = hashedPassword;
-    }
 
     await db.user.update({
       where: { id },

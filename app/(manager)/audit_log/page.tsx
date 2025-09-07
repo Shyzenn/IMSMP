@@ -19,15 +19,16 @@ const page = async (props: {
   searchParams?: Promise<{
     query?: string;
     page?: string;
+    filter?: string;
   }>;
 }) => {
   const searchParams = await props.searchParams;
   const query = searchParams?.query || "";
   const page = searchParams?.page;
+  const filter = searchParams?.filter || "all";
 
   const currentPage = Number(page);
-
-  const totalPages = await fetchAuditPages(query);
+  const totalPages = await fetchAuditPages(query, filter);
 
   return (
     <div
@@ -37,10 +38,14 @@ const page = async (props: {
       <Header />
       <div className="mt-4">
         <Suspense
-          key={`${query}-${currentPage}`}
+          key={`${query}-${filter}-${currentPage}`}
           fallback={<TableRowSkeleton headerLabel={skeletonHeaders} />}
         >
-          <AuditLogTable query={query} currentPage={currentPage} />
+          <AuditLogTable
+            query={query}
+            filter={filter}
+            currentPage={currentPage}
+          />
         </Suspense>
       </div>
       <div className="mt-6 flex justify-center">

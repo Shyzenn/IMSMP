@@ -1,6 +1,6 @@
 import React from "react";
 import Search from "../Search";
-import InventoryFilter from "../Inventory/InventoryFilter";
+import AuditFilter from "./Filter";
 
 const Header = () => {
   return (
@@ -10,7 +10,7 @@ const Header = () => {
         <Search placeholder="Search..." />
       </div>
       <div>
-        <InventoryFilter />
+        <AuditFilter />
       </div>
     </div>
   );

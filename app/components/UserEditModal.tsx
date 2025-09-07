@@ -1,8 +1,6 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
 import React, { useCallback, useState } from "react";
-import FormField from "./FormField";
 import CategoryField from "./CategoryField";
 import CancelButton from "./CancelButton";
 import { useForm } from "react-hook-form";
@@ -14,8 +12,8 @@ import toast from "react-hot-toast";
 import { useProductForm } from "../hooks/useProductForm";
 import { editUser } from "@/lib/action/add";
 import { useQueryClient } from "@tanstack/react-query";
-import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
 import axios from "axios";
+import ResetPasswordModal from "./ResetPasswordModal";
 
 const UserEditModal = ({
   setIsModalOpen,
@@ -24,22 +22,17 @@ const UserEditModal = ({
   user: UserFormValues;
   setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-  const [isResetPassword, setIsResestPassword] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
 
   const {
-    register,
     setError,
     formState: { errors, isSubmitting, isDirty },
     handleSubmit,
     control,
-    setValue,
   } = useForm<TEditUserSchema>({
-    resolver: zodResolver(editUserSchema(isResetPassword)),
+    resolver: zodResolver(editUserSchema()),
     defaultValues: {
       id: user.id,
-      username: user.username,
       role: user.role,
     },
   });
@@ -59,7 +52,6 @@ const UserEditModal = ({
   const onSubmit = async (data: TEditUserSchema) => {
     const payload = {
       ...data,
-      isResetPassword,
     };
 
     try {
@@ -87,17 +79,6 @@ const UserEditModal = ({
     }
   };
 
-  const resetPasswordBtn = () => {
-    setIsResestPassword((prev) => {
-      const newValue = !prev;
-      if (!newValue) {
-        setValue("password", "");
-        setValue("confirmPassword", "");
-      }
-      return newValue;
-    });
-  };
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
       <div className="bg-white w-full max-w-[500px] max-h-[95vh] rounded-md relative py-4">
@@ -107,15 +88,6 @@ const UserEditModal = ({
           onSubmit={handleSubmit(onSubmit)}
         >
           <div className="flex flex-col gap-6 mb-4 px-12">
-            <FormField label="Username" error={errors.username?.message}>
-              <Input
-                {...register("username")}
-                id="username"
-                type="text"
-                className="mt-1"
-              />
-            </FormField>
-
             <CategoryField
               label="User Type"
               control={control}
@@ -128,66 +100,19 @@ const UserEditModal = ({
 
           <div className="mx-12">
             <button
-              className={`${
-                isResetPassword ? "text-red-500" : "text-blue-500"
-              } hover:underline mb-2`}
-              onClick={resetPasswordBtn}
+              className={"text-blue-500 hover:underline mb-2"}
               type="button"
+              onClick={() => setShowResetModal(true)}
             >
-              {isResetPassword ? "cancel" : "reset password?"}
+              reset password?
             </button>
-
-            {isResetPassword && (
-              <>
-                <FormField
-                  label="New Password"
-                  error={errors.password?.message}
-                >
-                  <div className="relative">
-                    <Input
-                      {...register("password")}
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      className="mt-1 mb-6 relative"
-                      autoComplete="off"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowPassword((prev) => !prev);
-                      }}
-                      className="absolute right-3 top-3"
-                    >
-                      {showPassword ? <FaRegEye /> : <FaRegEyeSlash />}
-                    </button>
-                  </div>
-                </FormField>
-                <FormField
-                  label="Confirm Password"
-                  error={errors.confirmPassword?.message}
-                >
-                  <div className="relative">
-                    <Input
-                      {...register("confirmPassword")}
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      className="mt-1"
-                      autoComplete="off"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowConfirmPassword((prev) => !prev);
-                      }}
-                      className="absolute right-3 top-3"
-                    >
-                      {showConfirmPassword ? <FaRegEye /> : <FaRegEyeSlash />}
-                    </button>
-                  </div>
-                </FormField>
-              </>
-            )}
           </div>
+
+          <ResetPasswordModal
+            user={user}
+            setShowResetModal={setShowResetModal}
+            showResetModal={showResetModal}
+          />
 
           <div className="flex gap-6 bg-white border-t-2 p-4 absolute bottom-0 left-0 w-full justify-end">
             <CancelButton setIsModalOpen={setIsModalOpen} />

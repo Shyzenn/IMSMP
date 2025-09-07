@@ -50,27 +50,11 @@ export const changePasswordSchema = z
 
 export type TChangePasswordSchema = z.infer<typeof changePasswordSchema>;
 
-export const editUserSchema = (isResetPassword: boolean) =>
-  z
-    .object({
+export const editUserSchema = () =>
+  z.object({
       id: z.string(),
-      username: z.string().min(1, "Username is required"),
       role: z.string().min(1, "Role is required"),
-      password: isResetPassword
-        ? z.string().min(8, "Password must be at least 8 characters")
-        : z.string().optional(),
-      confirmPassword: isResetPassword
-        ? z.string().min(8, "Password must be at least 8 characters")
-        : z.string().optional(),
-    })
-    .refine(
-      (data) =>
-        !isResetPassword || data.password === data.confirmPassword,
-      {
-        message: "Passwords do not match",
-        path: ["confirmPassword"],
-      }
-    );
+  })
 
 export type TEditUserSchema = z.infer<ReturnType<typeof editUserSchema>>;
 

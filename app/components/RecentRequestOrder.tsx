@@ -2,7 +2,6 @@
 
 import React, { useMemo, useState } from "react";
 import TableComponent from "./TableComponent";
-import { Order } from "@/lib/interfaces";
 import { Input } from "@/components/ui/input";
 import { IoIosClose } from "react-icons/io";
 import { Path, useFieldArray, useForm } from "react-hook-form";
@@ -22,10 +21,11 @@ import { useProducts } from "../hooks/useProducts";
 import { useProductDropdown } from "../hooks/useProductDropDown";
 import { useProductForm } from "../hooks/useProductForm";
 import { RecentRequestOrderSkeleton } from "./Skeleton";
+import { OrderView } from "./transaction/cashier/CashierAction";
 
 const RecentRequestOrder = () => {
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<OrderView | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
 
   const { isOpen, open, close } = useModal();

@@ -33,7 +33,7 @@ export async function handleCredentialsSignIn({
       return { message: "Your account has been banned. Contact admin." };
     }
 
-    // 🔄 OTP Expiration check
+    // OTP Expiration check
     if (user.otpExpiresAt && new Date() > user.otpExpiresAt) {
       const newOtp = Math.floor(10000000 + Math.random() * 90000000).toString();
       const hashedOtp = await bcrypt.hash(newOtp, 10);
