@@ -116,7 +116,7 @@ const ManagerRecentReqTable = () => {
   if (isLoading) return <RecentRequestOrderSkeleton />;
 
   return (
-    <div className="mx-4 min-h-[280px] max-h-[280px] overflow-auto">
+    <div className="mx-4">
       <>
         <TableComponent
           title="Recent Order Request"

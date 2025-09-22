@@ -11,13 +11,18 @@ import { capitalLetter } from "@/lib/utils";
 import React from "react";
 import { Control, Controller, FieldValues, Path } from "react-hook-form";
 
+type Option = {
+  id: number;
+  name: string;
+};
+
 type CategoryFieldProps<T extends FieldValues = FieldValues> = {
   label: string;
   control: Control<T>;
   name: Path<T>;
   error?: string;
   categoryLabel: string;
-  items: string[];
+  items: Option[];
 };
 
 const CategoryField = <T extends FieldValues>({
@@ -36,18 +41,18 @@ const CategoryField = <T extends FieldValues>({
         name={name}
         render={({ field }) => (
           <Select
-            value={field.value}
+            value={field.value || ""}
             onValueChange={(val) => field.onChange(val)}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a category" />
+              <SelectValue placeholder={categoryLabel} />
             </SelectTrigger>
             <SelectContent className="bg-white">
               <SelectGroup>
                 <SelectLabel>{categoryLabel}</SelectLabel>
                 {items.map((item) => (
-                  <SelectItem key={item} value={item}>
-                    {capitalLetter(item.replace("_", " "))}
+                  <SelectItem key={item.id} value={item.name}>
+                    {capitalLetter(item.name)}
                   </SelectItem>
                 ))}
               </SelectGroup>

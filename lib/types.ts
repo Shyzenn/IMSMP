@@ -86,34 +86,15 @@ export type TSignInSchema = z.infer<typeof signInSchema>;
 
 // Add Product
 export const addProductSchema = z.object({
-  product_name: z .string({
-    required_error: "Product Name is required",
-  })
-  .min(1, "Product Name is required")
-  .trim(),
- category: z
-  .string({
-    required_error: "Category is required.",
-  })
-  .refine((val) =>
-    ["ANTIBIOTIC", "GASTROINTESTINAL", "PAIN_RELIEVER", "ANTI_INFLAMMATORY", "GENERAL_MEDICATION"].includes(val), {
-    message: "Category is required.",
-  }),
-
-
-  quantity: z.preprocess(
-    (val) => (val === "" || val === undefined ? undefined : Number(val)),
-    z.number({ required_error: "Quantity is required" })
-    .min(0, "Quantity must be 0 or higher")
-  ),
+  product_name: z.string().min(1, "Product Name is required").trim(),
+  category: z.string({ required_error: "Category is required" }).min(1),
   price: z.preprocess(
     (val) => (val === "" || val === undefined ? undefined : Number(val)),
-    z.number({ required_error: "Price is required" })
+    z
+      .number({ required_error: "Price is required" })
       .min(0, "Price must be 0 or higher")
       .multipleOf(0.01, "Price must be a valid decimal number")
   ),
-  releaseDate: z.preprocess((val) => (typeof val === "string" ? new Date(val) : val), z.date({ required_error: "Release Date is required" })),
-  expiryDate: z.preprocess((val) => (typeof val === "string" ? new Date(val) : val), z.date({ required_error: "Expiry Date is required" })),
 });
 
 export type TAddProductSchema = z.infer<typeof addProductSchema>;
@@ -151,6 +132,40 @@ export const editProductSchema = z.object({
 });
 
 export type TEditProductSchema = z.infer<typeof editProductSchema>;
+
+// Edit Batch
+export const editBatchSchema = z.object({
+  id: z.number(),
+  quantity: z.preprocess(
+    (val) => (val === "" || val === undefined ? undefined : Number(val)),
+    z.number({ required_error: "Quantity is required" }).min(0, "Quantity must be 0 or higher")
+  ),
+  releaseDate: z.preprocess(
+    (val) => (typeof val === "string" ? new Date(val) : val),
+    z.date({ required_error: "Release Date is required" })
+  ),
+  expiryDate: z.preprocess(
+    (val) => (typeof val === "string" ? new Date(val) : val),
+    z.date({ required_error: "Expiry Date is required" })
+  ),
+});
+
+
+export type TEditBatchSchema = z.infer<typeof editBatchSchema>;
+
+// Replenish Product
+export const replenishProductSchema = z.object({
+  productId: z.number(),
+  quantity: z.preprocess(
+    (val) => (val === "" || val === undefined ? undefined : Number(val)),
+    z.number({ required_error: "Quantity is required" })
+    .min(0, "Quantity must be 0 or higher")
+  ),
+  releaseDate: z.preprocess((val) => (typeof val === "string" ? new Date(val) : val), z.date({ required_error: "Release Date is required" })),
+  expiryDate: z.preprocess((val) => (typeof val === "string" ? new Date(val) : val), z.date({ required_error: "Expiry Date is required" })),
+});
+
+export type TReplenishProductSchema = z.infer<typeof replenishProductSchema>;
 
 export const addRequestOrderSchema = z.object({
   room_number: z.string().optional(),

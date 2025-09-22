@@ -3,24 +3,7 @@
 import { RiDashboardHorizontalLine } from "react-icons/ri";
 import { MdOutlineInventory2 } from "react-icons/md";
 import { GrTransaction } from "react-icons/gr";
-import { BsBoxSeam } from "react-icons/bs";
 import { Links } from "./interfaces";
-
-export const links: Links[] = [
-  {
-    name: "Dashboard",
-    href: "/dashboard",
-    icon: RiDashboardHorizontalLine,
-  },
-  {
-    name: "Inventory",
-    href: "/inventory",
-    icon: MdOutlineInventory2,
-  },
-  { name: "Transaction", href: "/transaction", icon: GrTransaction },
-  
-  { name: "Order", href: "/order", icon: BsBoxSeam },
-];
 
 export const nurseLinks = [
   {
@@ -28,10 +11,14 @@ export const nurseLinks = [
     href: "/request-order",
     icon: RiDashboardHorizontalLine,
   },
-  {
-    name: "Inventory",
-    href: "/nurse_inventory",
+ {
+    name: "Inventory " ,
     icon: MdOutlineInventory2,
+    subLinks: [
+      { name: "Products", href: "/nurse_inventory/products" },
+      { name: "Batches", href: "/nurse_inventory/batches" },
+      
+    ],
   },
   {
     name: "Transaction",
@@ -40,22 +27,24 @@ export const nurseLinks = [
   },
 ];
 
-export const managerLinks = [
-  
+export const managerLinks: Links[] = [
   {
     name: "Dashboard",
     href: "/dashboard",
     icon: RiDashboardHorizontalLine,
   },
   {
-    name: "Inventory",
-    href: "/inventory",
+    name: "Inventory " ,
     icon: MdOutlineInventory2,
+    subLinks: [
+      { name: "Products", href: "/inventory/products" },
+      { name: "Batches", href: "/inventory/batches" },
+     
+    ],
   },
-
   { name: "Transaction", href: "/transaction", icon: GrTransaction },
-   { name: "Audit Log", href: "/audit_log", icon: GrTransaction },
-]
+  { name: "Audit Log", href: "/audit_log", icon: GrTransaction },
+];
 
 export const pharmacistLinks = [
   
@@ -65,9 +54,13 @@ export const pharmacistLinks = [
     icon: RiDashboardHorizontalLine,
   },
   {
-    name: "Inventory",
-    href: "/pharmacist_inventory",
+    name: "Inventory " ,
     icon: MdOutlineInventory2,
+    subLinks: [
+      { name: "Products", href: "/pharmacist_inventory/products" },
+      { name: "Batches", href: "/pharmacist_inventory/batches" },
+     
+    ],
   },
   { name: "Transaction", href: "/pharmacist_transaction", icon: GrTransaction },
 ]

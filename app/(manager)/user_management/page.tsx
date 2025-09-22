@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import AddUser from "./AddUser";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
-import UserTable from "./UserTable";
+import AddUser from "@/app/components/AddUser";
+import UserTable from "@/app/components/UserTable";
 
 const UserManagement = () => {
   const fetchUser = async () => {

@@ -20,7 +20,7 @@ export default async function AuditLogTable({
   return (
     <>
       {auditLogs.length === 0 ? (
-        <EmptyTable content="No Transaction Available" />
+        <EmptyTable content="No Transaction Found" />
       ) : (
         <Table>
           <AuditLogTableHeader />

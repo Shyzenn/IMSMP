@@ -22,10 +22,10 @@ export default function AdminLayout({
         <SidebarProvider>
           <div className="flex">
             <Sidebar links={managerLinks} />
-            <div className="flex-1 flex flex-col h-svh overflow-y-auto">
+            <div className="flex-1 flex flex-col  overflow-y-auto">
               <Header />
               <div className="flex-1 mx-10">
-                <div className="w-full h-full"> {children}</div>
+                <div>{children}</div>
               </div>
             </div>
           </div>

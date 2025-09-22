@@ -44,10 +44,14 @@ const ProfileDropdown = ({ session }: { session: Session | null }) => {
             <DropdownMenuItem onClick={open}>Profile</DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <Link href={"/manager_settings"}>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+          {session?.user === "Manager" && (
+            <Link href={"/user_management"}>
+              <DropdownMenuItem>User Management</DropdownMenuItem>
+            </Link>
+          )}
+          <Link href={"/manager_archive"}>
+            <DropdownMenuItem>Archive</DropdownMenuItem>
           </Link>
-
           <DropdownMenuSeparator />
           <form
             action={handleSignOut}

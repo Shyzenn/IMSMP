@@ -60,20 +60,45 @@ enum Role {
 }
 
 model Product {
-  id              Int   @id @default(autoincrement()) // UUID as Primary Key
-  product_name    String   @unique // Unique product name
-  category        Category   // Category of the product
-  quantity        Int      @default(0) // Default stock quantity
-  releaseDate     DateTime? // Optional release date
-  expiryDate      DateTime? // Optional expiry date
-  price           Decimal  @default(0.00) // Product price
-  createdAt       DateTime @default(now()) // Auto-generated timestamp
-  updatedAt       DateTime @updatedAt // Auto-update timestamp
-  orderItems      OrderItem[]
-  WalkInItem      WalkInItem[]
-  Notification    Notification[]
-  userId          String?
-  user            User?       @relation(fields: [userId], references: [id])
+  id            Int            @id @default(autoincrement())
+  product_name  String         @unique
+  price         Decimal        @default(0.00)
+  status        String         @default("ACTIVE") // ACTIVE | ARCHIVED
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  // Relationships
+  batches       ProductBatch[]
+  orderItems    OrderItem[]
+  WalkInItem    WalkInItem[]
+  Notification  Notification[]
+
+  userId        String?
+  user          User?          @relation(fields: [userId], references: [id])
+
+  categoryId  Int?
+  category    ProductCategory? @relation(fields: [categoryId], references: [id])
+}
+
+model ProductBatch {
+  id          Int      @id @default(autoincrement())
+  productId   Int
+  product     Product  @relation(fields: [productId], references: [id])
+
+  batchNumber Int
+  quantity    Int      @default(0)
+  releaseDate DateTime
+  expiryDate  DateTime
+  type        String   @default("ACTIVE") // ACTIVE | EXPIRING | EXPIRED | CONSUMED
+
+  createdAt   DateTime @default(now())
+ 
+}
+
+model ProductCategory {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  products  Product[]
 }
 
 model OrderRequest {
@@ -126,14 +151,6 @@ enum Status {
   pending
   for_payment
   paid
-}
-
-enum Category {
-  ANTIBIOTIC
-  GASTROINTESTINAL
-  PAIN_RELIEVER
-  ANTI_INFLAMMATORY
-  GENERAL_MEDICATION
 }
 
 enum NotificationType {

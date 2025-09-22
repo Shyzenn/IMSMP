@@ -1,23 +1,24 @@
 "use client";
 
-import { CiEdit } from "react-icons/ci";
+import { useModal } from "@/app/hooks/useModal";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import React from "react";
+import { CiEdit } from "react-icons/ci";
 import { IoArchiveOutline } from "react-icons/io5";
-import { ProductProps } from "./InventoryTable";
-import EditProductForm from "./EditProductForm";
-import { useModal } from "@/app/hooks/useModal";
+import { BatchProps } from "./BatchTable";
+import EditBatchForm from "./EditBatchForm";
 
-const Action = ({ product }: { product: ProductProps }) => {
+const BatchAction = ({ batch }: { batch: BatchProps }) => {
   const { open, close, isOpen } = useModal();
 
   return (
     <>
-      {isOpen && <EditProductForm setIsModalOpen={close} product={product} />}
+      {isOpen && <EditBatchForm batches={batch} setIsModalOpen={close} />}
 
       <div className="flex text-xl gap-2">
         <TooltipProvider>
@@ -28,7 +29,7 @@ const Action = ({ product }: { product: ProductProps }) => {
               </button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Edit Product</p>
+              <p>Edit Batch</p>
             </TooltipContent>
           </Tooltip>
 
@@ -39,7 +40,7 @@ const Action = ({ product }: { product: ProductProps }) => {
               </button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Archive Product</p>
+              <p>Archive Batch</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -48,4 +49,4 @@ const Action = ({ product }: { product: ProductProps }) => {
   );
 };
 
-export default Action;
+export default BatchAction;

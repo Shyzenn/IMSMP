@@ -19,54 +19,54 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    const { product_name, category, quantity, price, releaseDate, expiryDate } = body;
+   const { product_name, category, price } = body;
 
-    // Validate input using Zod schema
-    const result = addProductSchema.safeParse({
-        product_name,
-        category,
-        quantity,
-        price,
-        releaseDate: new Date(releaseDate),
-        expiryDate: new Date(expiryDate),
-    });
-
-    // Create an object to store validation errors
-    const zodErrors: Record<string, string> = {};
+    // Validate input
+    const result = addProductSchema.safeParse({ product_name, category, price });
     if (!result.success) {
+      const zodErrors: Record<string, string> = {};
       result.error.issues.forEach((issue) => {
         zodErrors[issue.path[0]] = issue.message;
       });
       return NextResponse.json({ errors: zodErrors }, { status: 400 });
     }
 
+    // Normalize category name
+    const normalizedCategory = category.trim().toLowerCase();
+
+    // Find category by normalized name
+    const categoryRecord = await db.productCategory.findFirst({
+      where: {
+        name: normalizedCategory, // make sure stored category names are also normalized
+      },
+    });
+
+    if (!categoryRecord) {
+      return NextResponse.json(
+        { errors: { category: "Selected category does not exist" } },
+        { status: 400 }
+      );
+    }
+
+    // Check if product already exists
     const existingProduct = await db.product.findFirst({
-      where: {product_name},
+      where: { product_name: product_name.trim() },
     });
 
     if (existingProduct) {
-      if (existingProduct.product_name === product_name) {
-        zodErrors.product_name = "Product name is already taken";
-      }
+      return NextResponse.json(
+        { errors: { product_name: "Product name is already taken" } },
+        { status: 400 }
+      );
     }
 
-    if (Object.keys(zodErrors).length > 0) {
-      return NextResponse.json({ errors: zodErrors }, { status: 400 });
-    }
-
-    const releaseDateUTC = new Date(releaseDate).toISOString();
-    const expiryDateUTC = new Date(expiryDate).toISOString();
-
-    // Create a new product in the database
-   const newProduct = await db.product.create({
+    // Create product
+    const newProduct = await db.product.create({
       data: {
-        product_name,
-        category,
-        quantity,
+        product_name: product_name.trim(),
         price,
-        releaseDate: releaseDateUTC,
-        expiryDate: expiryDateUTC,
-        userId
+        userId: session.user.id,
+        categoryId: categoryRecord.id,
       },
     });
 
@@ -127,7 +127,9 @@ export async function POST(req: Request) {
 // get product
 export async function GET() {
   try {
-    const products = await db.product.findMany();
+    const products = await db.product.findMany({
+      include: {batches: true}
+    });
 
     return NextResponse.json(products, { status: 200 });
   } catch (error) {

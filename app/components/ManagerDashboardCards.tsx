@@ -31,10 +31,12 @@ const ManagerDashboardCards = () => {
     return <CardSkeleton />;
   }
 
-  const [totalProducts, lowStockArray, highStockArray, expiring] = managerCard;
+  const [totalProducts, lowStock, highStock, expiring] = managerCard;
 
   const basePath =
-    userRole === "Pharmacist_Staff" ? "pharmacist_inventory" : "inventory";
+    userRole === "Pharmacist_Staff"
+      ? "pharmacist_inventory/products"
+      : "inventory/products";
 
   const managerCards = [
     {
@@ -48,7 +50,7 @@ const ManagerDashboardCards = () => {
     },
     {
       title: "Low Stock",
-      value: lowStockArray.length,
+      value: lowStock,
       icon: TbShoppingCartDown,
       bgColor: "bg-orange-50",
       textColor: "text-orange-500",
@@ -56,7 +58,7 @@ const ManagerDashboardCards = () => {
     },
     {
       title: "High Stock",
-      value: highStockArray.length,
+      value: highStock,
       icon: TbShoppingCartUp,
       bgColor: "bg-green-50",
       textColor: "text-green-500",
@@ -68,12 +70,12 @@ const ManagerDashboardCards = () => {
       icon: TbShoppingCartX,
       bgColor: "bg-red-50",
       textColor: "text-red-500",
-      link: `/${basePath}?query=&page=1&filter=all&sort=expiryDate&order=asc`,
+      link: `/${basePath}?query=&page=1&filter=all&sort=expiringSoon&order=desc`,
     },
   ];
 
   return (
-    <div className="h-[15%]">
+    <div className="h-32">
       <DashboardCards cards={managerCards} />
     </div>
   );

@@ -2,9 +2,9 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
-import SelectField from "../SelectField";
+import SelectField from "../../SelectField";
 
-const InventoryFilter = () => {
+const BatchFilter = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedFilter = searchParams.get("filter") || "all";
@@ -23,14 +23,13 @@ const InventoryFilter = () => {
       onChange={handleCategoryChange}
       option={[
         { label: "All", value: "all" },
-        { label: "Antibiotic", value: "ANTIBIOTIC" },
-        { label: "Gastrointestinal", value: "GASTROINTESTINAL" },
-        { label: "Pain Reliever", value: "PAIN_RELIEVER" },
-        { label: "Anti-inflammatory", value: "ANTI_INFLAMMATORY" },
-        { label: "General Medication", value: "GENERAL_MEDICATION" },
+        { label: "Active", value: "Active" },
+        { label: "Expiring", value: "Expiring" },
+        { label: "Expired", value: "Expired" },
+        { label: "Consumed", value: "Consumed" },
       ]}
     />
   );
 };
 
-export default InventoryFilter;
+export default BatchFilter;

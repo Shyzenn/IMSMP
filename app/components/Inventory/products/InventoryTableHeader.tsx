@@ -4,17 +4,21 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import React from "react";
 import { LuArrowDownUp } from "react-icons/lu";
+import { useSession } from "next-auth/react";
 
 const sortableHeaders = [
   { key: "number", label: "No." },
   { key: "product_name", label: "Product" },
-  { key: "quantity", label: "Quantity" },
+  { key: "quantity", label: "Quantity(Total)" },
   { key: "price", label: "Price" },
-  { key: "releaseDate", label: "Release Date" },
-  { key: "expiryDate", label: "Expiry Date" },
+  { key: "created_at", label: "Created At" },
+  { key: "expiringSoon", label: "Expiring Soon" },
+  { key: "totalBatches", label: "Total Batches" },
 ];
 
 const InventoryTableHeader = () => {
+  const { data: session } = useSession();
+  const userRole = session?.user.role;
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -49,7 +53,9 @@ const InventoryTableHeader = () => {
           </TableHead>
         ))}
         <TableHead className="text-black font-semibold">Category</TableHead>
-        <TableHead className="text-black font-semibold">Actions</TableHead>
+        {(userRole === "Manager" || userRole === "Pharmacist_Staff") && (
+          <TableHead className="text-black font-semibold">Actions</TableHead>
+        )}
       </TableRow>
     </TableHeader>
   );

@@ -67,7 +67,8 @@ export interface Order {
 
 export interface Links {
   name: string;
-  href: string;
+  href?: string;
+  subLinks?:{name: string, href:string}[]
   icon: IconType;
 }
 

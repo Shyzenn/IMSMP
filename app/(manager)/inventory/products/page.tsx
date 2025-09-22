@@ -1,10 +1,10 @@
 import React, { Suspense } from "react";
-import InventoryTable from "@/app/components/Inventory/InventoryTable";
+import InventoryTable from "@/app/components/Inventory/products/InventoryTable";
 import { TableRowSkeleton } from "@/app/components/Skeleton";
 import Pagination from "@/app/components/Pagination";
 import { fetchProductsPages } from "@/lib/action/get";
 import { redirect } from "next/navigation";
-import InventoryHeader from "@/app/components/Inventory/InventoryHeader";
+import InventoryHeader from "@/app/components/Inventory/products/InventoryHeader";
 import { inventorySkeletonHeaders } from "@/lib/utils";
 
 async function Inventory(props: {
@@ -22,7 +22,7 @@ async function Inventory(props: {
   const filter = searchParams?.filter;
 
   if (!filter || !page) {
-    redirect(`/nurse_inventory?query=&page=1&filter=all&sort=releaseDate&order=desc
+    redirect(`/inventory/products?query=&page=1&filter=all&sort=releaseDate&order=desc
 `);
   }
 
@@ -37,7 +37,11 @@ async function Inventory(props: {
       className="p-6 bg-white overflow-auto rounded-md"
       style={{ height: "calc(94vh - 70px)" }}
     >
-      <InventoryHeader />
+      <InventoryHeader
+        title="Products"
+        hasAddProduct={true}
+        hasInventoryFilter={true}
+      />
 
       <div className="overflow-x-auto">
         <Suspense

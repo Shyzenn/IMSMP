@@ -14,7 +14,7 @@ interface DateFieldProps<T extends FieldValues> {
   name: Path<T>;
   label?: string;
   error?: string;
-  className: string;
+  className?: string;
 }
 
 const DateField = <T extends FieldValues>({

@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import FormField from "../FormField";
+import FormField from "../../FormField";
 import { Input } from "@/components/ui/input";
 import { ProductProps } from "./InventoryTable";
 import { useForm } from "react-hook-form";
@@ -7,9 +7,8 @@ import { editProductSchema, TEditProductSchema } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { editNewProduct } from "@/lib/action/add";
 import LoadingButton from "@/components/loading-button";
-import CategoryField from "../CategoryField";
-import CancelButton from "../CancelButton";
-import DateField from "../DateField";
+import CategoryField from "../../CategoryField";
+import CancelButton from "../../CancelButton";
 import { useProductForm } from "@/app/hooks/useProductForm";
 import toast from "react-hot-toast";
 
@@ -31,12 +30,7 @@ const EditProductForm = ({
     defaultValues: {
       id: product.id,
       product_name: product.product_name,
-      quantity: product.quantity,
       price: product.price,
-      releaseDate: product.releaseDate
-        ? new Date(product.releaseDate)
-        : undefined,
-      expiryDate: product.expiryDate ? new Date(product.expiryDate) : undefined,
       category: product.category,
     },
   });
@@ -82,44 +76,17 @@ const EditProductForm = ({
               categoryLabel={product.category}
               items={["PAIN_RELIEVER", "ANTIBIOTIC"]}
             />
-            <div className="flex w-full gap-2">
-              <FormField label="Quantity" error={errors.quantity?.message}>
-                <Input
-                  {...register("quantity")}
-                  id="quantity"
-                  type="number"
-                  className="mt-1"
-                />
-              </FormField>
-              <FormField label="Price" error={errors.price?.message}>
-                <Input
-                  {...register("price")}
-                  id="price"
-                  type="number"
-                  className="mt-1"
-                  step="0.01"
-                  min="0"
-                />
-              </FormField>
-            </div>
 
-            <div className="flex justify-between w-full">
-              <DateField
-                control={control}
-                label="Release Date"
-                name="releaseDate"
-                error={errors.releaseDate?.message}
-                className="w-[12.4rem] justify-start text-left"
+            <FormField label="Price" error={errors.price?.message}>
+              <Input
+                {...register("price")}
+                id="price"
+                type="number"
+                className="mt-1"
+                step="0.01"
+                min="0"
               />
-
-              <DateField
-                control={control}
-                label="Expiry Date"
-                name="expiryDate"
-                error={errors.expiryDate?.message}
-                className="w-[12.4rem] justify-start text-left"
-              />
-            </div>
+            </FormField>
           </div>
 
           <div className="flex gap-6 bg-white border-t-2 p-4 absolute bottom-0 left-0 w-full justify-end">

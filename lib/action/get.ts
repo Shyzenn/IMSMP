@@ -1,10 +1,235 @@
 'use server'
 
 import { Decimal } from "@prisma/client/runtime/library";
-import { Category, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { db } from "../db";
 import { OrderItem } from "../interfaces";
 import formatStatus, { isRequestOrderFilterEnabled, isWalkInFilterEnabled, ITEMS_PER_PAGE, mapStatus, TransactionFilter } from "../utils";
+
+// Batches
+export const getBatches = async (
+  query: string,
+  currentPage: number,
+  filter: string,
+  sortBy: string = "createdAt",
+  sortOrder: "asc" | "desc" = "desc"
+) => {
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+  const safeQuery = query.toLowerCase().trim();
+
+  const where: Prisma.ProductBatchWhereInput = {
+    product: {
+      product_name: {
+        contains: safeQuery,
+      },
+    },
+  };
+
+  const validSortFields: Record<
+    string,
+    keyof Prisma.ProductBatchOrderByWithRelationInput
+  > = {
+    product_name: "product",
+    batchNumber: "batchNumber",
+    quantity: "quantity",
+    releaseDate: "releaseDate",
+    expiryDate: "expiryDate",
+    createdAt: "createdAt",
+  };
+
+  let orderBy: Prisma.ProductBatchOrderByWithRelationInput;
+  if (sortBy === "product_name") {
+    orderBy = { product: { product_name: sortOrder } };
+  } else {
+    orderBy = { [validSortFields[sortBy] || "createdAt"]: sortOrder };
+  }
+
+  const batches = await db.productBatch.findMany({
+    where,
+    orderBy,
+    take: ITEMS_PER_PAGE,
+    skip: offset,
+    include: {
+      product: { select: { product_name: true } },
+    },
+  });
+
+  const now = new Date();
+  const enriched = batches.map((batch) => {
+    let status: "Active" | "Expiring" | "Expired" | "Consumed" = "Active";
+
+    if (batch.quantity === 0) {
+      status = "Consumed";
+    } else if (new Date(batch.expiryDate) < now) {
+      status = "Expired";
+    } else {
+      const daysToExpire =
+        (new Date(batch.expiryDate).getTime() - now.getTime()) /
+        (1000 * 60 * 60 * 24);
+      if (daysToExpire <= 7) status = "Expiring";
+    }
+
+    return { ...batch, status };
+  });
+
+  const filtered =
+    filter && ["Active", "Expiring", "Expired", "Consumed"].includes(filter)
+      ? enriched.filter((batch) => batch.status === filter)
+      : enriched;
+
+  return filtered;
+};
+
+export async function fetchBatchPages(query: string, filter: string) {
+  const safeQuery = query.toLowerCase().trim();
+
+  try {
+    const batches = await db.productBatch.findMany({
+      where: {
+        product: {
+          product_name: {
+            contains: safeQuery,
+          },
+        },
+      },
+      include: { product: true },
+    });
+
+    const now = new Date();
+    const enriched = batches.map((batch) => {
+      let status: "Active" | "Expiring" | "Expired" | "Consumed" = "Active";
+
+      if (batch.quantity === 0) {
+        status = "Consumed";
+      } else if (new Date(batch.expiryDate) < now) {
+        status = "Expired";
+      } else {
+        const daysToExpire =
+          (new Date(batch.expiryDate).getTime() - now.getTime()) /
+          (1000 * 60 * 60 * 24);
+        if (daysToExpire <= 7) status = "Expiring";
+      }
+
+      return { ...batch, status };
+    });
+
+    const filtered =
+      filter && ["Active", "Expiring", "Expired", "Consumed"].includes(filter)
+        ? enriched.filter((batch) => batch.status === filter)
+        : enriched;
+
+    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+    return totalPages;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch total number of batches.");
+  }
+}
+
+//Inventory
+export const getProductList = async (
+  query: string,
+  currentPage: number,
+  filter: string,
+  sortBy: string = "createdAt", 
+  sortOrder: "asc" | "desc" = "desc"
+) => {
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
+  const where: Prisma.ProductWhereInput = {
+    product_name: {
+      contains: query,
+    },
+  };
+
+    if (
+    filter &&
+    filter !== "latest" &&
+    filter !== "oldest" &&
+    filter !== "all"
+  ) {
+    where.category = {
+      name: filter,
+    };
+  }
+
+  const validSortFields = ["product_name", "price", "createdAt"];
+  const safeSortBy = validSortFields.includes(sortBy) ? sortBy : "createdAt";
+
+  const products = await db.product.findMany({
+    where,
+    include: {
+      batches: {
+        orderBy: { expiryDate: "asc" }, 
+      },
+      category: true,
+    },
+    orderBy: {
+      [safeSortBy]: sortOrder,
+    },
+    take: ITEMS_PER_PAGE,
+    skip: offset,
+  });
+
+  // Map and compute total quantity + soonest expiry
+  const mappedProducts = products.map((p) => {
+    const totalQuantity = p.batches.reduce((sum, b) => sum + b.quantity, 0);
+
+    // count batches expiring within 7 days
+    const now = new Date();
+    const threshold = new Date();
+    threshold.setDate(now.getDate() + 7);
+
+    const expiringSoonCount = p.batches.filter((b) => {
+      const expiry = new Date(b.expiryDate);
+      return expiry > now && expiry <= threshold;
+    }).length;
+
+    return {
+      id: p.id,
+      product_name: p.product_name,
+      price: p.price instanceof Decimal ? p.price.toNumber() : Number(p.price),
+       category: p.category?.name ?? "Uncategorized",
+      createdAt: p.createdAt,
+      totalQuantity,
+      totalBatches: p.batches.length,
+      expiringSoonCount, 
+      batches: p.batches,
+      icon: [],
+    };
+  });
+
+  return mappedProducts;
+};
+
+export async function fetchProductsPages(query: string, filter: string) {
+  try {
+    const where: Prisma.ProductWhereInput = {
+      product_name: {
+        contains: query,
+      },
+    };
+
+  if (
+    filter &&
+    filter !== "latest" &&
+    filter !== "oldest" &&
+    filter !== "all"
+  ) {
+    where.category = {
+      name: filter,
+    };
+  }
+
+    const totalProducts = await db.product.count({ where });
+
+    const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
+    return totalPages;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch total number of products.");
+  }
+}
 
 // Audit
 export const getAuditLogList = async (
@@ -263,91 +488,6 @@ export async function fetchTransactionPages(query: string, filter: string) {
   }
 
   return Math.ceil(total / ITEMS_PER_PAGE);
-}
-
-//Inventory
-export const getProductList = async (
-  query: string,
-  currentPage: number,
-  filter: string,
-  sortBy: string = "createdAt", 
-  sortOrder: "asc" | "desc" = "desc"
-) => {
-  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
-
-  const where: Prisma.ProductWhereInput = {
-    product_name: {
-      contains: query,
-    },
-  };
-
-  if (
-    filter &&
-    filter !== "latest" &&
-    filter !== "oldest" &&
-    filter !== "all" &&
-    Object.values(Category).includes(filter as Category)
-  ) {
-    where.category = filter as Category;
-  }
-
-  const validSortFields = ["product_name", "price", "quantity", "createdAt", "expiryDate"];
-  const safeSortBy = validSortFields.includes(sortBy) ? sortBy : "createdAt";
-
-  const products = await db.product.findMany({
-    where,
-    select: {
-      id: true,
-      product_name: true,
-      price: true,
-      quantity: true,
-      category: true,
-      releaseDate: true,
-      expiryDate: true,
-      createdAt: true,
-    },
-    orderBy: {
-      [safeSortBy]: sortOrder,
-    },
-    take: ITEMS_PER_PAGE,
-    skip: offset,
-  });
-
-  const mappedProducts = products.map((p) => ({
-    ...p,
-    price: p.price instanceof Decimal ? p.price.toNumber() : Number(p.price),
-    icon: [],
-  }));
-
-  return mappedProducts;
-};
-
-export async function fetchProductsPages(query: string, filter: string) {
-  try {
-    const where: Prisma.ProductWhereInput = {
-      product_name: {
-        contains: query,
-      },
-    };
-
-    // Apply category if valid
-    if (
-      filter &&
-      filter !== "latest" &&
-      filter !== "oldest" &&
-      filter !== "all"
-    ) {
-      where.category = filter as Category;
-    }
-
-    const totalProducts = await db.product.count({ where });
-
-    const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
-    return totalPages;
-  } catch (error) {
-    console.error("Database Error:", error);
-    throw new Error("Failed to fetch total number of products.");
-  }
 }
 
 export async function getProductById(id:number) {

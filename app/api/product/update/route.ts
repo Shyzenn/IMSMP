@@ -16,7 +16,7 @@ export async function PATCH(req: Request) {
     const userId = session.user.id; 
 
     const body = await req.json();
-    const { id, product_name, category, quantity, price, releaseDate, expiryDate } = body;
+    const { id, product_name, category, quantity, price, releaseDate, expiryDate, batchId } = body;
 
     // Validate input using Zod schema
     const result = editProductSchema.safeParse(body);
@@ -45,21 +45,29 @@ export async function PATCH(req: Request) {
         }, { status: 400 });
     }
 
-    const releaseDateUTC = new Date(releaseDate).toISOString();
-    const expiryDateUTC = new Date(expiryDate).toISOString();
+    // const releaseDateUTC = new Date(releaseDate).toISOString();
+    // const expiryDateUTC = new Date(expiryDate).toISOString();
 
     // Update a new product in the database
-   const editProduct = await db.product.update({
-      where:{id},
+    const editProduct = await db.product.update({
+      where: { id },
       data: {
         product_name,
         category,
-        quantity,
         price,
-        releaseDate: releaseDateUTC,
-        expiryDate: expiryDateUTC,
       },
     });
+
+    if (batchId) {
+      await db.productBatch.update({
+        where: { id: batchId },
+        data: {
+          quantity,
+          releaseDate: new Date(releaseDate),
+          expiryDate: new Date(expiryDate),
+        },
+      });
+    }
 
     await db.auditLog.create({
       data: {

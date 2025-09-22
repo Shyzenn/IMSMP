@@ -10,6 +10,7 @@ import { ExpiryProductsSkeleton } from "./Skeleton";
 
 const columns: Column[] = [
   { label: "Product name", accessor: "name" },
+  { label: "Batch#", accessor: "batch_number" },
   { label: "Expiry Date", accessor: "expiryDate" },
   { label: "Quantity", accessor: "quantity" },
   { label: "Categories", accessor: "category" },
@@ -34,7 +35,7 @@ const ExpiryProducts = () => {
   if (isLoading) return <ExpiryProductsSkeleton />;
 
   return (
-    <div className="mx-4 max-h-[240px] overflow-auto">
+    <div className="mx-4 overflow-auto">
       <TableComponent
         data={formattedData}
         columns={columns}

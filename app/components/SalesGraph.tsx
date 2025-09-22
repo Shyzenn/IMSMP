@@ -73,7 +73,7 @@ const SalesGraph = () => {
   };
 
   return (
-    <div className="bg-white w-full md:w-[70%] h-full rounded-md p-3 shadow-md flex flex-col">
+    <div className="bg-white w-full h-full rounded-md p-3 shadow-md flex flex-col">
       <div className="flex justify-between mb-2 w-full">
         <p className="text-lg font-semibold">Sales</p>
         <SelectField

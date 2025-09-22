@@ -30,7 +30,7 @@ const TransactionTable = async ({
   return (
     <>
       {transactions.length === 0 ? (
-        <EmptyTable content="No Transaction Available" />
+        <EmptyTable content="No Transaction Found" />
       ) : (
         <Table>
           <TransactionTableHeader />

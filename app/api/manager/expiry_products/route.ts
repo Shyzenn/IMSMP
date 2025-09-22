@@ -9,26 +9,26 @@ export async function GET() {
         const in30Days = new Date();
         in30Days.setDate(now.getDate() + 30)
 
-        const expiryProducts = await db.product.findMany({
-            where: {
-               expiryDate:{
-                gt:now,
-                lte: in30Days
-               }
-            },
-            orderBy: {
-                expiryDate: 'asc'
-            },
-            take:20
-        })
+       const expiryProducts = await db.product.findMany({
+        include: { batches: true, category: true },
+       });
 
-        const formattedProducts = expiryProducts.map((product) => ({
+
+        const formattedProducts = expiryProducts.flatMap((product) =>
+        product.batches
+            ?.filter(
+            (batch) =>
+                batch.expiryDate > now && batch.expiryDate <= in30Days
+            )
+            .map((batch) => ({
             id: product.id,
-            name:capitalLetter(product.product_name),
-            expiryDate: product.expiryDate?.toISOString() || "",
-            quantity: product.quantity,
-            category: capitalLetter(product.category)
-        }))
+            name: capitalLetter(product.product_name),
+            expiryDate: batch.expiryDate.toISOString(),
+            quantity: batch.quantity,
+            batch_number:batch.batchNumber,
+            category: capitalLetter(product.category?.name || "")
+            })) || []
+        );
 
         return NextResponse.json(formattedProducts, {status:200})
 
