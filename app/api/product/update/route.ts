@@ -16,25 +16,38 @@ export async function PATCH(req: Request) {
     const userId = session.user.id; 
 
     const body = await req.json();
-    const { id, product_name, category, quantity, price, releaseDate, expiryDate, batchId } = body;
+    const { productId, product_name, category, price } = body;
 
     // Validate input using Zod schema
-    const result = editProductSchema.safeParse(body);
-
-    // Create an object to store validation errors
-    const zodErrors: Record<string, string> = {};
+   const result = editProductSchema.safeParse({ productId, product_name, category, price });
     if (!result.success) {
+      const zodErrors: Record<string, string> = {};
       result.error.issues.forEach((issue) => {
         zodErrors[issue.path[0]] = issue.message;
       });
       return NextResponse.json({ errors: zodErrors }, { status: 400 });
     }
 
+    const normalizedCategory = category.trim().toLowerCase();
+
+    const categoryRecord = await db.productCategory.findFirst({
+      where: {
+        name: normalizedCategory,
+      },
+    });
+
+    if (!categoryRecord) {
+      return NextResponse.json(
+        { errors: { category: "Selected category does not exist" } },
+        { status: 400 }
+      );
+    }
+
     const existingProduct = await db.product.findFirst({
-        where: {
-            product_name,
-            NOT: { id },
-        },
+      where: { 
+        product_name: product_name.trim(), 
+        NOT: {id: productId} 
+      },
     });
 
     if (existingProduct) {
@@ -45,29 +58,18 @@ export async function PATCH(req: Request) {
         }, { status: 400 });
     }
 
-    // const releaseDateUTC = new Date(releaseDate).toISOString();
-    // const expiryDateUTC = new Date(expiryDate).toISOString();
-
     // Update a new product in the database
     const editProduct = await db.product.update({
-      where: { id },
+      where: {
+        id: productId,
+      },
       data: {
-        product_name,
-        category,
+        product_name: product_name.trim(),
         price,
+        userId: session.user.id,
+        categoryId: categoryRecord.id,
       },
     });
-
-    if (batchId) {
-      await db.productBatch.update({
-        where: { id: batchId },
-        data: {
-          quantity,
-          releaseDate: new Date(releaseDate),
-          expiryDate: new Date(expiryDate),
-        },
-      });
-    }
 
     await db.auditLog.create({
       data: {

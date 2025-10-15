@@ -77,7 +77,7 @@ export async function handleCredentialsSignIn({
 
     // Role-based redirects
     if (user.role === "Manager") return { redirectUrl: "/dashboard" };
-    if (user.role === "Nurse") return { redirectUrl: "/request-order" };
+    if (user.role === "Nurse") return { redirectUrl: "/nurse_dashboard" };
     if (user.role === "Pharmacist_Staff") return { redirectUrl: "/pharmacist_dashboard" };
     if (user.role === "Cashier") return { redirectUrl: "/cashier_dashboard" };
 

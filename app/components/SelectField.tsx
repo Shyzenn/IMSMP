@@ -8,44 +8,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ControllerRenderProps } from "react-hook-form";
-import { UserFormValues } from "@/lib/interfaces";
+import { ControllerRenderProps, FieldValues, Path } from "react-hook-form";
 
-interface SelectFieldProps {
-  field?: ControllerRenderProps<UserFormValues, "role">;
+interface SelectFieldProps<T extends FieldValues> {
+  field?: ControllerRenderProps<T, Path<T>>;
   label: string;
   option: { label: string; value: string }[];
   value?: string;
   onChange?: (value: string) => void;
   defaultValue?: string;
+  inputWidth?: string;
 }
 
-const SelectField = ({
+const SelectField = <T extends FieldValues>({
   field,
   label,
   option,
   value,
   onChange,
   defaultValue,
-}: SelectFieldProps) => {
+  inputWidth,
+}: SelectFieldProps<T>) => {
   return (
     <Select
       value={field?.value || value || undefined}
       onValueChange={field?.onChange ?? onChange}
       defaultValue={defaultValue}
     >
-      <SelectTrigger className="w-auto">
+      <SelectTrigger className={`${inputWidth}`}>
         <SelectValue placeholder={label} />
       </SelectTrigger>
       <SelectContent className="bg-white">
         <SelectGroup>
           <SelectLabel>{label}</SelectLabel>
           {option.map((opt) => (
-            <SelectItem
-              key={opt.value}
-              value={opt.value}
-              className="hover:bg-gray-100"
-            >
+            <SelectItem key={opt.value} value={opt.value}>
               {opt.label}
             </SelectItem>
           ))}

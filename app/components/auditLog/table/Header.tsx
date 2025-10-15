@@ -1,5 +1,5 @@
-import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import React from "react";
+import ReusableTableHeader from "../../ReusabaleTableHeader";
 
 const sortableTableHeaders = [
   { key: "id", label: "Log ID" },
@@ -12,17 +12,7 @@ const sortableTableHeaders = [
 ];
 
 const AuditLogTableHeader = () => {
-  return (
-    <TableHeader>
-      <TableRow className="bg-slate-100">
-        {sortableTableHeaders.map(({ key, label }) => (
-          <TableHead key={key} className="text-black font-semibold">
-            {label}
-          </TableHead>
-        ))}
-      </TableRow>
-    </TableHeader>
-  );
+  return <ReusableTableHeader headers={sortableTableHeaders} />;
 };
 
 export default AuditLogTableHeader;

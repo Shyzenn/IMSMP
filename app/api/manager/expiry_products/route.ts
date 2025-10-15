@@ -13,12 +13,11 @@ export async function GET() {
         include: { batches: true, category: true },
        });
 
-
         const formattedProducts = expiryProducts.flatMap((product) =>
         product.batches
             ?.filter(
             (batch) =>
-                batch.expiryDate > now && batch.expiryDate <= in30Days
+                batch.expiryDate > now && batch.expiryDate <= in30Days && batch.quantity > 0
             )
             .map((batch) => ({
             id: product.id,

@@ -4,8 +4,8 @@ import { TableRowSkeleton } from "@/app/components/Skeleton";
 import Pagination from "@/app/components/Pagination";
 import { fetchProductsPages } from "@/lib/action/get";
 import { redirect } from "next/navigation";
-import InventoryHeader from "@/app/components/Inventory/products/InventoryHeader";
 import { inventorySkeletonHeaders } from "@/lib/utils";
+import PageTableHeader from "@/app/components/PageTableHeader";
 
 async function Inventory(props: {
   searchParams?: Promise<{
@@ -37,10 +37,10 @@ async function Inventory(props: {
       className="p-6 bg-white overflow-auto rounded-md"
       style={{ height: "calc(94vh - 70px)" }}
     >
-      <InventoryHeader
+      <PageTableHeader
         title="Products"
         hasAddProduct={true}
-        hasInventoryFilter={true}
+        isProductFilter={true}
       />
 
       <div className="overflow-x-auto">

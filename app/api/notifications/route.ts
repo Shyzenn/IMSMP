@@ -13,9 +13,24 @@ export async function GET() {
     where: {
       recipientId: session.user.id,
     },
+    include: {
+      sender: {
+        select: {
+          username: true,
+          role: true,
+        },
+      },
+      order: {
+        select: {
+          patient_name: true,
+          room_number: true,
+        },
+      },
+    },
     orderBy: {
       createdAt: "desc",
     },
+    take:20
   });
 
   return NextResponse.json(notifications);

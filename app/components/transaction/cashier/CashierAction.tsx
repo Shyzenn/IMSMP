@@ -7,14 +7,19 @@ import { CombinedTransaction } from "@/lib/action/get";
 import { OrderItem } from "@/lib/interfaces";
 
 export type OrderView = {
-  id: string;
+  type?: "REGULAR" | "EMERGENCY";
+  id: number | string;
+  requestedBy?: string;
+  receivedBy?: string;
+  processedBy?: string;
   customer?: string;
   patient_name?: string;
   roomNumber?: string;
+  notes?: string;
   quantity: number;
   price: number;
   total: number;
-  status: string;
+  status: "pending" | "for_payment" | "paid" | "canceled";
   createdAt: Date;
   source: "Walk In" | "Request Order";
   itemDetails: OrderItem[];
@@ -31,14 +36,18 @@ const CashierAction = ({
   return (
     <>
       <CashierReqOrderAction
-        orderId={transaction.id.toString()}
         status={transaction.status}
         onView={() => {
           const orderView: OrderView = {
             ...transaction,
-            id: `ORD-${transaction.id}`,
+            id: transaction.id,
             patient_name: transaction.patient_name ?? "N/A",
             roomNumber: transaction.roomNumber?.toString() ?? "N/A",
+            status: transaction.status as
+              | "pending"
+              | "for_payment"
+              | "paid"
+              | "canceled",
           };
           setSelectedOrder(orderView);
           setIsOrderModalOpen(true);

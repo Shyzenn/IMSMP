@@ -20,7 +20,10 @@ const UserManagement = () => {
   });
 
   return (
-    <div className="mx-32 my-16">
+    <div
+      className="p-6 bg-white overflow-auto rounded-md"
+      style={{ height: "calc(94vh - 70px)" }}
+    >
       <div className="flex items-center justify-between mb-6">
         <p>
           All Users{" "}

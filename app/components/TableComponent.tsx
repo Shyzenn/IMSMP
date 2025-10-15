@@ -15,31 +15,19 @@ function TableComponent<T extends Record<string, unknown>>({
   setIsOrderModalOpen,
   onRowClick,
   title,
-  requestOrderBtn,
   interactiveRows,
   noDataMessage,
   colorCodeExpiry = false,
+  filter,
 }: TableComponentProps<T>) {
   const { data: session } = useSession();
   const userRole = session?.user.role;
 
   return (
     <>
-      <div
-        className={`flex ${
-          requestOrderBtn ? "justify-between py-4" : "justify-start py-2"
-        } items-center sticky top-0 bg-white z-10`}
-      >
-        {requestOrderBtn ? (
-          <>
-            <p className="text-lg font-semibold">{title}</p>
-            <div>{requestOrderBtn}</div>
-          </>
-        ) : (
-          <>
-            <p className="text-lg font-semibold">{title}</p>
-          </>
-        )}
+      <div className="flex items-center justify-between p-2">
+        <p className="text-lg font-semibold">{title}</p>
+        {filter && <div>{filter}</div>}
       </div>
 
       <Table>
@@ -92,12 +80,13 @@ function TableComponent<T extends Record<string, unknown>>({
                       className={`${
                         column.align === "right" ? "text-right" : "text-left"
                       } ${
-                        interactiveRows && userRole !== "Cashier"
-                          ? "cursor-pointer"
-                          : ""
+                        (interactiveRows && userRole === "Cashier") ||
+                        userRole === "Nurse"
+                          ? ""
+                          : "cursor-pointer"
                       }`}
                       onClick={() => {
-                        if (userRole === "Cashier") {
+                        if (userRole === "Cashier" || userRole === "Nurse") {
                           onRowClick?.(row);
                         } else {
                           onRowClick?.(row);

@@ -1,16 +1,14 @@
 "use client";
 
 import React from "react";
-import {
-  TbShoppingCart,
-  TbShoppingCartDown,
-  TbShoppingCartUp,
-  TbShoppingCartX,
-} from "react-icons/tb";
 import DashboardCards from "./DashboardCards";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { CardSkeleton } from "./Skeleton";
+import { TbCurrencyPeso } from "react-icons/tb";
+import { PiChartLineUpLight } from "react-icons/pi";
+import { LuPackage } from "react-icons/lu";
+import { TbCreditCardPay } from "react-icons/tb";
 
 type OrderCardData = {
   totalRevenue: number;
@@ -46,35 +44,35 @@ const CashierDashboardCards = () => {
     {
       title: "Total Revenue",
       value: `₱${Number(totalRevenue).toLocaleString()}`,
-      icon: TbShoppingCart,
+      icon: TbCurrencyPeso,
       bgColor: "bg-blue-50",
       textColor: "text-blue-500",
     },
     {
       title: "Sales Today",
       value: `₱${Number(totalSalesToday).toLocaleString()}`,
-      icon: TbShoppingCartDown,
+      icon: PiChartLineUpLight,
       bgColor: "bg-orange-50",
       textColor: "text-orange-500",
     },
     {
       title: "Total Orders",
       value: totalOrders,
-      icon: TbShoppingCartUp,
+      icon: LuPackage,
       bgColor: "bg-green-50",
       textColor: "text-green-500",
     },
     {
       title: "For Payment",
       value: forPayment,
-      icon: TbShoppingCartX,
+      icon: TbCreditCardPay,
       bgColor: "bg-red-50",
       textColor: "text-red-500",
     },
   ];
 
   return (
-    <div className="h-[15%]">
+    <div className="h-32">
       <DashboardCards cards={cashierCards} />
     </div>
   );

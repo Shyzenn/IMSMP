@@ -7,14 +7,32 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import React from "react";
+import React, { useTransition } from "react";
 import { CiEdit } from "react-icons/ci";
 import { IoArchiveOutline } from "react-icons/io5";
 import { BatchProps } from "./BatchTable";
 import EditBatchForm from "./EditBatchForm";
+import LoadingButton from "@/components/loading-button";
+import UserStatusConfirmDialog from "../../UserStatusConfirmDialog";
+import { archiveBatch } from "@/lib/action/product";
+import toast from "react-hot-toast";
 
 const BatchAction = ({ batch }: { batch: BatchProps }) => {
   const { open, close, isOpen } = useModal();
+
+  const [isPending, startTransition] = useTransition();
+
+  const handleArchive = () => {
+    startTransition(async () => {
+      const result = await archiveBatch(batch.id);
+
+      if (result.success) {
+        toast.success(result.message + " ✅");
+      } else {
+        toast.error(result.message + " ❌");
+      }
+    });
+  };
 
   return (
     <>
@@ -35,13 +53,21 @@ const BatchAction = ({ batch }: { batch: BatchProps }) => {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <button>
-                <IoArchiveOutline />
-              </button>
+              <UserStatusConfirmDialog
+                iconOnly={true}
+                iconColor="text-gray-900"
+                modalButtonLabel={
+                  isPending ? <LoadingButton color="text-white" /> : "Confirm"
+                }
+                buttonLabel="Archive"
+                icon={IoArchiveOutline}
+                title="Archive Batch"
+                description="Are you sure you want to
+                archive this Batch?"
+                confirmButton={handleArchive}
+              />
             </TooltipTrigger>
-            <TooltipContent>
-              <p>Archive Batch</p>
-            </TooltipContent>
+            <TooltipContent>Archive Batch</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>

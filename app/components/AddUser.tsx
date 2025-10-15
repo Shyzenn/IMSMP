@@ -71,7 +71,9 @@ const AddUser = () => {
 
   return (
     <>
-      {isOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-30" />}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40" />
+      )}
       {isOpen && (
         <div className="flex justify-center items-center overflow-y-auto py-5 z-40 h-auto w-[28rem] absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
           <AddUserForm

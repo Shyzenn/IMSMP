@@ -8,7 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { replenishProductSchema, TReplenishProductSchema } from "@/lib/types";
 import toast from "react-hot-toast";
 import LoadingButton from "@/components/loading-button";
-import axios from "axios";
+import { useProductForm } from "../hooks/useProductForm";
+import { replenishProduct } from "@/lib/action/add";
 
 const ReplenishFormModal = ({
   setShowReplenishModal,
@@ -35,36 +36,14 @@ const ReplenishFormModal = ({
     toast.success("Product replenish successfully! 🎉", { icon: "✅" });
   }, []);
 
-  const onSubmit = async (data: TReplenishProductSchema) => {
-    const payload = {
-      ...data,
-      productId,
-    };
+  const { handleSubmitWrapper } = useProductForm(setError, () => {
+    reset();
+    notify();
+    setShowReplenishModal(false);
+  });
 
-    try {
-      await axios.post("/api/product/replenish", payload);
-      notify();
-      setShowReplenishModal(false);
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        if (error.response?.data?.errors) {
-          Object.entries(error.response.data.errors).forEach(
-            ([field, message]) => {
-              setError(field as keyof TReplenishProductSchema, {
-                type: "server",
-                message: message as string,
-              });
-            }
-          );
-        } else {
-          toast.error("Failed to update user. Please try again.");
-        }
-      } else if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("An unexpected error occurred.");
-      }
-    }
+  const onSubmit = (data: TReplenishProductSchema) => {
+    return handleSubmitWrapper(() => replenishProduct(data));
   };
 
   return (

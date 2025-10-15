@@ -11,11 +11,17 @@ import {
 import EmptyTable from "./EmptyTable";
 import UserActionButton from "./UserActionButton";
 import clsx from "clsx";
+import { TableRowSkeleton } from "./Skeleton";
 
 const sortableHeaders = [
   { label: "Username", key: "username" },
   { label: "User Type", key: "role" },
   { label: "Status", key: "status" },
+];
+
+const skeletonHeader = [
+  ...sortableHeaders,
+  { label: "Action", key: "actions" },
 ];
 
 const UserTable = ({
@@ -25,7 +31,7 @@ const UserTable = ({
   isLoading: boolean;
   usersData: UserFormValues[];
 }) => {
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading) return <TableRowSkeleton headerLabel={skeletonHeader} />;
 
   return (
     <>

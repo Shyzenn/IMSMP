@@ -22,8 +22,11 @@ model User {
   status        UserStatus   @default(ACTIVE)
   mustChangePassword   Boolean @default(true)
 
-  OrderRequest  OrderRequest[]
-  WalkInTransaction    WalkInTransaction[]
+  OrderRequest        OrderRequest[]     @relation("RequestedBy")
+  WalkInTransaction   WalkInTransaction[]
+
+  ReceivedOrders      OrderRequest[]     @relation("ReceivedBy")
+  ProcessedOrders     OrderRequest[]     @relation("ProcessedBy")
   
   Product       Product[]
   AuditLog      AuditLog[]
@@ -66,6 +69,7 @@ model Product {
   status        String         @default("ACTIVE") // ACTIVE | ARCHIVED
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  archiveAt     DateTime?
 
   // Relationships
   batches       ProductBatch[]
@@ -84,15 +88,16 @@ model ProductBatch {
   id          Int      @id @default(autoincrement())
   productId   Int
   product     Product  @relation(fields: [productId], references: [id])
+  archiveAt     DateTime?
 
-  batchNumber Int
+  batchNumber String
   quantity    Int      @default(0)
   releaseDate DateTime
   expiryDate  DateTime
-  type        String   @default("ACTIVE") // ACTIVE | EXPIRING | EXPIRED | CONSUMED
+  type        String   @default("ACTIVE") // ACTIVE | EXPIRING | EXPIRED | CONSUMED | ARCHIVED
 
   createdAt   DateTime @default(now())
- 
+  updatedAt   DateTime @updatedAt
 }
 
 model ProductCategory {
@@ -106,12 +111,33 @@ model OrderRequest {
   room_number  String?
   patient_name String?
   status       Status
+  notes        String?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
-  items        OrderItem[]  // relation to items
-  user         User       @relation(fields: [userId], references: [id])
+
+  type         OrderType    @default(REGULAR)
+
+  isArchived   Boolean      @default(false)
+
+  user         User         @relation("RequestedBy", fields: [userId], references: [id])
   userId       String
+
+  receivedBy   User?        @relation("ReceivedBy", fields: [receivedById], references: [id])
+  receivedById String?
+
+  processedBy  User?        @relation("ProcessedBy", fields: [processedById], references: [id])
+  processedById String?
+
+  receivedAt   DateTime?
+  processedAt  DateTime?
+
+  items        OrderItem[]  
   Notification Notification[]
+}
+
+enum OrderType {
+  REGULAR
+  EMERGENCY
 }
 
 model OrderItem {
@@ -151,17 +177,20 @@ enum Status {
   pending
   for_payment
   paid
+  canceled
 }
 
 enum NotificationType {
   ORDER_REQUEST
   ADD_PRODUCT
+  ORDER_RECEIVED
+  PAYMENT_PROCESSED
+  EMERGENCY_ORDER
 }
 
 model Notification {
   id        Int      @id @default(autoincrement())
   title     String
-  message   String
   read      Boolean   @default(false)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -181,4 +210,9 @@ model Notification {
   product      Product?        @relation(fields: [productId], references: [id])
 
   type         NotificationType?
+
+  patientName  String?
+  roomNumber   String?
+  submittedBy  String?
+  role         String?
 }

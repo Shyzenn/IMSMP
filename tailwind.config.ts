@@ -10,6 +10,8 @@ export default {
   theme: {
   	extend: {
   		colors: {
+			buttonBgColor: '#2b9e78',
+			buttonHover: '#41b08d',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

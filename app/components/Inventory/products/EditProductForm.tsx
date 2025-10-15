@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useCallback } from "react";
 import FormField from "../../FormField";
 import { Input } from "@/components/ui/input";
@@ -7,10 +9,12 @@ import { editProductSchema, TEditProductSchema } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { editNewProduct } from "@/lib/action/add";
 import LoadingButton from "@/components/loading-button";
-import CategoryField from "../../CategoryField";
 import CancelButton from "../../CancelButton";
 import { useProductForm } from "@/app/hooks/useProductForm";
 import toast from "react-hot-toast";
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
+import CategoryField from "../../CategoryField";
 
 const EditProductForm = ({
   setIsModalOpen,
@@ -28,7 +32,7 @@ const EditProductForm = ({
   } = useForm<TEditProductSchema>({
     resolver: zodResolver(editProductSchema),
     defaultValues: {
-      id: product.id,
+      productId: product.id,
       product_name: product.product_name,
       price: product.price,
       category: product.category,
@@ -47,6 +51,30 @@ const EditProductForm = ({
   const onSubmit = async (data: TEditProductSchema) => {
     handleSubmitWrapper(() => editNewProduct(data));
   };
+
+  const getCategories = async () => {
+    try {
+      const response = await axios.get("/api/product/category");
+      return response.data;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.error("Axios error:", error.response?.data || error.message);
+        throw new Error(
+          error.response?.data?.message || "Failed to fetch categories"
+        );
+      } else {
+        console.error("Unexpected error:", error);
+        throw new Error(
+          "An unexpected error occurred while fetching categories"
+        );
+      }
+    }
+  };
+
+  const { data: categoriesData = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: getCategories,
+  });
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
@@ -73,18 +101,23 @@ const EditProductForm = ({
               control={control}
               name="category"
               error={errors.category?.message}
-              categoryLabel={product.category}
-              items={["PAIN_RELIEVER", "ANTIBIOTIC"]}
+              categoryLabel={"Select a category"}
+              items={categoriesData}
             />
 
             <FormField label="Price" error={errors.price?.message}>
               <Input
                 {...register("price")}
-                id="price"
                 type="number"
-                className="mt-1"
-                step="0.01"
                 min="0"
+                step="any"
+                placeholder="Enter price"
+                onWheel={(e) => e.currentTarget.blur()}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+                    e.preventDefault();
+                  }
+                }}
               />
             </FormField>
           </div>
@@ -96,7 +129,7 @@ const EditProductForm = ({
               className={`px-12 rounded-md ${
                 !isDirty || isSubmitting
                   ? "bg-gray-400 cursor-not-allowed"
-                  : " cursor-pointer bg-green-500 hover:bg-green-600 text-white"
+                  : " cursor-pointer bg-buttonBgColor hover:bg-buttonHover text-white"
               }`}
               type="submit"
             >

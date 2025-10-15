@@ -29,9 +29,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-   const zodErrors: Record<string, string> = {};
 
-   // check current password
+    // check current password
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
       return NextResponse.json(
@@ -40,12 +39,21 @@ export async function POST(req: Request) {
       );
     }
 
-     if (Object.keys(zodErrors).length > 0) {
-      return NextResponse.json({ errors: zodErrors }, { status: 400 });
+    // check if new password is same as current
+    const isSameAsCurrent = await bcrypt.compare(newPassword, user.password);
+    if (isSameAsCurrent) {
+      return NextResponse.json(
+        { error: "New password cannot be the same as your current password." },
+        { status: 400 }
+      );
     }
 
-    // Hash new password
+    // Hash new password and update...
     const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await db.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword, otp: null, otpExpiresAt: null, mustChangePassword: false },
+    });
 
     // Update user
     await db.user.update({

@@ -21,7 +21,7 @@ const AddButton: React.FC<AddButtonProps> = ({
     <button
       type={type}
       onClick={onClick}
-      className={`cursor-pointer bg-green-500 hover:bg-green-600 text-white rounded-md ${className}`}
+      className={`cursor-pointer bg-[#2b9e78] hover:bg-[#41b08d] transition-all ease-in-out duration-300 text-white rounded-md ${className}`}
       disabled={disabled}
     >
       {icon}

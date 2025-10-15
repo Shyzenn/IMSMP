@@ -20,7 +20,7 @@ export async function POST(req: Request) {
         password: hashedOTP,          // new password is OTP
         mustChangePassword: true,     // user must change at next login
         otp: null,                         
-        otpExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h expiry
+        otpExpiresAt: new Date(Date.now() + 1000 * 60 * 15), // 15m expiry
       },
     });
 

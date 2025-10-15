@@ -16,19 +16,23 @@ const skeletonHeaders = [
 ];
 
 const page = async (props: {
-  searchParams?: Promise<{
+  searchParams: Promise<{
     query?: string;
     page?: string;
     filter?: string;
+    from: string;
+    to: string;
   }>;
 }) => {
   const searchParams = await props.searchParams;
   const query = searchParams?.query || "";
   const page = searchParams?.page;
   const filter = searchParams?.filter || "all";
+  const from = searchParams.from;
+  const to = searchParams.to;
 
   const currentPage = Number(page);
-  const totalPages = await fetchAuditPages(query, filter);
+  const totalPages = await fetchAuditPages(query, filter, { from, to });
 
   return (
     <div
@@ -45,6 +49,7 @@ const page = async (props: {
             query={query}
             filter={filter}
             currentPage={currentPage}
+            dateRange={{ from, to }}
           />
         </Suspense>
       </div>

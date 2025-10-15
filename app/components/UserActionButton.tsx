@@ -14,39 +14,35 @@ import { GoCheckCircle } from "react-icons/go";
 import { IoBanOutline } from "react-icons/io5";
 import { Button } from "@/components/ui/button";
 import UserStatusConfirmDialog from "./UserStatusConfirmDialog";
-import axios from "axios";
 import toast from "react-hot-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import LoadingButton from "@/components/loading-button";
+import { useTransition } from "react";
+import { updateUserStatus } from "@/lib/action/user";
 
 const UserActionButton = ({ user }: { user: UserFormValues }) => {
   const { close, open, isOpen } = useModal();
-  const queryClient = useQueryClient();
 
-  const updateUserStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      return await axios.patch(`/api/user/${id}/status`, { status });
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success(
-        `User "${user.username}" has been ${
-          variables.status === "ACTIVE" ? "activated" : "banned"
-        } successfully`,
-        { icon: "✅" }
-      );
-    },
-    onError: () => {
-      toast.error(`Failed to update user ${user.username}`, { icon: "❌" });
-    },
-  });
+  const [isPending, startTransition] = useTransition();
 
-  const handleBan = () => {
-    updateUserStatus.mutate({ id: user.id!, status: "DISABLE" });
+  const handleStatusChange = (status: "ACTIVE" | "DISABLE") => {
+    startTransition(async () => {
+      const result = await updateUserStatus({ userId: user.id!, status });
+
+      if (result.success) {
+        toast.success(`User "${user.username}" ${result.message}`, {
+          icon: "✅",
+        });
+      } else {
+        toast.error(
+          `Failed to update user ${user.username}: ${result.message}`,
+          { icon: "❌" }
+        );
+      }
+    });
   };
 
-  const handleActivate = () => {
-    updateUserStatus.mutate({ id: user.id!, status: "ACTIVE" });
-  };
+  const handleBan = () => handleStatusChange("DISABLE");
+  const handleActivate = () => handleStatusChange("ACTIVE");
 
   return (
     <>
@@ -68,6 +64,9 @@ const UserActionButton = ({ user }: { user: UserFormValues }) => {
 
           {user.status === "ACTIVE" ? (
             <UserStatusConfirmDialog
+              modalButtonLabel={
+                isPending ? <LoadingButton color="text-white" /> : "Confirm"
+              }
               buttonWidth="w-[110px] flex justify-evenly"
               iconColor="text-red-500"
               buttonLabel="Ban"
@@ -79,6 +78,9 @@ const UserActionButton = ({ user }: { user: UserFormValues }) => {
             />
           ) : (
             <UserStatusConfirmDialog
+              modalButtonLabel={
+                isPending ? <LoadingButton color="text-white" /> : "Confirm"
+              }
               iconColor="text-green-500"
               buttonLabel="Activate"
               icon={GoCheckCircle}

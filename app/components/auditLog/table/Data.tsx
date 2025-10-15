@@ -10,17 +10,24 @@ export default async function AuditLogTable({
   query = "",
   filter = "all",
   currentPage = 1,
+  dateRange,
 }: {
   query?: string;
   filter?: string;
   currentPage?: number;
+  dateRange: { from: string; to: string };
 }) {
-  const auditLogs = await getAuditLogList(query, filter, currentPage);
+  const auditLogs = await getAuditLogList(
+    query,
+    filter,
+    currentPage,
+    dateRange
+  );
 
   return (
     <>
       {auditLogs.length === 0 ? (
-        <EmptyTable content="No Transaction Found" />
+        <EmptyTable content="No Audit Log Found" />
       ) : (
         <Table>
           <AuditLogTableHeader />

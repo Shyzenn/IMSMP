@@ -94,7 +94,9 @@ const UserEditModal = ({
               name="role"
               error={errors.role?.message}
               categoryLabel={user.role.replace("_", " ")}
-              items={["Nurse", "Pharmacist Staff", "Manager", "Cashier"]}
+              items={["Nurse", "Pharmacist Staff", "Manager", "Cashier"].map(
+                (role, index) => ({ id: index + 1, name: role })
+              )}
             />
           </div>
 

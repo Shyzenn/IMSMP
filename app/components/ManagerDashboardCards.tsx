@@ -11,17 +11,13 @@ import {
 } from "react-icons/tb";
 import axios from "axios";
 import { CardSkeleton } from "./Skeleton";
-import { useSession } from "next-auth/react";
 
 const fetchManagerCardData = async () => {
   const { data } = await axios.get("api/manager/manager_card");
   return Array.isArray(data) ? data : [];
 };
 
-const ManagerDashboardCards = () => {
-  const { data: session } = useSession();
-  const userRole = session?.user?.role;
-
+const ManagerDashboardCards = ({ userRole }: { userRole?: string }) => {
   const { data: managerCard = [], isLoading } = useQuery({
     queryFn: fetchManagerCardData,
     queryKey: ["manager_cards"],
@@ -31,7 +27,7 @@ const ManagerDashboardCards = () => {
     return <CardSkeleton />;
   }
 
-  const [totalProducts, lowStock, highStock, expiring] = managerCard;
+  const [totalSales, lowStock, highStock, expiring] = managerCard;
 
   const basePath =
     userRole === "Pharmacist_Staff"
@@ -40,13 +36,15 @@ const ManagerDashboardCards = () => {
 
   const managerCards = [
     {
-      title: "Product",
-      value: totalProducts,
+      title: "Sales",
+      value: `₱${Number(totalSales).toLocaleString("en-PH", {
+        minimumFractionDigits: 0,
+      })}`,
       icon: TbShoppingCart,
       bgColor: "bg-blue-50",
       textColor: "text-blue-500",
 
-      link: `${basePath}?query=&page=1&filter=all&sort=releaseDate&order=desc`,
+      link: `/transaction?page=1&filter=all&sort=createdAt&order=desc`,
     },
     {
       title: "Low Stock",
@@ -54,7 +52,7 @@ const ManagerDashboardCards = () => {
       icon: TbShoppingCartDown,
       bgColor: "bg-orange-50",
       textColor: "text-orange-500",
-      link: `/${basePath}?query=&page=1&filter=all&sort=quantity&order=asc`,
+      link: `/${basePath}?query=&page=1&filter=all&sort=totalQuantity&order=asc`,
     },
     {
       title: "High Stock",
@@ -62,7 +60,7 @@ const ManagerDashboardCards = () => {
       icon: TbShoppingCartUp,
       bgColor: "bg-green-50",
       textColor: "text-green-500",
-      link: `/${basePath}?query=&page=1&filter=all&sort=quantity&order=desc`,
+      link: `/${basePath}?query=&page=1&filter=all&sort=totalQuantity&order=desc`,
     },
     {
       title: "Expiring Soon",
@@ -70,7 +68,7 @@ const ManagerDashboardCards = () => {
       icon: TbShoppingCartX,
       bgColor: "bg-red-50",
       textColor: "text-red-500",
-      link: `/${basePath}?query=&page=1&filter=all&sort=expiringSoon&order=desc`,
+      link: `/inventory/batches?query=&page=1&filter=Expiring&sort=expiry_date&order=asc`,
     },
   ];
 

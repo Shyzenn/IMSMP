@@ -5,7 +5,6 @@ import {
   nurseLinks,
 } from "@/lib/links";
 import { isActive } from "@/lib/utils";
-import { Session } from "next-auth";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
@@ -18,11 +17,10 @@ const roleLinksMap: Record<string, Links[]> = {
   Manager: managerLinks,
 };
 
-const HeaderLinks = ({ session }: { session: Session | null }) => {
+const HeaderLinks = ({ userRole }: { userRole: string | null }) => {
   const pathname = usePathname();
-  const role = session?.user.role;
 
-  const links = role ? roleLinksMap[role] : [];
+  const links = userRole ? roleLinksMap[userRole] : [];
 
   return (
     <ul className="bg-white rounded-full p-[5px] flex gap-8 py-[10px] sm:hidden xl:flex">
@@ -56,7 +54,7 @@ const HeaderLinks = ({ session }: { session: Session | null }) => {
             ) : (
               <>
                 <span
-                  className={`px-6 py-2 rounded-full text-sm cursor-pointer transition-colors duration-300 hover:text-green-600
+                  className={`px-6 py-2 rounded-full text-sm cursor-pointer transition-colors duration-300 
                     ${active ? "text-green-600 font-medium" : "text-gray-600"}`}
                 >
                   {link.name}
@@ -72,7 +70,7 @@ const HeaderLinks = ({ session }: { session: Session | null }) => {
                           className={`block px-4 py-2 text-sm transition-colors duration-200 ${
                             subActive
                               ? "bg-green-100 text-green-700 font-medium"
-                              : "text-gray-700 hover:bg-green-100 hover:text-green-700"
+                              : "text-gray-700  hover:text-green-700"
                           }`}
                         >
                           {sub.name}

@@ -59,7 +59,7 @@ export async function POST(req: Request) {
           mustChangePassword: true,
           status: (status as UserStatus) ?? UserStatus.ACTIVE,
           otp: null,
-          otpExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24hrs expiration
+          otpExpiresAt: new Date(Date.now() + 1000 * 60 * 15), //15m expiration
         },
       });
 

@@ -55,7 +55,7 @@ const ChangePassword = () => {
       if (userRole === "Manager") {
         window.location.href = "/dashboard";
       } else if (userRole === "Nurse") {
-        window.location.href = "/request-order";
+        window.location.href = "/nurse_dashboard";
       } else if (userRole === "Pharmacist_Staff") {
         window.location.href = "/pharmacist_dashboard";
       } else if (userRole === "Cashier") {

@@ -20,13 +20,12 @@ export default function AdminLayout({
     <ReactQueryProvider>
       <div className={`antialiased bg-background bg-gray-100`}>
         <SidebarProvider>
-          <div className="flex">
-            <Sidebar links={managerLinks} />
-            <div className="flex-1 flex flex-col  overflow-y-auto">
-              <Header />
-              <div className="flex-1 mx-10">
-                <div>{children}</div>
-              </div>
+          <Sidebar links={managerLinks} />
+          <Header />
+
+          <div className="mx-auto w-full max-w-screen-3xl px-4 sm:px-6 lg:px-8">
+            <div className=" mx-10 mt-24">
+              <div>{children}</div>
             </div>
           </div>
         </SidebarProvider>

@@ -4,7 +4,195 @@ import { Decimal } from "@prisma/client/runtime/library";
 import { Prisma } from "@prisma/client";
 import { db } from "../db";
 import { OrderItem } from "../interfaces";
-import formatStatus, { isRequestOrderFilterEnabled, isWalkInFilterEnabled, ITEMS_PER_PAGE, mapStatus, TransactionFilter } from "../utils";
+import { dateFilter, isRequestOrderFilterEnabled, isWalkInFilterEnabled, ITEMS_PER_PAGE, mapStatus, TransactionFilter } from "../utils";
+
+type ArchiveItem =
+  | {
+      id: number;
+      type: "Product";
+      product_name: string;
+      category: string;
+      quantity: number;
+      archivedAt: Date | null;
+    }
+  | {
+      id: number;
+      type: "Product Batch";
+      product_name: string;
+      category: string;
+      batchNumber: number | string;
+      quantity: number;
+      releaseDate: Date;
+      expiryDate: Date;
+      archivedAt: Date | null;
+    }
+  | {
+      id: number;
+      type: "Order Request";
+      product_name: string;
+      category: string; 
+      quantity: number;
+      archivedAt: Date | null;
+    };
+
+export const getArchive = async (
+  query: string,
+  currentPage: number,
+  filter: string
+): Promise<ArchiveItem[]> => {
+  try {
+    const safePage = Number(currentPage) || 1;
+    const safeQuery = (query || "").toLowerCase().trim();
+
+    let archivedProducts: Prisma.ProductGetPayload<{
+      include: { category: true; batches: { select: { quantity: true } } };
+    }>[] = [];
+
+    let archivedBatches: Prisma.ProductBatchGetPayload<{
+      include: { product: { include: { category: true } } };
+    }>[] = [];
+
+    let archivedOrders: Prisma.OrderRequestGetPayload<{
+      include: { user: true; items: true };
+    }>[] = [];
+
+    if (filter === "all" || filter === "Product") {
+      archivedProducts = await db.product.findMany({
+        where: {
+          status: "ARCHIVED",
+          ...(safeQuery && {
+            product_name: { contains: safeQuery },
+          }),
+        },
+        include: {
+          category: true,
+          batches: { select: { quantity: true } },
+        },
+        orderBy: { archiveAt: "desc" },
+      });
+    }
+
+    if (filter === "all" || filter === "Product Batch") {
+      archivedBatches = await db.productBatch.findMany({
+        where: {
+          type: "ARCHIVED",
+          ...(safeQuery && {
+            product: { product_name: { contains: safeQuery } },
+          }),
+        },
+        include: { product: { include: { category: true } } },
+        orderBy: { archiveAt: "desc" },
+      });
+    }
+
+    if (filter === "all" || filter === "Order Request") {
+      archivedOrders = await db.orderRequest.findMany({
+        where: {
+          isArchived: true,
+          ...(safeQuery && {
+            patient_name: { contains: safeQuery },
+          }),
+        },
+        include: { user: true, items: true },
+        orderBy: { updatedAt: "desc" },
+      });
+    }
+
+    const merged: ArchiveItem[] = [
+      ...archivedProducts.map((p) => ({
+        id: p.id,
+        type: "Product" as const,
+        product_name: p.product_name,
+        category: p.category?.name || "None",
+        quantity:
+          p.batches?.reduce((sum, b) => sum + (b.quantity || 0), 0) || 0,
+        archivedAt: p.archiveAt,
+      })),
+      ...archivedBatches.map((b) => ({
+        id: b.id,
+        type: "Product Batch" as const,
+        product_name: b.product.product_name,
+        category: b.product.category?.name || "None",
+        batchNumber: b.batchNumber,
+        quantity: b.quantity,
+        releaseDate: b.releaseDate,
+        expiryDate: b.expiryDate,
+        archivedAt: b.archiveAt,
+      })),
+      ...archivedOrders.map((o) => ({
+        id: o.id,
+        type: "Order Request" as const,
+        product_name: o.patient_name || "Unknown",
+        category: `Room ${o.room_number || "N/A"}`,
+        quantity: o.items?.length || 0,
+        archivedAt: o.updatedAt,
+      })),
+    ];
+
+    // Sort newest first
+    merged.sort((a, b) => {
+      const dateA = a.archivedAt ? new Date(a.archivedAt).getTime() : 0;
+      const dateB = b.archivedAt ? new Date(b.archivedAt).getTime() : 0;
+      return dateB - dateA;
+    });
+
+    const offset = (safePage - 1) * ITEMS_PER_PAGE;
+    return merged.slice(offset, offset + ITEMS_PER_PAGE);
+  } catch (error) {
+    console.error("Error in getArchive:", error);
+    return [];
+  }
+};
+
+
+export const fetchArchivePages = async (
+  query: string,
+  filter: string
+): Promise<number> => {
+  try {
+    const safeQuery = (query || "").toLowerCase().trim();
+
+    const counts = await Promise.all([
+      (filter === "all" || filter === "Product")
+        ? db.product.count({
+            where: {
+              status: "ARCHIVED",
+              ...(safeQuery && { product_name: { contains: safeQuery } }),
+            },
+          })
+        : Promise.resolve(0),
+
+      (filter === "all" || filter === "Product Batch")
+        ? db.productBatch.count({
+            where: {
+              type: "ARCHIVED",
+              ...(safeQuery && {
+                product: { product_name: { contains: safeQuery } },
+              }),
+            },
+          })
+        : Promise.resolve(0),
+
+      (filter === "all" || filter === "Order Request")
+        ? db.orderRequest.count({
+            where: {
+              isArchived: true,
+              ...(safeQuery && { patient_name: { contains: safeQuery } }),
+            },
+          })
+        : Promise.resolve(0),
+    ]);
+
+    const [productCount, batchCount, orderCount] = counts;
+    const totalCount = productCount + batchCount + orderCount;
+
+    return Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
+  } catch (error) {
+    console.error("Error in fetchArchivePages:", error);
+    return 1;
+  }
+};
+
 
 // Batches
 export const getBatches = async (
@@ -56,18 +244,22 @@ export const getBatches = async (
 
   const now = new Date();
   const enriched = batches.map((batch) => {
-    let status: "Active" | "Expiring" | "Expired" | "Consumed" = "Active";
+  if (batch.type === "ARCHIVED") {
+    return { ...batch, status: "ARCHIVED" };
+  }
 
-    if (batch.quantity === 0) {
-      status = "Consumed";
-    } else if (new Date(batch.expiryDate) < now) {
-      status = "Expired";
-    } else {
-      const daysToExpire =
-        (new Date(batch.expiryDate).getTime() - now.getTime()) /
-        (1000 * 60 * 60 * 24);
-      if (daysToExpire <= 7) status = "Expiring";
-    }
+  let status: "Active" | "Expiring" | "Expired" | "Consumed" = "Active";
+
+  if (batch.quantity === 0) {
+    status = "Consumed";
+  } else if (new Date(batch.expiryDate) < now) {
+    status = "Expired";
+  } else {
+    const daysToExpire =
+      (new Date(batch.expiryDate).getTime() - now.getTime()) /
+      (1000 * 60 * 60 * 24);
+    if (daysToExpire <= 7) status = "Expiring";
+  }
 
     return { ...batch, status };
   });
@@ -90,6 +282,7 @@ export async function fetchBatchPages(query: string, filter: string) {
           product_name: {
             contains: safeQuery,
           },
+          status: "ACTIVE"
         },
       },
       include: { product: true },
@@ -140,47 +333,50 @@ export const getProductList = async (
     product_name: {
       contains: query,
     },
+    status: "ACTIVE",
   };
 
-    if (
-    filter &&
-    filter !== "latest" &&
-    filter !== "oldest" &&
-    filter !== "all"
-  ) {
+  if (filter && filter !== "latest" && filter !== "oldest" && filter !== "all") {
     where.category = {
       name: filter,
     };
   }
 
-  const validSortFields = ["product_name", "price", "createdAt"];
-  const safeSortBy = validSortFields.includes(sortBy) ? sortBy : "createdAt";
+  const databaseSortFields = ["id", "product_name", "price", "createdAt"];
+  const isDatabaseSort = databaseSortFields.includes(sortBy);
 
   const products = await db.product.findMany({
     where,
     include: {
       batches: {
-        orderBy: { expiryDate: "asc" }, 
+        where: {
+          type: { not: "ARCHIVED" } 
+        },
+        orderBy: { expiryDate: "asc" },
       },
       category: true,
     },
-    orderBy: {
-      [safeSortBy]: sortOrder,
-    },
-    take: ITEMS_PER_PAGE,
-    skip: offset,
+    ...(isDatabaseSort && {
+      orderBy: {
+        [sortBy]: sortOrder,
+      },
+    }),
+    ...(isDatabaseSort ? {
+      take: ITEMS_PER_PAGE,
+      skip: offset,
+    } : {}),
   });
 
-  // Map and compute total quantity + soonest expiry
-  const mappedProducts = products.map((p) => {
-    const totalQuantity = p.batches.reduce((sum, b) => sum + b.quantity, 0);
+  let mappedProducts = products.map((p) => {
+    const validBatches = p.batches.filter((b) => b.quantity > 0 && b.type !== "ARCHIVED");
+    const totalQuantity = validBatches.reduce((sum, b) => sum + b.quantity, 0);
+    const totalBatches = p.batches.length;
 
-    // count batches expiring within 7 days
     const now = new Date();
     const threshold = new Date();
     threshold.setDate(now.getDate() + 7);
 
-    const expiringSoonCount = p.batches.filter((b) => {
+    const expiringSoonCount = validBatches.filter((b) => {
       const expiry = new Date(b.expiryDate);
       return expiry > now && expiry <= threshold;
     }).length;
@@ -189,15 +385,41 @@ export const getProductList = async (
       id: p.id,
       product_name: p.product_name,
       price: p.price instanceof Decimal ? p.price.toNumber() : Number(p.price),
-       category: p.category?.name ?? "Uncategorized",
+      category: p.category?.name ?? "Uncategorized",
       createdAt: p.createdAt,
       totalQuantity,
-      totalBatches: p.batches.length,
+      totalBatches,
       expiringSoonCount, 
-      batches: p.batches,
+      batches: validBatches,
+      batchQuantity: validBatches.map((b) => b.quantity),
+      status: p.status as "ACTIVE" | "ARCHIVED",
       icon: [],
     };
   });
+
+  if (sortBy === "expiringSoon") {
+  mappedProducts = mappedProducts.sort((a, b) =>
+    sortOrder === "asc"
+      ? a.expiringSoonCount - b.expiringSoonCount
+      : b.expiringSoonCount - a.expiringSoonCount
+  );
+}
+
+  if (!isDatabaseSort) {
+    mappedProducts.sort((a, b) => {
+      let compareValue = 0;
+
+      if (sortBy === "totalQuantity") {
+        compareValue = a.totalQuantity - b.totalQuantity;
+      } else if (sortBy === "totalBatches") {
+        compareValue = a.totalBatches - b.totalBatches;
+      }
+
+      return sortOrder === "asc" ? compareValue : -compareValue;
+    });
+
+    return mappedProducts.slice(offset, offset + ITEMS_PER_PAGE);
+  }
 
   return mappedProducts;
 };
@@ -208,21 +430,16 @@ export async function fetchProductsPages(query: string, filter: string) {
       product_name: {
         contains: query,
       },
+      status: "ACTIVE", 
     };
 
-  if (
-    filter &&
-    filter !== "latest" &&
-    filter !== "oldest" &&
-    filter !== "all"
-  ) {
-    where.category = {
-      name: filter,
-    };
-  }
+    if (filter && filter !== "latest" && filter !== "oldest" && filter !== "all") {
+      where.category = {
+        name: filter,
+      };
+    }
 
     const totalProducts = await db.product.count({ where });
-
     const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
     return totalPages;
   } catch (error) {
@@ -235,23 +452,28 @@ export async function fetchProductsPages(query: string, filter: string) {
 export const getAuditLogList = async (
   query: string = "",
   filter: string = "all",
-  currentPage: number = 1
+  currentPage: number = 1,
+  dateRange: {to: string, from: string}
 ) => {
   const page = Number.isFinite(Number(currentPage)) ? Number(currentPage) : 1;
   const offset = (page - 1) * ITEMS_PER_PAGE;
 
   const safeQuery = query.toLowerCase().trim();
 
-  const where: Prisma.AuditLogWhereInput = {};
-
-  if (safeQuery) {
-    where.OR = [
-      { action: { contains: safeQuery } },
-      { description: { contains: safeQuery } },
-      { entityType: { contains: safeQuery } },
-      { user: { username: { contains: safeQuery } } },
-    ];
-  }
+  const where: Prisma.AuditLogWhereInput = {
+      AND: [
+        safeQuery && {
+          OR: [
+            { action: { contains: safeQuery} },
+            { description: { contains: safeQuery} },
+            { entityType: { contains: safeQuery} },
+            { user: { username: { contains: safeQuery} } },
+          ],
+        },
+        filter && filter !== "all" ? { entityType: { equals: filter } } : undefined,
+        dateFilter(dateRange),
+      ].filter(Boolean) as Prisma.AuditLogWhereInput[],
+    };
 
   if (filter && filter !== "all") {
     where.entityType = { equals: filter };
@@ -266,24 +488,24 @@ export const getAuditLogList = async (
   });
 };
 
+export async function fetchAuditPages(query: string, filter: string = "all", dateRange: {to: string, from: string}) {
 
-export async function fetchAuditPages(query: string, filter: string = "all") {
-  const safeQuery = typeof query === "string" ? query.toLowerCase().trim() : "";
+  const safeQuery = query.toLowerCase().trim();
 
-  const where: Prisma.AuditLogWhereInput = {};
-
-  if (safeQuery) {
-    where.OR = [
-      { action: { contains: safeQuery } },
-      { description: { contains: safeQuery } },
-      { entityType: { contains: safeQuery } },
-      { user: { username: { contains: safeQuery } } },
-    ];
-  }
-
-  if (filter && filter !== "all") {
-    where.entityType = { equals: filter };
-  }
+  const where: Prisma.AuditLogWhereInput = {
+      AND: [
+        safeQuery && {
+          OR: [
+            { action: { contains: safeQuery} },
+            { description: { contains: safeQuery} },
+            { entityType: { contains: safeQuery} },
+            { user: { username: { contains: safeQuery} } },
+          ],
+        },
+        filter && filter !== "all" ? { entityType: { equals: filter } } : undefined,
+        dateFilter(dateRange),
+      ].filter(Boolean) as Prisma.AuditLogWhereInput[],
+    };
 
   const totalAudit = await db.auditLog.count({ where });
   return Math.ceil(totalAudit / ITEMS_PER_PAGE);
@@ -291,7 +513,9 @@ export async function fetchAuditPages(query: string, filter: string = "all") {
 
 // Transaction
 export type CombinedTransaction = {
-  id: string; 
+  id: number; 
+  type: "REGULAR" | "EMERGENCY" | undefined;
+  requestedBy?: string
   customer: string;
   patient_name?: string;
   roomNumber?: number;
@@ -310,7 +534,9 @@ export const getTransactionList = async (
   currentPage: number,
   filter: string,
   sortBy: string = "createdAt", 
-  sortOrder: "asc" | "desc" = "desc"
+  sortOrder: "asc" | "desc" = "desc",
+  userRole: string,
+  dateRange: { from: string; to: string }
 ): Promise<CombinedTransaction[]> => {
   const skip = (currentPage - 1) * ITEMS_PER_PAGE;
   const safeQuery = typeof query === "string" ? query.toLowerCase().trim() : "";
@@ -319,17 +545,23 @@ export const getTransactionList = async (
 
   const whereRequestOrder: Prisma.OrderRequestWhereInput = {
     AND: [
-      query && { patient_name: { contains: safeQuery } },
-      statusFilter && { status: statusFilter },
+      safeQuery && { patient_name: { contains: safeQuery} },
+      statusFilter ? { [statusFilter.field]: statusFilter.value } : {},
+      dateFilter(dateRange)
     ].filter(Boolean) as Prisma.OrderRequestWhereInput[],
   };
 
   const whereWalkIn: Prisma.WalkInTransactionWhereInput = {
     AND: [
-      query && { customer_name: { contains: safeQuery } },
-      statusFilter && { status: statusFilter },
-    ].filter(Boolean) as Prisma.WalkInTransactionWhereInput[],
+      safeQuery && {
+        customer_name: { contains: safeQuery},
+      },
+      statusFilter ? { [statusFilter.field]: statusFilter.value } : {},
+      dateFilter(dateRange)
+      ].filter(Boolean) as Prisma.WalkInTransactionWhereInput[],
   };
+
+
 
   const includeWalkIn = isWalkInFilterEnabled(filter as TransactionFilter);
   const includeRequest = isRequestOrderFilterEnabled(filter as TransactionFilter);
@@ -346,12 +578,15 @@ export const getTransactionList = async (
       ? db.orderRequest.findMany({
           where: whereRequestOrder,
           include: {
-            items: { include: { product: true } },
+            user: true,
+            receivedBy: true,
+            processedBy: true,
+            items: { include: { product: true} },
           },
           orderBy: isDbSortable ? { [safeSortByRequest]: sortOrder } : { createdAt: "desc" },
         })
       : Promise.resolve([]),
-    includeWalkIn
+    includeWalkIn && userRole !== "Nurse"
       ? db.walkInTransaction.findMany({
           where: whereWalkIn,
           include: {
@@ -366,12 +601,14 @@ export const getTransactionList = async (
       const items = tx.items ?? [];
 
       return {
-        id: `WALK-${tx.id}`,
+        id: tx.id,
         customer: tx.customer_name?.trim() || "Unknown",
-        patient_name: undefined, // not applicable
-        roomNumber: undefined,   // not applicable
+        type: undefined,
+        patient_name: undefined, 
+        roomNumber: undefined,   
+        requestedBy: "Unknown",
         createdAt: tx.createdAt,
-        status: formatStatus(tx.status),
+        status: tx.status,
         source: "Walk In",
         quantity: items.reduce((sum, item) => sum + item.quantity, 0),
         price: items.reduce((sum, item) => sum + item.price.toNumber(), 0),
@@ -388,12 +625,22 @@ export const getTransactionList = async (
       const items = tx.items ?? [];
 
       return {
-        id: `REQ-${tx.id}`,
+        id: tx.id,
+        requestedBy: tx.user?.username
+        ? tx.user.username.charAt(0).toUpperCase() + tx.user.username.slice(1)
+        : "Unknown",
+        receivedBy: tx.receivedBy?.username
+        ? tx.receivedBy.username.charAt(0).toUpperCase() + tx.receivedBy.username.slice(1)
+        : "Unknown",
+        processedBy: tx.processedBy?.username
+        ? tx.processedBy.username.charAt(0).toUpperCase() + tx.processedBy.username.slice(1)
+        : "Unknown",
         customer: tx.patient_name || "Unknown",
         patient_name: tx.patient_name ?? "N/A",
         roomNumber: tx.room_number ? Number(tx.room_number) : undefined,
+        type: tx.type,
         createdAt: tx.createdAt,
-        status: formatStatus(tx.status),
+        status: tx.status,
         source: "Request Order",
         quantity: items.reduce((sum, item) => sum + item.quantity, 0),
         price: items.reduce(
@@ -451,33 +698,44 @@ export const getTransactionList = async (
   return sorted.slice(skip, skip + ITEMS_PER_PAGE);
 };
 
-export async function fetchTransactionPages(query: string, filter: string) {
+export async function fetchTransactionPages(
+  query: string,
+  filter: string,
+  userRole: string,
+  dateRange: { from: string; to: string } 
+) {
   const safeQuery = query.toLowerCase().trim();
   const statusFilter = mapStatus(filter as TransactionFilter);
 
   const whereRequestOrder: Prisma.OrderRequestWhereInput = {
     AND: [
-      query && { patient_name: { contains: safeQuery } },
-      statusFilter && { status: statusFilter },
+      safeQuery && { patient_name: { contains: safeQuery} },
+      statusFilter ? { [statusFilter.field]: statusFilter.value } : {},
+      dateFilter(dateRange)
     ].filter(Boolean) as Prisma.OrderRequestWhereInput[],
   };
 
   const whereWalkIn: Prisma.WalkInTransactionWhereInput = {
     AND: [
-      query && { customer_name: { contains: safeQuery } },
-      statusFilter && { status: statusFilter },
-    ].filter(Boolean) as Prisma.WalkInTransactionWhereInput[],
+      safeQuery && {
+        customer_name: { contains: safeQuery},
+      },
+      statusFilter ? { [statusFilter.field]: statusFilter.value } : {},
+      dateFilter(dateRange)
+      ].filter(Boolean) as Prisma.WalkInTransactionWhereInput[],
   };
-
   let total: number;
 
   if (filter === "walk_in") {
-    total = await db.walkInTransaction.count({ where: whereWalkIn });
+    total =
+      userRole === "Nurse"
+        ? 0
+        : await db.walkInTransaction.count({ where: whereWalkIn });
   } else if (filter === "request_order") {
     total = await db.orderRequest.count({ where: whereRequestOrder });
   } else {
     const [walkinCount, requestCount] = await Promise.all([
-      isWalkInFilterEnabled(filter as TransactionFilter)
+      isWalkInFilterEnabled(filter as TransactionFilter) && userRole !== "Nurse"
         ? db.walkInTransaction.count({ where: whereWalkIn })
         : Promise.resolve(0),
       isRequestOrderFilterEnabled(filter as TransactionFilter)
@@ -489,6 +747,7 @@ export async function fetchTransactionPages(query: string, filter: string) {
 
   return Math.ceil(total / ITEMS_PER_PAGE);
 }
+
 
 export async function getProductById(id:number) {
     try{

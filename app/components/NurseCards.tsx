@@ -3,12 +3,10 @@
 import React from "react";
 import DashboardCards from "./DashboardCards";
 import { useQuery } from "@tanstack/react-query";
-import {
-  TbShoppingCart,
-  TbShoppingCartDown,
-  TbShoppingCartUp,
-  TbShoppingCartX,
-} from "react-icons/tb";
+import { PiPackageDuotone } from "react-icons/pi";
+import { IoIosHourglass } from "react-icons/io";
+import { MdOutlinePayment } from "react-icons/md";
+import { MdPaid } from "react-icons/md";
 import axios from "axios";
 import { CardSkeleton } from "./Skeleton";
 
@@ -33,7 +31,7 @@ const NurseCards = () => {
     {
       title: "Total Orders",
       value: totalOrders,
-      icon: TbShoppingCart,
+      icon: PiPackageDuotone,
       bgColor: "bg-blue-50",
       textColor: "text-blue-500",
       link: "nurse_transaction?page=1&filter=all&sort=createdAt&order=desc",
@@ -41,31 +39,31 @@ const NurseCards = () => {
     {
       title: "Pending",
       value: pending,
-      icon: TbShoppingCartDown,
-      bgColor: "bg-orange-50",
-      textColor: "text-orange-500",
+      icon: IoIosHourglass,
+      bgColor: "bg-yellow-50",
+      textColor: "text-yellow-500",
       link: "nurse_transaction?page=1&filter=pending&sort=createdAt&order=desc",
     },
     {
       title: "For Payment",
       value: for_payment,
-      icon: TbShoppingCartUp,
-      bgColor: "bg-green-50",
-      textColor: "text-green-500",
+      icon: MdOutlinePayment,
+      bgColor: "bg-orange-50",
+      textColor: "text-orange-500",
       link: "nurse_transaction?page=1&filter=for_payment&sort=createdAt&order=desc",
     },
     {
       title: "Paid",
       value: paid,
-      icon: TbShoppingCartX,
-      bgColor: "bg-red-50",
-      textColor: "text-red-500",
+      icon: MdPaid,
+      bgColor: "bg-green-50",
+      textColor: "text-green-500",
       link: "nurse_transaction?page=1&filter=paid&sort=createdAt&order=desc",
     },
   ];
 
   return (
-    <div className="h-[15%]">
+    <div className="h-32">
       <DashboardCards cards={nurseCards} />
     </div>
   );

@@ -7,8 +7,8 @@ import { Links } from "./interfaces";
 
 export const nurseLinks = [
   {
-    name: "Request Order",
-    href: "/request-order",
+    name: "Dashboard",
+    href: "/nurse_dashboard",
     icon: RiDashboardHorizontalLine,
   },
  {

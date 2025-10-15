@@ -1,13 +1,9 @@
-// "use client";
-
 import LoadingButton from "@/components/loading-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-// import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
 import { RxCross2 } from "react-icons/rx";
-// import { useState } from "react";
 import {
   Control,
   Controller,
@@ -39,9 +35,6 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
   control,
   isSubmitting,
 }) => {
-  // const [showPassword, setShowPassword] = useState(false);
-  // const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   return (
     <>
       <Card className="w-[400px] bg-white ">
@@ -105,55 +98,6 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
                   </p>
                 )}
               </div>
-
-              {/* <div className="flex flex-col space-y-1.5 relative">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  {...register("password")}
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="password"
-                  className=""
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPassword((prev) => !prev);
-                  }}
-                  className="absolute right-3 top-6"
-                >
-                  {showPassword ? <FaRegEye /> : <FaRegEyeSlash />}
-                </button>
-                {errors.password && (
-                  <p className="mt-2 text-sm text-red-500">
-                    {`${errors.password.message}`}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex flex-col space-y-1.5 relative">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  {...register("confirmPassword")}
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="confirm password"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowConfirmPassword((prev) => !prev);
-                  }}
-                  className="absolute right-3 top-6"
-                >
-                  {showConfirmPassword ? <FaRegEye /> : <FaRegEyeSlash />}
-                </button>
-                {errors.confirmPassword && (
-                  <p className="mt-2 text-sm text-red-500">
-                    {`${errors.confirmPassword.message}`}
-                  </p>
-                )}
-              </div> */}
             </div>
             <Button
               className="w-full py-5 mt-8 text-center bg-green-500 text-white hover:bg-green-600"

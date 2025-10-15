@@ -83,7 +83,7 @@ const Sidebar = ({ links }: { links?: Links[] }) => {
                 {
                   "bg-green-500 hover:bg-green-500 text-white": isActive(
                     pathname,
-                    link.href
+                    link.href ?? ""
                   ),
                   "xl:w-full": isHovered,
                 }

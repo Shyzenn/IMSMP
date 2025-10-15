@@ -17,7 +17,7 @@ const ConfirmationModal = ({
   description,
   submitButton,
 }: {
-  button: React.ReactNode;
+  button?: React.ReactNode;
   title: string;
   description: string;
   submitButton: () => void;

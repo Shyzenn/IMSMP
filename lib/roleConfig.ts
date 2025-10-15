@@ -8,12 +8,13 @@ export const roleConfig = {
       "/transaction",
       "/audit_log",
       "/manager_settings",
-      "/user_management"
+      "/user_management",
+      "/archive"
     ],
   },
   Nurse: {
-    base: "/request-order",
-    routes: ["/request-order", "/nurse_inventory", "/nurse_transaction"],
+    base: "/nurse_dashboard",
+    routes: ["/nurse_dashboard", "/nurse_inventory", "/nurse_transaction", "/archive"],
   },
   Cashier: {
     base: "/cashier_dashboard",
@@ -25,6 +26,7 @@ export const roleConfig = {
       "/pharmacist_dashboard",
       "/pharmacist_inventory",
       "/pharmacist_transaction",
+      "/archive"
     ],
   },
 } as const;

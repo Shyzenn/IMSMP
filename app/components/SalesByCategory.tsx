@@ -3,89 +3,76 @@
 import React, { useState } from "react";
 import {
   Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
+  ArcElement,
   Tooltip,
   Legend,
   TooltipItem,
   ChartOptions,
 } from "chart.js";
-import { Bar } from "react-chartjs-2";
+import { Doughnut } from "react-chartjs-2";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import SelectField from "./SelectField";
 import { ExpiryProductsSkeleton } from "./Skeleton";
+import WidgetHeader from "./WidgetHeader";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(ArcElement, Tooltip, Legend);
 
-type SalesByCategory = {
+type SalesByOrderType = {
   name: string;
   revenue: number;
 };
 
-const fetchSalesByCategory = async (
+const fetchSalesByOrderType = async (
   filter: string
-): Promise<SalesByCategory[]> => {
-  const { data } = await axios.get("/api/product/category/sales", {
+): Promise<SalesByOrderType[]> => {
+  const { data } = await axios.get("/api/charts/order_type", {
     params: { filter },
   });
   return data;
 };
 
-const SalesByCategoryBar = () => {
+const SalesByOrderTypePie = () => {
   const [filter, setFilter] = useState("This Year");
 
   const { data = [], isLoading } = useQuery({
-    queryKey: ["salesByCategory", filter],
-    queryFn: () => fetchSalesByCategory(filter),
+    queryKey: ["salesByOrderType", filter],
+    queryFn: () => fetchSalesByOrderType(filter),
   });
 
-  const limitedData = data.sort((a, b) => b.revenue - a.revenue).slice(0, 10);
+  const totalRevenue = data.reduce((sum, item) => sum + item.revenue, 0);
 
   const chartData = {
-    labels: limitedData.map((item) => item.name),
+    labels: data.map((item) => item.name),
     datasets: [
       {
-        label: "Revenue (₱)",
-        data: limitedData.map((item) => item.revenue),
-        backgroundColor: "#3b82f6",
-        borderRadius: 6,
+        data: data.map((item) => item.revenue),
+        backgroundColor: ["#3b82f6", "#10b981"],
+        borderWidth: 1,
+        borderThickness: 2,
       },
     ],
   };
 
-  const options: ChartOptions<"bar"> = {
+  const options: ChartOptions<"doughnut"> = {
     responsive: true,
     maintainAspectRatio: false,
+    cutout: "70%",
+    radius: "95%",
     plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (ctx: TooltipItem<"bar">) => {
-            const value = ctx.raw as number;
-            return `₱${value.toLocaleString()}`;
-          },
+      legend: {
+        position: "right",
+        labels: {
+          padding: 15,
+          boxWidth: 12,
+          boxHeight: 12,
         },
       },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          callback: (value: string | number) => {
-            if (typeof value === "number") {
-              return `₱${value.toLocaleString()}`;
-            }
-            return value;
+      tooltip: {
+        callbacks: {
+          label: (ctx: TooltipItem<"doughnut">) => {
+            const value = ctx.raw as number;
+            const percent = ((value / totalRevenue) * 100).toFixed(1);
+            return `${ctx.label}: ₱${value.toLocaleString()} (${percent}%)`;
           },
         },
       },
@@ -96,32 +83,27 @@ const SalesByCategoryBar = () => {
 
   return (
     <>
-      <div className="flex justify-between p-2 w-full">
-        <p className="text-lg font-semibold">Sales By Category (₱)</p>
-        <SelectField
-          label="Select a range"
-          option={[
-            { label: "Last 7 Days", value: "Last 7 Days" },
-            { label: "This Month", value: "This Month" },
-            { label: "This Year", value: "This Year" },
-          ]}
-          defaultValue={filter}
-          value={filter}
-          onChange={(value) => setFilter(value)}
-        />
-      </div>
+      <WidgetHeader
+        filter={filter}
+        setFilter={setFilter}
+        title="Sales by Order Type"
+        data={data.map((d) => ({ label: d.name, value: d.revenue }))}
+        reportType="type"
+      />
 
-      <div className="p-2 w-full h-[325px]">
+      <div className="p-2 w-full h-[325px] flex flex-col items-center justify-center overflow-hidden">
         {data.length === 0 ? (
           <p className="text-center text-sm text-gray-500">
             No sales data available for this range.
           </p>
         ) : (
-          <Bar options={options} data={chartData} />
+          <div className="relative w-[95%] h-[95%] mt-10">
+            <Doughnut options={options} data={chartData} />
+          </div>
         )}
       </div>
     </>
   );
 };
 
-export default SalesByCategoryBar;
+export default SalesByOrderTypePie;

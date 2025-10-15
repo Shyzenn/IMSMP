@@ -55,22 +55,30 @@ export async function GET(req: Request) {
 
     for (const order of paidOrders) {
       const dateStr = order.createdAt.toISOString().split("T")[0];
+
       const total = order.items.reduce((sum, item) => {
-        const price = typeof item.product.price === "number" ? item.product.price : Number(item.product.price);
+        const price =
+          typeof item.product.price === "number"
+            ? item.product.price
+            : Number(item.product.price);
+
         return sum + price * item.quantity;
       }, 0);
 
       dailySalesMap.set(dateStr, (dailySalesMap.get(dateStr) || 0) + total);
     }
 
-     for (const order of paidWalkIns) {
+
+    for (const order of paidWalkIns) {
       const dateStr = order.createdAt.toISOString().split("T")[0];
+
       const total = order.items.reduce((sum, item) => {
-        const price = typeof item.product.price === "number"
-          ? item.product.price
-          : Number(item.product.price);
+        const price =
+          typeof item.price === "number" ? item.price : Number(item.price);
+
         return sum + price * item.quantity;
       }, 0);
+
       dailySalesMap.set(dateStr, (dailySalesMap.get(dateStr) || 0) + total);
     }
 

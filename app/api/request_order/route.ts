@@ -1,10 +1,10 @@
 import { addRequestOrderSchema } from "@/lib/types";
 import { db } from "@/lib/db";
-import { NextResponse } from "next/server";
-import formatStatus, { capitalLetter } from "@/lib/utils";
+import { NextRequest, NextResponse } from "next/server";
+import  { capitalLetter } from "@/lib/utils";
 import { auth } from "@/auth";
-import { NotificationType } from "@prisma/client";
-import { broadcast } from "@/lib/sse";
+import { $Enums, NotificationType } from "@prisma/client";
+import { pusherServer } from "@/lib/pusher/server";
 
 export async function POST(req: Request) {
   try {
@@ -14,8 +14,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 400 });
     }
 
-    const userId = session.user.id; 
-
+    const userId = session.user.id;
     const body = await req.json();
     const result = addRequestOrderSchema.safeParse(body);
 
@@ -28,7 +27,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ errors: zodErrors }, { status: 400 });
     }
 
-    const { room_number, patient_name, status, products } = result.data;
+    const { room_number, patient_name, status, products, type, notes } = result.data;
 
     const newOrder = await db.orderRequest.create({
       data: {
@@ -36,6 +35,8 @@ export async function POST(req: Request) {
         patient_name,
         status,
         userId,
+        type,
+        notes,
         items: {
           create: products.map((product) => ({
             quantity: product.quantity,
@@ -47,47 +48,81 @@ export async function POST(req: Request) {
           })),
         },
       },
+      include: {
+        items:{
+          include:{
+            product: true
+          }
+        }
+      }
     });
 
+    // Send notification to the Pharmacist Staff
+    const pharmacists = await db.user.findMany({
+      where: { role: "Pharmacist_Staff" }
+    });
+
+    const notificationData = newOrder.type === "EMERGENCY" 
+      ? {
+          title: "Emergency Order Request!",
+          type: NotificationType.EMERGENCY_ORDER,
+        }
+      : {
+          title: "New order request",
+          type: NotificationType.ORDER_REQUEST,
+        };
+
+    for (const pharmacist of pharmacists) {
+      const notification = await db.notification.create({
+        data: {
+          title: notificationData.title,
+          type: notificationData.type,
+          senderId: session.user.id,
+          recipientId: pharmacist.id,
+          orderId: newOrder.id,
+          patientName: patient_name,
+          roomNumber: room_number,
+          submittedBy: session.user.username,
+          role: session.user.role,
+        },
+        include: { sender: true },
+      });
+
+      await pusherServer.trigger(
+        `private-user-${pharmacist.id}`,
+        "new-notification",
+        {
+          id: notification.id,
+          title: notification.title,
+          orderType: newOrder.type,
+          createdAt: notification.createdAt,
+          type: notification.type,
+          notes: newOrder.notes || "",
+          sender: {
+            username: notification.sender.username,
+            role: notification.sender.role,
+          },
+         order: {
+          patient_name: patient_name,
+          room_number: room_number,
+          products: newOrder.items.map((item) => ({
+            productName: item.product.product_name,
+            quantity: item.quantity,
+          })), 
+        },
+        }
+      );
+    }
+    
     await db.auditLog.create({
       data: {
         userId: session.user.id,
         action: "Requested",
         entityType: "OrderRequest",
         entityId: newOrder.id,
-        description: `User ${session.user.username} (${session.user.role}) created an order for patient "${patient_name}" in room ${room_number} with ${products.length} item(s).`,
+        description: `User ${session.user.username} (${session.user.role}) created an order (${type}) for patient "${patient_name}" in room ${room_number} with ${products.length} item(s).`,
       },
     });
-
-    // Send notification to the Pharmacist Staff
-    const pharmacists = await db.user.findMany({
-      where: {role: "Pharmacist_Staff"}
-    })
-
-    const notifications = pharmacists.map((pharmacist) => ({
-      title: "New order request",
-      message: JSON.stringify({
-        patientName: patient_name,
-        roomNumber: room_number,
-        submittedBy: session.user.username,
-        role: session.user.role
-      }),
-      type: NotificationType.ORDER_REQUEST,
-      senderId: session.user.id,
-      recipientId: pharmacist.id,
-      orderId: newOrder.id
-    }))
-
-    await db.notification.createMany({ data: notifications });
-
-    for (const notification of notifications) {
-      broadcast(notification.recipientId, {
-        title: notification.title,
-        message: notification.message,
-        type: notification.type,
-        createdAt: new Date(),
-      });
-    }
 
     console.log("Order and notifications successfully created:", newOrder);
 
@@ -109,46 +144,75 @@ export async function POST(req: Request) {
   }
 }
 
-
-
-export async function GET() {
-
+export async function GET(req: NextRequest) {
   try {
-    const orders = await db.orderRequest.findMany({
-      include: {
-        items: {
-          include: {
-            product: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take:15
-    });
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "5", 10);
+    const filter = searchParams.get("filter") || "all";
+    const validStatuses: $Enums.Status[] = ["pending", "for_payment", "paid", "canceled"];
+    const whereClause = {
+        isArchived: false, 
+        ...(validStatuses.includes(filter.toLowerCase() as $Enums.Status)
+          ? { status: filter.toLowerCase() as $Enums.Status }
+          : {}),
+      };
 
-    const formattedOrders = orders.map((order) => { 
+    const [orders, total] = await Promise.all([
+      db.orderRequest.findMany({
+        where: whereClause,
+        include: {
+          items: { include: { product: true } },
+          user: true,
+          receivedBy: true,
+          processedBy: true,
+        },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      db.orderRequest.count({ where: whereClause }),
+    ]);
+
+    const formattedOrders = orders.map((order) => {
       const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
-      
-      const customId = `ORD-${order.id.toString().padStart(4, '0')}`
 
       return {
-        id: customId,
-        patient_name: `${order.patient_name ? capitalLetter(order.patient_name) : 'Unknown'}`,
-        roomNumber: `${order.room_number ? capitalLetter(order.room_number) : 'Unknown'}`,
+        id: order.id,
+        requestedBy: order.user?.username
+          ? capitalLetter(order.user.username)
+          : "Unknown",
+        receivedBy: order.receivedBy?.username
+          ? capitalLetter(order.receivedBy.username)
+          : "Unknown",
+        processedBy: order.processedBy?.username
+          ? capitalLetter(order.processedBy.username)
+          : "Unknown",
+        patient_name: order.patient_name
+          ? capitalLetter(order.patient_name)
+          : "Unknown",
+        roomNumber: order.room_number
+          ? capitalLetter(order.room_number)
+          : "Unknown",
         createdAt: order.createdAt,
-        status: formatStatus(order.status),
-        items: `${totalItems} item${totalItems !== 1 ? 's' : ''}`, 
+        status: order.status,
+        type: order.type,
+        notes: order.notes,
+        items: `${totalItems} item${totalItems !== 1 ? "s" : ""}`,
         itemDetails: order.items.map((item) => ({
           productName: item.product.product_name,
           quantity: item.quantity,
-          price:item.product.price
-        }))
-      };  
+          price: item.product.price,
+        })),
+      };
     });
 
-    return NextResponse.json(formattedOrders, { status: 200 });
+    return NextResponse.json({
+      data: formattedOrders,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (error) {
     console.error("Error fetching order requests:", error);
     return NextResponse.json(
@@ -160,3 +224,4 @@ export async function GET() {
     );
   }
 }
+

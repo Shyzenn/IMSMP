@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import SelectField from "./SelectField";
 import { Line } from "react-chartjs-2";
 import axios from "axios";
 import {
@@ -16,6 +15,7 @@ import {
 } from "chart.js";
 import { useQuery } from "@tanstack/react-query";
 import SalesGraphSkeleton from "./Skeleton";
+import WidgetHeader from "./WidgetHeader";
 
 ChartJS.register(
   CategoryScale,
@@ -34,7 +34,7 @@ const fetchSales = async (filter: string) => {
   return Array.isArray(data) ? data : [];
 };
 
-const SalesGraph = () => {
+const SalesGraph = ({ username }: { username: string }) => {
   const [filter, setFilter] = useState("This Year");
 
   const { data: salesData = [], isLoading } = useQuery({
@@ -50,12 +50,13 @@ const SalesGraph = () => {
       {
         label: "Sales",
         data: salesData.map((entry) => entry.totalSales),
+        borderColor: "#11d695 ",
+        backgroundColor: "rgba(103,255,153,0.1)",
         fill: true,
-        borderColor: "#339cff",
-        backgroundColor: "rgba(51,156,255,0.1)",
-        tension: 0.4,
+        tension: 0,
       },
     ],
+    hoverRadius: 8,
   };
 
   const options = {
@@ -64,29 +65,40 @@ const SalesGraph = () => {
     plugins: {
       legend: { display: false },
     },
+    layout: {
+      padding: {
+        top: 20,
+        bottom: 20,
+        left: 10,
+        right: 10,
+      },
+    },
     scales: {
+      x: {
+        grid: {
+          color: "rgba(0,0,0,0.03)",
+        },
+      },
       y: {
         beginAtZero: true,
         ticks: { precision: 0 },
+        grid: {
+          color: "rgba(0,0,0,0.03)",
+        },
       },
     },
   };
 
   return (
-    <div className="bg-white w-full h-full rounded-md p-3 shadow-md flex flex-col">
-      <div className="flex justify-between mb-2 w-full">
-        <p className="text-lg font-semibold">Sales</p>
-        <SelectField
-          label="Select a category"
-          option={[
-            { label: "Last 7 Days", value: "Last 7 Days" },
-            { label: "This Month", value: "This Month" },
-            { label: "This Year", value: "This Year" },
-          ]}
-          value={filter}
-          onChange={(value) => setFilter(value)}
-        />
-      </div>
+    <div className="bg-white w-full h-full rounded-md shadow-md flex flex-col">
+      <WidgetHeader
+        filter={filter}
+        setFilter={setFilter}
+        title="Sales"
+        data={salesData.map((s) => ({ label: s.date, value: s.totalSales }))}
+        reportType="sales"
+        userName={username}
+      />
 
       <div className="h-full">
         {salesData.length === 0 ? (

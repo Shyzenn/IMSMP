@@ -10,6 +10,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { ReactNode } from "react";
 import { IconType } from "react-icons/lib";
 
 type ConfirmDialogProps = {
@@ -20,6 +21,8 @@ type ConfirmDialogProps = {
   description: string;
   buttonWidth?: string;
   confirmButton: () => void;
+  iconOnly?: boolean;
+  modalButtonLabel: ReactNode;
 };
 
 const UserStatusConfirmDialog = ({
@@ -30,14 +33,20 @@ const UserStatusConfirmDialog = ({
   title,
   description,
   confirmButton,
+  iconOnly,
+  modalButtonLabel,
 }: ConfirmDialogProps) => {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="outline" className={buttonWidth}>
-          {buttonLabel}
-          <Icon className={iconColor} />
-        </Button>
+        {iconOnly ? (
+          <Icon className={`${iconColor} cursor-pointer`} />
+        ) : (
+          <Button variant="outline" className={buttonWidth}>
+            {buttonLabel}
+            <Icon className={iconColor} />
+          </Button>
+        )}
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -46,8 +55,11 @@ const UserStatusConfirmDialog = ({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={confirmButton}>
-            Continue
+          <AlertDialogAction
+            onClick={confirmButton}
+            className="bg-[#2b9e78] hover:bg-[#4dc49d]"
+          >
+            {modalButtonLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

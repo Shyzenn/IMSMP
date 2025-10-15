@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `orderrequest` ADD COLUMN `type` ENUM('REGULAR', 'EMERGENCY') NOT NULL DEFAULT 'REGULAR';

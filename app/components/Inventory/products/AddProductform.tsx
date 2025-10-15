@@ -4,9 +4,8 @@ import React, { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
-
 import { addProductSchema, TAddProductSchema } from "@/lib/types";
-import { addNewProduct } from "@/lib/action/add";
+import { addCategory, addNewProduct } from "@/lib/action/add";
 import AddButton from "../../Button";
 import FormField from "../../FormField";
 import CancelButton from "../../CancelButton";
@@ -61,22 +60,14 @@ const AddProductForm = () => {
 
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
+
     try {
-      const res = await fetch("/api/product/category", {
-        method: "POST",
-        body: JSON.stringify({ name: newCategory }),
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!res.ok) throw new Error("Failed to add category");
-
+      await addCategory(newCategory, refetch);
       toast.success("Category added successfully!");
       setCategoryModalOpen(false);
       setNewCategory("");
-      await refetch();
-    } catch (err) {
-      console.error("Error adding category", err);
-      toast.error("Failed to add category");
+    } catch {
+      toast.error("Failed to add category. Please try again.");
     }
   };
 
@@ -116,35 +107,36 @@ const AddProductForm = () => {
                     control={control}
                     name="category"
                     error={errors.category?.message}
+                    categoryModal={setCategoryModalOpen}
+                    hasAddButton={true}
                   />
-                  <button
-                    className="border ml-2 py-[5px] px-4 rounded-md bg-green-600 text-white hover:bg-green-500"
-                    type="button"
-                    onClick={() => setCategoryModalOpen(true)}
-                  >
-                    Add
-                  </button>
                 </div>
 
                 <FormField label="Price" error={errors.price?.message}>
                   <Input
                     {...register("price")}
                     type="number"
-                    step="0.01"
                     min="0"
+                    step="any"
                     placeholder="Enter price"
+                    onWheel={(e) => e.currentTarget.blur()}
+                    onKeyDown={(e) => {
+                      if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+                        e.preventDefault();
+                      }
+                    }}
                   />
                 </FormField>
               </div>
 
               <div className="flex gap-6 bg-white border-t-2 p-4 absolute bottom-0 left-0 w-full justify-end">
-                <CancelButton onClick={close} />
+                <CancelButton onClick={close} reset={reset} />
                 <button
                   disabled={!isDirty || isSubmitting}
                   className={`px-12 rounded-md ${
                     !isDirty || isSubmitting
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-green-500 hover:bg-green-600 text-white"
+                      : "bg-buttonBgColor hover:bg-buttonHover text-white"
                   }`}
                   type="submit"
                 >
@@ -170,15 +162,11 @@ const AddProductForm = () => {
               placeholder="Enter new category"
             />
             <div className="flex justify-end gap-4 mt-4">
-              <button
-                onClick={() => setCategoryModalOpen(false)}
-                className="px-4 py-2 border rounded-md"
-              >
-                Cancel
-              </button>
+              <CancelButton onClick={() => setCategoryModalOpen(false)} />
+
               <button
                 onClick={handleAddCategory}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-500"
+                className="px-4 py-2 bg-buttonBgColor text-white rounded-md hover:bg-buttonHover"
               >
                 Save
               </button>

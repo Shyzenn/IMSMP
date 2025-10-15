@@ -104,7 +104,7 @@ export function TableRowSkeleton({
 
 export function CardSkeleton() {
   return (
-    <div className="flex gap-5 h-[250px]">
+    <div className="flex gap-5 h-32">
       {Array.from({ length: 4 }).map((_, index) => (
         <div
           key={index}
@@ -122,7 +122,7 @@ export function CardSkeleton() {
 
 const SalesGraphSkeleton = () => {
   return (
-    <div className="bg-white w-full md:w-[60%] h-full rounded-md p-3 shadow-md flex flex-col animate-pulse">
+    <div className="bg-white w-full h-full rounded-md p-3 shadow-md flex flex-col animate-pulse">
       <div className="h-6 bg-gray-300 rounded w-1/3 mb-4" />
 
       <div className="flex flex-col gap-4 flex-1">

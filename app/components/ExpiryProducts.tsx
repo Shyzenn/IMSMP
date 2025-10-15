@@ -4,9 +4,9 @@ import { Column } from "@/lib/interfaces";
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import TableComponent from "./TableComponent";
-import { relativeTime } from "@/lib/utils";
 import axios from "axios";
 import { ExpiryProductsSkeleton } from "./Skeleton";
+import { capitalLetter, expiryDate } from "@/lib/utils";
 
 const columns: Column[] = [
   { label: "Product name", accessor: "name" },
@@ -27,10 +27,14 @@ const ExpiryProducts = () => {
     queryKey: ["expiry_products"],
   });
 
-  const formattedData = expiryProducts.map((product) => ({
-    ...product,
-    expiryDate: relativeTime(product.expiryDate),
-  }));
+  const formattedData = expiryProducts.map((product) => {
+    return {
+      ...product,
+      expiryDate: `in ${expiryDate(product.expiryDate)} days`,
+      name: capitalLetter(product.name),
+      category: capitalLetter(product.category),
+    };
+  });
 
   if (isLoading) return <ExpiryProductsSkeleton />;
 

@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { replenishProductSchema } from "@/lib/types";
 import { NextResponse } from "next/server";
+import { format } from "date-fns";
 
 export async function POST(req: Request) {
   try {
@@ -14,7 +15,6 @@ export async function POST(req: Request) {
     const userId = session.user.id;
     const body = await req.json();
 
-    // Validate with zod
     const result = replenishProductSchema.safeParse(body);
     if (!result.success) {
       const zodErrors: Record<string, string> = {};
@@ -26,10 +26,10 @@ export async function POST(req: Request) {
 
     const { productId, quantity, releaseDate, expiryDate } = result.data;
 
-    // Ensure product exists
     const product = await db.product.findUnique({
       where: { id: productId },
     });
+
     if (!product) {
       return NextResponse.json(
         { message: "Product not found" },
@@ -37,30 +37,40 @@ export async function POST(req: Request) {
       );
     }
 
-    const batchCount = await db.productBatch.count({
+    const rd = new Date(releaseDate);
+    if (isNaN(rd.getTime())) {
+      return NextResponse.json(
+        { message: "Invalid releaseDate" },
+        { status: 400 }
+      );
+    }
+
+    const countForProduct = await db.productBatch.count({
       where: { productId },
     });
-    const nextBatchNumber = batchCount + 1;
 
-    // Create new batch
+    const paddedCount = String(countForProduct + 1).padStart(2, "0");
+
+    const dateCode = format(rd, "ddMMyyyy");
+    const batchNumber = `${dateCode}B${paddedCount}`;
+
     const newBatch = await db.productBatch.create({
       data: {
         productId,
-        batchNumber: nextBatchNumber,
+        batchNumber,
         quantity,
         releaseDate: new Date(releaseDate),
         expiryDate: new Date(expiryDate),
       },
     });
 
-    // Audit log
     await db.auditLog.create({
       data: {
         userId,
         action: "Product Replenished",
         entityType: "Product",
         entityId: newBatch.id,
-        description: `User ${session.user.username} (${session.user.role}) replenished ${quantity} of "${product.product_name}" (Batch ID: ${newBatch.id}).`,
+        description: `User ${session.user.username} (${session.user.role}) replenished ${quantity} of "${product.product_name}" (Batch: ${batchNumber}).`,
       },
     });
 

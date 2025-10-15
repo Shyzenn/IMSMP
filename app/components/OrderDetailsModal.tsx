@@ -1,6 +1,6 @@
 import { OrderItem } from "@/lib/interfaces";
-import { capitalLetter } from "@/lib/utils";
-import React, { Dispatch, SetStateAction } from "react";
+import { capitalLetter, typeLabels } from "@/lib/utils";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import { LuPrinter } from "react-icons/lu";
 import {
   Table,
@@ -29,7 +29,7 @@ const OrderDetailsModal = ({
   setIsOrderModalOpen: Dispatch<SetStateAction<boolean>>;
   hasPrint?: boolean;
 }) => {
-  const [isConfirmOpen, setIsConfirmOpen] = React.useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const { data: session } = useSession();
   const userRole = session?.user.role;
 
@@ -53,18 +53,16 @@ const OrderDetailsModal = ({
                 <div className="flex items-center justify-between w-full">
                   <div className="flex flex-col gap-2">
                     <p className="text-lg font-semibold">{selectedOrder.id}</p>
-                    <p className="">Order details</p>
+                    <p className="font-semibold">Order details</p>
                   </div>
-                  {(userRole === "Cashier" ||
-                    userRole === "Manager" ||
-                    userRole === "Nurse") && (
+                  {userRole !== "Pharmacist_Staff" && (
                     <button onClick={() => setIsOrderModalOpen(false)}>
                       <IoIosCloseCircleOutline className="text-2xl text-red-500" />
                     </button>
                   )}
 
                   {userRole === "Pharmacist_Staff" &&
-                    selectedOrder.status !== "Pending" && (
+                    selectedOrder.status !== "pending" && (
                       <button onClick={() => setIsOrderModalOpen(false)}>
                         <IoIosCloseCircleOutline className="text-2xl text-red-500" />
                       </button>
@@ -78,31 +76,46 @@ const OrderDetailsModal = ({
                     <p className="font-semibold">{selectedOrder.customer}</p>
                   </div>
                 ) : (
-                  <>
-                    <div className="flex gap-2">
-                      <p>Patient Name:</p>
-                      <p className="font-semibold">
-                        {selectedOrder.patient_name}
+                  <div className="flex  justify-between">
+                    <div>
+                      <p className="mt-2 font-semibold">
+                        Patient Name:{" "}
+                        <span className="font-normal">
+                          {" "}
+                          {selectedOrder.patient_name}
+                        </span>
+                      </p>
+
+                      <p className="mt-2 font-semibold">
+                        Room Number:
+                        <span className="font-normal">
+                          {" "}
+                          {selectedOrder.roomNumber}
+                        </span>
+                      </p>
+
+                      <p className="mt-2 font-semibold">
+                        Created At:{" "}
+                        <span className="font-normal">
+                          {new Date(selectedOrder.createdAt).toLocaleString(
+                            "en-PH",
+                            {
+                              timeZone: "Asia/Manila",
+                            }
+                          )}
+                        </span>
+                      </p>
+
+                      <p className="mt-2 font-semibold">
+                        Type:{" "}
+                        <span className="font-normal">
+                          {" "}
+                          {typeLabels[selectedOrder.type ?? "REGULAR"]}
+                        </span>
                       </p>
                     </div>
-                    <div className="flex gap-2">
-                      <p>Room Number:</p>
-                      <p className="font-semibold">
-                        {selectedOrder.roomNumber}
-                      </p>
-                    </div>
-                  </>
+                  </div>
                 )}
-                <div className="flex gap-2">
-                  <p>Created At:</p>
-                  <p className="font-semibold">
-                    {selectedOrder.createdAt.toLocaleString()}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <p>Status:</p>
-                  <p className="font-semibold">{selectedOrder.status}</p>
-                </div>
               </div>
               <div className="border-t-2 pt-4">
                 <Table>
@@ -162,8 +175,35 @@ const OrderDetailsModal = ({
                   </TableFooter>
                 </Table>
               </div>
+              <div>
+                <p className="mt-2 font-semibold">
+                  Requested By:{" "}
+                  <span className="font-normal">
+                    {selectedOrder.requestedBy}
+                  </span>
+                </p>
+
+                {(selectedOrder.status === "paid" ||
+                  selectedOrder.status === "for_payment") && (
+                  <p className="mt-2 font-semibold">
+                    Received By:{" "}
+                    <span className="font-normal">
+                      {selectedOrder.receivedBy}
+                    </span>
+                  </p>
+                )}
+
+                {selectedOrder.status === "paid" && (
+                  <p className="mt-2 font-semibold">
+                    Payment Processed By:{" "}
+                    <span className="font-normal">
+                      {selectedOrder.processedBy}
+                    </span>
+                  </p>
+                )}
+              </div>
               {session?.user.role === "Pharmacist_Staff" &&
-                selectedOrder.status === "Pending" && (
+                selectedOrder.status === "pending" && (
                   <div className="flex justify-end">
                     {hasPrint && (
                       <div className="flex justify-end mt-4 print:hidden gap-4">
@@ -199,17 +239,17 @@ const OrderDetailsModal = ({
                   setIsConfirmOpen(false);
                   if (!selectedOrder) return;
 
-                  const numericId = parseInt(
-                    selectedOrder.id.replace("ORD-", "")
-                  );
                   try {
-                    await fetch(`/api/request_order/${numericId}/status`, {
-                      method: "PUT",
-                      body: JSON.stringify({ status: "for_payment" }),
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
-                    });
+                    await fetch(
+                      `/api/request_order/${selectedOrder.id}/status`,
+                      {
+                        method: "PUT",
+                        body: JSON.stringify({ status: "for_payment" }),
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                      }
+                    );
 
                     await fetch("/api/audit-log", {
                       method: "POST",
@@ -232,7 +272,7 @@ const OrderDetailsModal = ({
                       queryKey: ["salesData", "This Year"],
                     });
 
-                    selectedOrder.status = "For Payment";
+                    selectedOrder.status = "for_payment";
                     setIsOrderModalOpen(false);
                   } catch (error) {
                     console.error(

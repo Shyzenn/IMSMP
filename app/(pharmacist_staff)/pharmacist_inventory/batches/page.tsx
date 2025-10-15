@@ -1,5 +1,5 @@
 import BatchTable from "@/app/components/Inventory/batches/BatchTable";
-import InventoryHeader from "@/app/components/Inventory/products/InventoryHeader";
+import PageTableHeader from "@/app/components/PageTableHeader";
 import Pagination from "@/app/components/Pagination";
 import { TableRowSkeleton } from "@/app/components/Skeleton";
 import { fetchBatchPages } from "@/lib/action/get";
@@ -22,7 +22,7 @@ const ProductBatch = async (props: {
   const filter = searchParams?.filter;
 
   if (!filter || !page) {
-    redirect(`/pharmacist_inventory/batches?query=&page=1&filter=all&sort=releaseDate&order=desc
+    redirect(`/pharmacist_inventory/batches?query=&page=1&filter=all&sort=number&order=desc
   `);
   }
 
@@ -37,10 +37,11 @@ const ProductBatch = async (props: {
       className="p-6 bg-white overflow-auto rounded-md"
       style={{ height: "calc(94vh - 70px)" }}
     >
-      <InventoryHeader
+      <PageTableHeader
         title={"Product Batches"}
         hasAddProduct={false}
-        hasInventoryFilter={false}
+        isBatchFilter={true}
+        batchExport={true}
       />
 
       <div className="overflow-x-auto">

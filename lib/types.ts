@@ -6,18 +6,16 @@ export const signUpSchema = z
     username: z.string().min(4, "Username must contain at least 4 characters"),
     role: z.enum(["Pharmacist_Staff", "Nurse","Manager", "Cashier"], { message: "User Type is required." }),
     email: z
-      .string()
-      .min(1, "Email is required")
-      .email("Invalid email address"),
-      
-  //   password: z.string().min(8, "Password must contain at least 8 characters"),
-  //   confirmPassword: z
-  //     .string()
-  //     .min(8, "Confirm Password must contain at least 8 characters"),
-  // })
-  // .refine((data) => data.password === data.confirmPassword, {
-  //   message: "Passwords do not match",
-  //   path: ["confirmPassword"],
+    .string()
+    .min(1, "Email is required")
+    .email("Invalid email address")
+    .refine(
+      (val) =>
+        val.endsWith("@gmail.com"),
+      {
+        message: "Only Gmail are allowed",
+      }
+    ),
   });
 
 export type TSignUpSchema = z.infer<typeof signUpSchema>;
@@ -100,35 +98,16 @@ export const addProductSchema = z.object({
 export type TAddProductSchema = z.infer<typeof addProductSchema>;
 
 export const editProductSchema = z.object({
-  id: z.union([z.string(), z.number()]),
-  product_name: z .string({
-    required_error: "Product Name is required",
-  })
-  .min(1, "Product Name is required")
-  .trim(),
- category: z
-  .string({
-    required_error: "Category is required.",
-  })
-  .refine((val) =>
-    ["ANTIBIOTIC", "GASTROINTESTINAL", "PAIN_RELIEVER", "ANTI_INFLAMMATORY", "GENERAL_MEDICATION"].includes(val), {
-    message: "Category is required.",
-  }),
-
-
-  quantity: z.preprocess(
-    (val) => (val === "" || val === undefined ? undefined : Number(val)),
-    z.number({ required_error: "Quantity is required" })
-    .min(0, "Quantity must be 0 or higher")
-  ),
+  productId: z.number(),
+  product_name: z.string().min(1, "Product Name is required").trim(),
+  category: z.string({ required_error: "Category is required" }).min(1),
   price: z.preprocess(
     (val) => (val === "" || val === undefined ? undefined : Number(val)),
-    z.number({ required_error: "Price is required" })
+    z
+      .number({ required_error: "Price is required" })
       .min(0, "Price must be 0 or higher")
       .multipleOf(0.01, "Price must be a valid decimal number")
   ),
-  releaseDate: z.preprocess((val) => (typeof val === "string" ? new Date(val) : val), z.date({ required_error: "Release Date is required" })),
-  expiryDate: z.preprocess((val) => (typeof val === "string" ? new Date(val) : val), z.date({ required_error: "Expiry Date is required" })),
 });
 
 export type TEditProductSchema = z.infer<typeof editProductSchema>;
@@ -168,18 +147,35 @@ export const replenishProductSchema = z.object({
 export type TReplenishProductSchema = z.infer<typeof replenishProductSchema>;
 
 export const addRequestOrderSchema = z.object({
-  room_number: z.string().optional(),
-  patient_name: z.string().optional(),
+  room_number: z.string().min(1, "Room number is required"),
+  patient_name: z.string().min(1, "Patient name is required"),
   status: z.enum(["pending", "for_payment", "paid"]),
+  type: z.enum(["REGULAR", "EMERGENCY"]),
+  notes: z.string().optional(),
   products: z.array(
     z.object({
       productId: z.string().min(1, "Product name is required"),
-      quantity: z.number().min(1, "Quantity must be at least 1")
+      quantity: z.number().min(1, "Quantity is required")
     })
   ),
 });
 
 export type TAddRequestOrderSchema = z.infer<typeof addRequestOrderSchema>;
+
+export const editRequestOrderSchema = z.object({
+  room_number: z.string().min(1, "Room number is required"),
+  patient_name: z.string().min(1, "Patient name is required"),
+  status: z.enum(["pending", "for_payment", "paid"]).optional(),
+  notes: z.string().optional(),
+  products: z.array(
+    z.object({
+      productId: z.string().min(1, "Product name is required"),
+      quantity: z.number().min(1, "Quantity is required")
+    })
+  ),
+});
+
+export type TEditRequestOrderSchema = z.infer<typeof editRequestOrderSchema>;
 
 export const WalkInOrderSchema = z.object({
   customer_name: z.string().optional(),
@@ -192,3 +188,36 @@ export const WalkInOrderSchema = z.object({
 });
 
 export type TWalkInOrderSchema = z.infer<typeof WalkInOrderSchema>;
+
+// forgot password
+export const forgotPasswordSchema = z.object({
+   email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Invalid email address")
+    
+});
+
+export const otpSchema = z.object({
+  otp: z.string().length(8, "OTP must be 8 digits"),
+});
+
+export const resetPasswordSchema = z
+  .object({
+     newPassword: z
+      .string()
+      .trim()
+      .min(8, "Password must contain at least 8 characters"),
+    confirmPassword: z
+      .string()
+      .trim()
+      .min(8, "Confirm Password must contain at least 8 characters"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match",
+  })
+
+export type TForgotPassword = z.infer<typeof forgotPasswordSchema>;
+export type TOtp = z.infer<typeof otpSchema>;
+export type TResetPassword = z.infer<typeof resetPasswordSchema>;

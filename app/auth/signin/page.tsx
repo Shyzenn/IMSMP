@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,10 +12,14 @@ import LoadingButton from "@/components/loading-button";
 import Image from "next/image";
 import MacoleenLogo from "@/public/macoleens_logo.png";
 import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
+import { Button } from "@/components/ui/button";
+
+import ForgotPasswordModal from "@/app/components/ForgotPasswordModal";
 
 const Login = () => {
   const [manualError, setManualError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const {
     register,
@@ -89,32 +92,41 @@ const Login = () => {
                 >
                   {showPassword ? <FaRegEye /> : <FaRegEyeSlash />}
                 </button>
-                {errors.password && (
-                  <p className="mt-2 text-sm text-red-500">
-                    {errors.password.message}
-                  </p>
-                )}
+                <div className="flex items-center justify-between">
+                  {errors.password && (
+                    <p className="text-sm text-red-500">
+                      {errors.password.message}
+                    </p>
+                  )}
+                  <button
+                    className="text-sm text-blue-500 ml-1 cursor-pointer hover:underline"
+                    type="button"
+                    onClick={() => setShowModal((prev) => !prev)}
+                  >
+                    forgot password?
+                  </button>
+                </div>
               </div>
+
               {manualError && (
                 <p className="mt-2 text-sm text-red-500 text-center">
                   {manualError}
                 </p>
               )}
             </div>
+
             <Button
-              className="w-full py-5 mt-5 bg-green-500 text-white"
+              className="w-full py-5 mt-8 bg-buttonBgColor hover:bg-buttonHover text-white duration-300 ease-in-out"
               type="submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? (
-                <LoadingButton color={"text-white"} />
-              ) : (
-                "Sign in"
-              )}
+              {isSubmitting ? <LoadingButton color={"text-white"} /> : "Login"}
             </Button>
           </form>
         </CardContent>
       </Card>
+
+      {showModal && <ForgotPasswordModal setShowModal={setShowModal} />}
     </div>
   );
 };

@@ -1,6 +1,6 @@
-import { Status } from "@prisma/client";
+import { OrderType, Status } from "@prisma/client";
 import { clsx, type ClassValue } from "clsx"
-import { formatDistanceToNow } from "date-fns";
+import { endOfDay, formatDistanceToNow, parseISO, startOfDay } from "date-fns";
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
@@ -22,6 +22,24 @@ export function formattedDate(dateInput?: string | number | Date | null) {
   });
 }
 
+export function formattedDateTime(
+  dateInput?: string | number | Date | null,
+  timeZone = "Asia/Manila"
+) {
+  const d = new Date(dateInput ?? Date.now());
+  if (isNaN(d.getTime())) return "Invalid Date";
+
+  return d.toLocaleString("en-PH", {
+    timeZone,
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
 export const relativeTime = (date: string | Date) => {
   return formatDistanceToNow(new Date(date), { addSuffix: true });
 };
@@ -38,13 +56,37 @@ export default function formatStatus(rawStatus: string) {
   return statusMap[rawStatus] || capitalLetter(rawStatus);
 }
 
-export type TransactionFilter =
+export function expiryDate(expiryDate: string) {
+  const today = new Date();
+  const expiry = new Date(expiryDate);
+  const diffTime = expiry.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  return diffDays;
+}
+
+export const statusLabels: Record<string, string> = {
+  for_payment: "For Payment",
+  canceled: "Cancelled",
+  paid: "Paid",
+  pending: "Pending",
+};
+
+export const typeLabels = {
+  REGULAR: "Regular",
+  EMERGENCY: "Emergency",
+};
+
+export type   TransactionFilter =
   | "all"
+  | "regular"
+  | "emergency"
   | "walk_in"
   | "request_order"
   | "paid"
   | "pending"
-  | "for_payment";
+  | "for_payment"
+  | "canceled";
 
 export const isWalkInFilterEnabled = (filter: TransactionFilter) => {
   return filter === "all" || filter === "paid" || filter === "walk_in";
@@ -53,19 +95,35 @@ export const isWalkInFilterEnabled = (filter: TransactionFilter) => {
 export const isRequestOrderFilterEnabled = (filter: TransactionFilter) => {
   return (
     filter === "all" ||
+    filter === "regular" ||
+    filter === "emergency" ||
     filter === "paid" ||
     filter === "pending" ||
     filter === "for_payment" ||
-    filter === "request_order"
+    filter === "request_order" ||
+    filter === "canceled"
   );
 };
 
-export const mapStatus = (filter: TransactionFilter): Status | undefined => {
-  if (filter === "paid") return Status.paid;
-  if (filter === "pending") return Status.pending;
-  if (filter === "for_payment") return Status.for_payment;
-  return undefined;
+export const mapStatus = (filter: TransactionFilter) => {
+  switch (filter) {
+    case "regular":
+      return { field: "type", value: OrderType.REGULAR };
+    case "emergency":
+      return { field: "type", value: OrderType.EMERGENCY };
+    case "paid":
+      return { field: "status", value: Status.paid };
+    case "pending":
+      return { field: "status", value: Status.pending };
+    case "for_payment":
+      return { field: "status", value: Status.for_payment };
+    case "canceled":
+      return { field: "status", value: Status.canceled };
+    default:
+      return undefined;
+  }
 };
+
 
 export const pageTitles: Record<string, string> = {
     "/dashboard": "Dashboard",
@@ -132,3 +190,27 @@ export const transactionSkeletonHeaders = [
   { key: "type", label: "Type" },
   { key: "status", label: "Status" },
 ];
+
+export const dateFilter = (dateRange:{to: string, from: string}) => {
+    let startDate: Date | undefined;
+    let endDate: Date | undefined;
+  
+    if (dateRange?.from) {
+      startDate = startOfDay(parseISO(dateRange.from));
+    }
+    if (dateRange?.to) {
+      endDate = endOfDay(parseISO(dateRange.to));
+    }
+  
+     const dateFilter =
+      startDate || endDate
+        ? {
+            createdAt: {
+              ...(startDate ? { gte: startDate } : {}),
+              ...(endDate ? { lte: endDate } : {}),
+            },
+          }
+        : undefined;
+
+    return dateFilter
+}

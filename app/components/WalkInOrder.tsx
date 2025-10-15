@@ -18,6 +18,7 @@ import { useModal } from "../hooks/useModal";
 import { useProducts } from "../hooks/useProducts";
 import { useProductDropdown } from "../hooks/useProductDropDown";
 import { useProductForm } from "../hooks/useProductForm";
+import { IoAddOutline } from "react-icons/io5";
 
 const WalkInOrder = () => {
   const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
@@ -73,7 +74,7 @@ const WalkInOrder = () => {
     return hasProductSelected && product.quantity > selectedQuantity[index];
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, prepend, remove } = useFieldArray({
     control,
     name: "products",
   });
@@ -93,7 +94,7 @@ const WalkInOrder = () => {
     }
   );
 
-  const onSubmit = (data: TWalkInOrderSchema) => {
+  const onSubmit = async (data: TWalkInOrderSchema) => {
     const hasInvalidProduct = data.products.some((product, index) => {
       const exists = products.some(
         (p) =>
@@ -112,7 +113,7 @@ const WalkInOrder = () => {
 
     if (hasInvalidProduct) return;
 
-    handleSubmitWrapper(() => walkInOrder(data));
+    await handleSubmitWrapper(() => walkInOrder(data));
   };
 
   return (
@@ -141,9 +142,23 @@ const WalkInOrder = () => {
                     />
                   </FormField>
                 </div>
+                <div className="ml-8 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => prepend({ productId: "", quantity: 0 })}
+                    className={`px-8 py-2 rounded-md text-black flex items-center gap-2 ${
+                      isQuantityExceeded
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-white border border-[#41b08d] hover:bg-[#41b08d] hover:text-white transition-all duration-300 ease-in-out "
+                    }`}
+                    disabled={isQuantityExceeded}
+                  >
+                    <IoAddOutline className="text-xl" /> Add Product
+                  </button>
+                </div>
 
                 <div className="p-8 h-[10%]">
-                  <div className="flex justify-between text-sm mt-8 mr-[155px]">
+                  <div className="flex justify-between text-sm mr-[155px]">
                     <p>Product Name</p>
                     <p>Quantity</p>
                   </div>
@@ -305,50 +320,33 @@ const WalkInOrder = () => {
                     ))}
                   </ul>
                 </div>
-                <div className="flex justify-between mx-8 py-4 items-center">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      append({
-                        productId: "",
-                        quantity: 0,
-                      })
-                    }
-                    className={`px-8 py-2 rounded-md text-white ${
-                      isQuantityExceeded
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-green-500 hover:bg-green-600"
-                    }`}
-                    disabled={isQuantityExceeded}
-                  >
-                    Add Product
-                  </button>
-                  <p className="font-semibold text-lg">
-                    Total: ₱
-                    {calculatedTotals
-                      .reduce((sum, val) => sum + val, 0)
-                      .toFixed(2)}
-                  </p>
-                </div>
               </div>
 
-              <div className="flex gap-6 bg-white border-t-2 p-4 absolute bottom-0 left-0 w-full justify-end items-center">
-                <CancelButton setIsModalOpen={close} reset={reset} />
-                <button
-                  type="submit"
-                  className={`px-8 py-2 rounded-md text-white ${
-                    isQuantityExceeded || isSubmitting
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-green-500 hover:bg-green-600"
-                  }`}
-                  disabled={isQuantityExceeded || isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <LoadingButton color="text-white" />
-                  ) : (
-                    "Submit"
-                  )}
-                </button>
+              <div className="flex  bg-white border-t-2 p-4 absolute bottom-0 left-0 w-full justify-between items-center">
+                <p className="font-semibold text-lg">
+                  Total: ₱
+                  {calculatedTotals
+                    .reduce((sum, val) => sum + val, 0)
+                    .toFixed(2)}
+                </p>
+                <div className="flex gap-6">
+                  <CancelButton setIsModalOpen={close} reset={reset} />
+                  <button
+                    type="submit"
+                    className={`px-8 py-2 rounded-md text-white ${
+                      isQuantityExceeded || isSubmitting
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-[#2b9e78] hover:bg-[#41b08d] transition-all duration-300 ease-in-out"
+                    }`}
+                    disabled={isQuantityExceeded || isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <LoadingButton color="text-white" />
+                    ) : (
+                      "Submit"
+                    )}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

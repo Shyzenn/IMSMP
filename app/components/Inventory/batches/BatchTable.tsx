@@ -9,7 +9,7 @@ import { auth } from "@/auth";
 export type BatchProps = {
   id: number;
   product: { product_name: string };
-  batchNumber: number;
+  batchNumber: string;
   quantity: number;
   releaseDate: Date;
   expiryDate: Date;
@@ -48,34 +48,38 @@ export default async function BatchTable({
         <Table>
           <BatchesTableHeader />
           <TableBody>
-            {batches.map((batch, i) => (
-              <TableRow
-                key={i}
-                className={`${
-                  batch.status === "Expiring"
-                    ? "bg-yellow-50"
-                    : batch.status === "Expired"
-                    ? "bg-red-50"
-                    : ""
-                }`}
-              >
-                <TableCell>{batch.id}</TableCell>
-                <TableCell>
-                  {capitalLetter(batch.product.product_name)}
-                </TableCell>
-                <TableCell>{batch.batchNumber}</TableCell>
-                <TableCell>{batch.quantity}</TableCell>
-                <TableCell>{formattedDate(batch.releaseDate)}</TableCell>
-                <TableCell>{formattedDate(batch.expiryDate)}</TableCell>
-                <TableCell>{batch.status}</TableCell>
-                {(userRole === "Manager" ||
-                  userRole === "Pharmacist_Staff") && (
+            {batches
+              .filter((batch) => batch.status !== "ARCHIVED")
+              .map((batch, i) => (
+                <TableRow
+                  key={i}
+                  className={`${
+                    batch.status === "Expiring"
+                      ? "bg-yellow-50"
+                      : batch.status === "Expired"
+                      ? "bg-red-50"
+                      : batch.status === "Consumed"
+                      ? "bg-slate-100"
+                      : ""
+                  }`}
+                >
+                  <TableCell>{batch.id}</TableCell>
                   <TableCell>
-                    <BatchAction batch={batch} />
+                    {capitalLetter(batch.product.product_name)}
                   </TableCell>
-                )}
-              </TableRow>
-            ))}
+                  <TableCell>{batch.batchNumber}</TableCell>
+                  <TableCell>{batch.quantity}</TableCell>
+                  <TableCell>{formattedDate(batch.releaseDate)}</TableCell>
+                  <TableCell>{formattedDate(batch.expiryDate)}</TableCell>
+                  <TableCell>{batch.status}</TableCell>
+                  {(userRole === "Manager" ||
+                    userRole === "Pharmacist_Staff") && (
+                    <TableCell>
+                      <BatchAction batch={batch} />
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       )}

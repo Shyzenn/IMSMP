@@ -11,14 +11,32 @@ import { IoArchiveOutline } from "react-icons/io5";
 import { GiRecycle } from "react-icons/gi";
 import EditProductForm from "./EditProductForm";
 import { useModal } from "@/app/hooks/useModal";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import ReplenishFormModal from "../../ReplenishFormModal";
 import { ProductProps } from "./InventoryTable";
+import UserStatusConfirmDialog from "../../UserStatusConfirmDialog";
+import toast from "react-hot-toast";
+import LoadingButton from "@/components/loading-button";
+import { archiveProduct } from "@/lib/action/product";
 
 const Action = ({ product }: { product: ProductProps }) => {
   const { open, close, isOpen } = useModal();
 
   const [showReplenishModal, setShowReplenishModal] = useState(false);
+
+  const [isPending, startTransition] = useTransition();
+
+  const handleArchive = () => {
+    startTransition(async () => {
+      const result = await archiveProduct(product.id);
+
+      if (result.success) {
+        toast.success(result.message + " ✅");
+      } else {
+        toast.error(result.message + " ❌");
+      }
+    });
+  };
 
   return (
     <>
@@ -50,9 +68,19 @@ const Action = ({ product }: { product: ProductProps }) => {
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <button>
-                <IoArchiveOutline />
-              </button>
+              <UserStatusConfirmDialog
+                iconOnly={true}
+                iconColor="text-gray-900"
+                modalButtonLabel={
+                  isPending ? <LoadingButton color="text-white" /> : "Confirm"
+                }
+                buttonLabel="Archive"
+                icon={IoArchiveOutline}
+                title="Archive Product"
+                description="Are you sure you want to
+                archive this product?"
+                confirmButton={handleArchive}
+              />
             </TooltipTrigger>
             <TooltipContent>
               <p>Archive Product</p>

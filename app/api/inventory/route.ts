@@ -5,10 +5,14 @@ export async function GET() {
     try {
         const products = await db.product.findMany({
             take:15,
-            orderBy:{
-                releaseDate: 'desc'
-            }
+            include: { batches: true},
         })
+
+        products.sort((a, b) => {
+            const aMax = Math.max(...a.batches.map(batch => batch.releaseDate.getTime()));
+            const bMax = Math.max(...b.batches.map(batch => batch.releaseDate.getTime()));
+            return bMax - aMax; 
+        });
 
         return NextResponse.json(products, {status: 200})
     } catch (error) {

@@ -2,7 +2,7 @@
 
 import MobileMenu from "./MobileMenu";
 import { useSession } from "next-auth/react";
-import { memo } from "react";
+import { memo, useEffect } from "react";
 import WalkInOrder from "./WalkInOrder";
 import Image from "next/image";
 import PharmacyIcon from "@/public/macoleens_logo.png";
@@ -14,44 +14,86 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import NotificationBell from "./NotificationBell";
+import StaffNotificationBell from "./StaffNotificationBell";
+import { pusherClient } from "@/lib/pusher/client";
+import { useEmergencyModal } from "@/lib/store/emergency-modal";
+import EmergencyOrderModal from "./EmergencyModal";
+import { Notification } from "@/lib/interfaces";
 
 const Header = () => {
   const { data: session } = useSession();
   const userRole = session?.user.role;
   const MemoMobileMenu = memo(MobileMenu);
+  const emergencyModal = useEmergencyModal();
+
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const channel = pusherClient.subscribe(`private-user-${session.user.id}`);
+
+    channel.bind("new-notification", (data: Notification) => {
+      if (data.type === "EMERGENCY_ORDER") {
+        emergencyModal.openModal({
+          id: data.id,
+          orderType: "EMERGENCY",
+          sender: {
+            username: data.sender?.username || "Unknown",
+            role: data.sender?.role || "Unknown",
+          },
+          order: {
+            patient_name: data.order?.patient_name || "Unknown",
+            room_number: data.order?.room_number || "Unknown",
+            products: data.order?.products || [],
+          },
+          notes: data.notes || "",
+          createdAt: new Date(data.createdAt),
+        });
+      }
+    });
+
+    return () => {
+      channel.unbind("new-notification");
+      pusherClient.unsubscribe(`private-user-${session.user.id}`);
+    };
+  }, [session?.user?.id, emergencyModal]);
 
   return (
-    <div className="flex justify-between items-center mx-10 py-8 relative">
-      <Image
-        src={PharmacyIcon}
-        alt="Macoleen's Pharmacy Icon"
-        width={150}
-        height={150}
-        className="hidden xl:block"
-      />
-      <MemoMobileMenu />
-      <HeaderLinks session={session} />
-      <div className="flex items-center relative">
-        {userRole === "Pharmacist_Staff" && <WalkInOrder />}
+    <div className="fixed top-0 w-full bg-white mb-5 shadow-md z-20">
+      <div className="flex justify-between items-center px-10 2xl:max-w-screen-3xl mx-auto">
+        <Image
+          src={PharmacyIcon}
+          alt="Macoleen's Pharmacy Icon"
+          width={150}
+          height={150}
+          className="hidden xl:block"
+        />
+        <MemoMobileMenu />
+        <HeaderLinks userRole={userRole} />
+        <div className="flex items-center relative">
+          {userRole === "Pharmacist_Staff" && (
+            <>
+              <WalkInOrder />
+            </>
+          )}
 
-        {(userRole === "Pharmacist_Staff" || userRole === "Manager") && (
-          <NotificationBell
+          <StaffNotificationBell
             userId={session?.user.id}
-            userRole={session?.user.role}
+            userRole={userRole}
           />
-        )}
 
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <ProfileDropdown session={session} />
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Profile</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <ProfileDropdown session={session} />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Profile</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <EmergencyOrderModal />
+        </div>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { Table } from "@/components/ui/table";
 import { TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { getTransactionList } from "@/lib/action/get";
-import { formattedDate } from "@/lib/utils";
+import { formattedDateTime, statusLabels } from "@/lib/utils";
 import TransactionTableHeader from "./TransactionHeader";
 import EmptyTable from "../../EmptyTable";
 import CashierAction from "../cashier/CashierAction";
@@ -12,19 +12,25 @@ const TransactionTable = async ({
   filter,
   sortBy = "createdAt",
   sortOrder = "desc",
+  userRole,
+  dateRange,
 }: {
   query: string;
   currentPage: number;
   filter: string;
-  sortBy?: string;
-  sortOrder?: "asc" | "desc";
+  sortBy: string;
+  sortOrder: "asc" | "desc";
+  userRole: string;
+  dateRange: { from: string; to: string };
 }) => {
   const transactions = await getTransactionList(
     query,
     currentPage,
     filter,
     sortBy,
-    sortOrder
+    sortOrder,
+    userRole,
+    dateRange
   );
 
   return (
@@ -33,17 +39,26 @@ const TransactionTable = async ({
         <EmptyTable content="No Transaction Found" />
       ) : (
         <Table>
-          <TransactionTableHeader />
+          <TransactionTableHeader userRole={userRole} />
           <TableBody>
             {transactions.map((transaction) => (
               <TableRow key={transaction.id}>
                 <TableCell>{`ORD-${transaction.id}`}</TableCell>
                 <TableCell>{transaction.customer}</TableCell>
-                <TableCell>{formattedDate(transaction.createdAt)}</TableCell>
+                <TableCell>
+                  {formattedDateTime(transaction.createdAt)}
+                </TableCell>
                 <TableCell>{transaction.quantity}</TableCell>
                 <TableCell>{`₱${transaction.total}`}</TableCell>
                 <TableCell>{transaction.source}</TableCell>
-                <TableCell>{transaction.status}</TableCell>
+                <TableCell>
+                  {transaction.type === "REGULAR"
+                    ? "Regular"
+                    : transaction.type === "EMERGENCY"
+                    ? "Emergency"
+                    : ""}
+                </TableCell>
+                <TableCell>{statusLabels[transaction.status]}</TableCell>
                 <TableCell>
                   <CashierAction transaction={transaction} />
                 </TableCell>
