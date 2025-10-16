@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
@@ -11,9 +12,10 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  console.log("🔐 NEXTAUTH_SECRET in middleware:", process.env.NEXTAUTH_SECRET ? "Loaded" : "Missing");
   console.log("🧠 Path:", pathname);
-console.log("🍪 Cookies in middleware:", request.cookies.getAll());
-console.log("🎫 Token from getToken:", token);
+  console.log("🍪 Cookies in middleware:", request.cookies.getAll());
+  console.log("🎫 Token from getToken:", token);
 
   // If not logged in → redirect to login
   if (!token && !publicPaths.includes(pathname)) {
