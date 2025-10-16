@@ -6,7 +6,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   pages: {
-    signIn: "auth/signin",
+    signIn: "/auth/signin",
   },
   session: { strategy: "jwt", maxAge: 24 * 60 * 60 },
   secret: process.env.NEXTAUTH_SECRET,
