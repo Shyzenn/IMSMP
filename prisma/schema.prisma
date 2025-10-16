@@ -8,30 +8,30 @@ datasource db {
 }
 
 model User {
-  id            String       @id @default(uuid())
-  username      String       @unique
-  role          Role
-  email         String       @unique
-  password      String
+  id       String @id @default(uuid())
+  username String @unique
+  role     Role
+  email    String @unique
+  password String
 
-  profileImage  String?
+  profileImage String?
 
-  otp           String?
-  otpExpiresAt  DateTime?
-  createdAt     DateTime     @default(now())
-  status        UserStatus   @default(ACTIVE)
-  mustChangePassword   Boolean @default(true)
+  otp                String?
+  otpExpiresAt       DateTime?
+  createdAt          DateTime   @default(now())
+  status             UserStatus @default(ACTIVE)
+  mustChangePassword Boolean    @default(true)
 
-  OrderRequest        OrderRequest[]     @relation("RequestedBy")
-  WalkInTransaction   WalkInTransaction[]
+  OrderRequest      OrderRequest[]      @relation("RequestedBy")
+  WalkInTransaction WalkInTransaction[]
 
-  ReceivedOrders      OrderRequest[]     @relation("ReceivedBy")
-  ProcessedOrders     OrderRequest[]     @relation("ProcessedBy")
-  
-  Product       Product[]
-  AuditLog      AuditLog[]
-  lastSeen      DateTime     @default(now()) @updatedAt
-  isOnline      Boolean      @default(false)
+  ReceivedOrders  OrderRequest[] @relation("ReceivedBy")
+  ProcessedOrders OrderRequest[] @relation("ProcessedBy")
+
+  Product  Product[]
+  AuditLog AuditLog[]
+  lastSeen DateTime   @default(now()) @updatedAt
+  isOnline Boolean    @default(false)
 
   SentNotification     Notification[] @relation("SentNotification")
   ReceivedNotification Notification[] @relation("ReceivedNotification")
@@ -43,16 +43,16 @@ enum UserStatus {
 }
 
 model AuditLog {
-  id          Int       @id @default(autoincrement())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
+  id     Int    @id @default(autoincrement())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  action      String    // e.g. CREATE_ORDER, UPDATE_USER
-  entityType  String    // e.g. User, Order, Product
-  entityId    Int?      // The affected record (nullable in case it's a general action)
-  description String?   // Human-readable summary
+  action      String // e.g. CREATE_ORDER, UPDATE_USER
+  entityType  String // e.g. User, Order, Product
+  entityId    Int? // The affected record (nullable in case it's a general action)
+  description String? // Human-readable summary
 
-  createdAt   DateTime  @default(now())
+  createdAt DateTime @default(now())
 }
 
 enum Role {
@@ -63,32 +63,32 @@ enum Role {
 }
 
 model Product {
-  id            Int            @id @default(autoincrement())
-  product_name  String         @unique
-  price         Decimal        @default(0.00)
-  status        String         @default("ACTIVE") // ACTIVE | ARCHIVED
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  archiveAt     DateTime?
+  id           Int       @id @default(autoincrement())
+  product_name String    @unique
+  price        Decimal   @default(0.00)
+  status       String    @default("ACTIVE") // ACTIVE | ARCHIVED
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  archiveAt    DateTime?
 
   // Relationships
-  batches       ProductBatch[]
-  orderItems    OrderItem[]
-  WalkInItem    WalkInItem[]
-  Notification  Notification[]
+  batches      ProductBatch[]
+  orderItems   OrderItem[]
+  WalkInItem   WalkInItem[]
+  Notification Notification[]
 
-  userId        String?
-  user          User?          @relation(fields: [userId], references: [id])
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
 
-  categoryId  Int?
-  category    ProductCategory? @relation(fields: [categoryId], references: [id])
+  categoryId Int?
+  category   ProductCategory? @relation(fields: [categoryId], references: [id])
 }
 
 model ProductBatch {
-  id          Int      @id @default(autoincrement())
-  productId   Int
-  product     Product  @relation(fields: [productId], references: [id])
-  archiveAt     DateTime?
+  id        Int       @id @default(autoincrement())
+  productId Int
+  product   Product   @relation(fields: [productId], references: [id])
+  archiveAt DateTime?
 
   batchNumber String
   quantity    Int      @default(0)
@@ -96,42 +96,42 @@ model ProductBatch {
   expiryDate  DateTime
   type        String   @default("ACTIVE") // ACTIVE | EXPIRING | EXPIRED | CONSUMED | ARCHIVED
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ProductCategory {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  products  Product[]
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products Product[]
 }
 
 model OrderRequest {
-  id           Int       @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   room_number  String?
   patient_name String?
   status       Status
   notes        String?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  type         OrderType    @default(REGULAR)
+  type OrderType @default(REGULAR)
 
-  isArchived   Boolean      @default(false)
+  isArchived Boolean @default(false)
 
-  user         User         @relation("RequestedBy", fields: [userId], references: [id])
-  userId       String
+  user   User   @relation("RequestedBy", fields: [userId], references: [id])
+  userId String
 
-  receivedBy   User?        @relation("ReceivedBy", fields: [receivedById], references: [id])
+  receivedBy   User?   @relation("ReceivedBy", fields: [receivedById], references: [id])
   receivedById String?
 
-  processedBy  User?        @relation("ProcessedBy", fields: [processedById], references: [id])
+  processedBy   User?   @relation("ProcessedBy", fields: [processedById], references: [id])
   processedById String?
 
-  receivedAt   DateTime?
-  processedAt  DateTime?
+  receivedAt  DateTime?
+  processedAt DateTime?
 
-  items        OrderItem[]  
+  items        OrderItem[]
   Notification Notification[]
 }
 
@@ -141,33 +141,33 @@ enum OrderType {
 }
 
 model OrderItem {
-  id         Int     @id @default(autoincrement())
-  quantity   Int        @default(1)
-  order      OrderRequest @relation(fields: [orderId], references: [id])
-  orderId    Int
-  product    Product     @relation(fields: [productId], references: [id])
-  productId  Int
+  id        Int          @id @default(autoincrement())
+  quantity  Int          @default(1)
+  order     OrderRequest @relation(fields: [orderId], references: [id])
+  orderId   Int
+  product   Product      @relation(fields: [productId], references: [id])
+  productId Int
 }
 
 model WalkInTransaction {
-  id             Int           @id @default(autoincrement())
-  customer_name  String?       
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  status         Status
-  items          WalkInItem[]
-  totalAmount    Decimal       @default(0.00)
-  userId         String        // pharmacist who encoded the walk-in
-  user           User          @relation(fields: [userId], references: [id])
-  Notification Notification[]
+  id            Int            @id @default(autoincrement())
+  customer_name String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  status        Status
+  items         WalkInItem[]
+  totalAmount   Decimal        @default(0.00)
+  userId        String // pharmacist who encoded the walk-in
+  user          User           @relation(fields: [userId], references: [id])
+  Notification  Notification[]
 }
 
 model WalkInItem {
-  id            Int           @id @default(autoincrement())
+  id            Int               @id @default(autoincrement())
   quantity      Int
   price         Decimal
-  total         Decimal        // quantity * price
-  product       Product        @relation(fields: [productId], references: [id])
+  total         Decimal // quantity * price
+  product       Product           @relation(fields: [productId], references: [id])
   productId     Int
   transaction   WalkInTransaction @relation(fields: [transactionId], references: [id])
   transactionId Int
@@ -191,28 +191,28 @@ enum NotificationType {
 model Notification {
   id        Int      @id @default(autoincrement())
   title     String
-  read      Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   senderId    String
   recipientId String
-  sender      User    @relation("SentNotification", fields:[senderId], references:[id])
-  recipient   User    @relation("ReceivedNotification", fields:[recipientId], references:[id])
+  sender      User   @relation("SentNotification", fields: [senderId], references: [id])
+  recipient   User   @relation("ReceivedNotification", fields: [recipientId], references: [id])
 
-  orderId      Int?
-  order        OrderRequest?   @relation(fields: [orderId], references: [id])
+  orderId Int?
+  order   OrderRequest? @relation(fields: [orderId], references: [id])
 
-  walkInOrderId    Int?
-  walkInOrder      WalkInTransaction? @relation(fields: [walkInOrderId], references: [id])
+  walkInOrderId Int?
+  walkInOrder   WalkInTransaction? @relation(fields: [walkInOrderId], references: [id])
 
-  productId    Int?
-  product      Product?        @relation(fields: [productId], references: [id])
+  productId Int?
+  product   Product? @relation(fields: [productId], references: [id])
 
-  type         NotificationType?
+  type NotificationType?
 
-  patientName  String?
-  roomNumber   String?
-  submittedBy  String?
-  role         String?
+  patientName String?
+  roomNumber  String?
+  submittedBy String?
+  role        String?
 }

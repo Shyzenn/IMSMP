@@ -76,10 +76,12 @@ const Header = () => {
             </>
           )}
 
-          <StaffNotificationBell
-            userId={session?.user.id}
-            userRole={userRole}
-          />
+          {userRole !== "Manager" && (
+            <StaffNotificationBell
+              userId={session?.user.id}
+              userRole={userRole}
+            />
+          )}
 
           <TooltipProvider>
             <Tooltip>

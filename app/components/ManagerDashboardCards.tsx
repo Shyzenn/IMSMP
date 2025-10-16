@@ -3,8 +3,8 @@
 import React from "react";
 import DashboardCards from "./DashboardCards";
 import { useQuery } from "@tanstack/react-query";
+import { LuPhilippinePeso } from "react-icons/lu";
 import {
-  TbShoppingCart,
   TbShoppingCartDown,
   TbShoppingCartUp,
   TbShoppingCartX,
@@ -40,7 +40,7 @@ const ManagerDashboardCards = ({ userRole }: { userRole?: string }) => {
       value: `₱${Number(totalSales).toLocaleString("en-PH", {
         minimumFractionDigits: 0,
       })}`,
-      icon: TbShoppingCart,
+      icon: LuPhilippinePeso,
       bgColor: "bg-blue-50",
       textColor: "text-blue-500",
 
