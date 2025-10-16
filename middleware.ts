@@ -11,6 +11,10 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  console.log("🧠 Path:", pathname);
+console.log("🍪 Cookies in middleware:", request.cookies.getAll());
+console.log("🎫 Token from getToken:", token);
+
   // If not logged in → redirect to login
   if (!token && !publicPaths.includes(pathname)) {
     return NextResponse.redirect(new URL("/auth/signin", request.url));
@@ -53,7 +57,6 @@ export const config = {
     "/nurse_dashboard/:path*",
     "/cashier_dashboard/:path*",
     "/pharmacist_dashboard/:path*",
-    "/auth/signin",
     "/change-password",
     "/user_management",
     "/unauthorized",
