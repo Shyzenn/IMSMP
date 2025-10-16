@@ -52,19 +52,32 @@ export async function handleCredentialsSignIn({
     }
 
     // NextAuth will check the OTP (stored as password)
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-
-    if (result?.error) {
+    const isOtpValid = await bcrypt.compare(password, user.password);
+    if (!isOtpValid) {
       return { message: "Invalid OTP" };
     }
 
     if (user.mustChangePassword) {
       return { redirectUrl: "/change-password" };
     }
+
+    await signIn("credentials", {
+      email,
+      password,
+      redirect: true,
+      redirectTo:
+        user.mustChangePassword
+          ? "/change-password"
+          : user.role === "Manager"
+          ? "/dashboard"
+          : user.role === "Nurse"
+          ? "/nurse_dashboard"
+          : user.role === "Pharmacist_Staff"
+          ? "/pharmacist_dashboard"
+          : user.role === "Cashier"
+          ? "/cashier_dashboard"
+          : "/",
+    });
 
     await db.auditLog.create({
       data: {
