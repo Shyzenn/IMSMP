@@ -42,9 +42,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  console.log("🍪 Cookies in middleware:", request.cookies.getAll());
-  console.log("🎫 Token from getToken:", token);
-
   return NextResponse.next();
 }
 

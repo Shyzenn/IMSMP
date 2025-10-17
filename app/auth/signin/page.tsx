@@ -22,6 +22,8 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
@@ -30,8 +32,6 @@ const Login = () => {
     resolver: zodResolver(signInSchema),
   });
 
-  const router = useRouter();
-
   const onSubmit = async (values: TSignInSchema) => {
     try {
       const result = await handleCredentialsSignIn(values);
@@ -39,10 +39,10 @@ const Login = () => {
         setManualError(result.message);
       }
       if (result?.redirectUrl) {
-        setTimeout(() => {
-          router.replace(result.redirectUrl);
-        }, 300);
+        window.location.href = result.redirectUrl;
       }
+
+      router.refresh();
     } catch (error) {
       console.log("An unexpected error occurred. Please try again.", error);
     }
