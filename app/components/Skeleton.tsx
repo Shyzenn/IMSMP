@@ -6,6 +6,28 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+export function HeaderSkeleton() {
+  return (
+    <>
+      <div className="fixed top-0 w-full bg-white mb-5 shadow-md z-20 py-6">
+        <div className="flex justify-between items-center px-10 2xl:max-w-screen-3xl mx-auto">
+          <div className="h-6 w-40 rounded bg-gray-100"></div>
+
+          <div className="flex items-center gap-8">
+            <div className="h-4 w-20 bg-gray-200 rounded" />
+            <div className="h-4 w-20 bg-gray-200 rounded" />
+            <div className="h-4 w-20 bg-gray-200 rounded" />
+            <div className="h-4 w-20 bg-gray-200 rounded" />
+          </div>
+          <div className="flex items-center relative">
+            <div className="h-6 w-40 rounded bg-gray-100"></div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export function ProductSkeleton() {
   return (
     <>

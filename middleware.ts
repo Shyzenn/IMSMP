@@ -55,6 +55,7 @@ export const config = {
     "/inventory/batches/:path*",
     "/transaction/:path*",
     "/audit_log/:path*",
+    "/auth/signin",
     "/manager_settings/:path*",
     "/nurse_dashboard/:path*",
     "/cashier_dashboard/:path*",

@@ -19,9 +19,10 @@ import { pusherClient } from "@/lib/pusher/client";
 import { useEmergencyModal } from "@/lib/store/emergency-modal";
 import EmergencyOrderModal from "./EmergencyModal";
 import { Notification } from "@/lib/interfaces";
+import { HeaderSkeleton } from "./Skeleton";
 
 const Header = () => {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const userRole = session?.user.role;
   const MemoMobileMenu = memo(MobileMenu);
   const emergencyModal = useEmergencyModal();
@@ -56,6 +57,10 @@ const Header = () => {
       pusherClient.unsubscribe(`private-user-${session.user.id}`);
     };
   }, [session?.user?.id, emergencyModal]);
+
+  if (status === "loading") {
+    return <HeaderSkeleton />;
+  }
 
   return (
     <div className="fixed top-0 w-full bg-white mb-5 shadow-md z-20">
