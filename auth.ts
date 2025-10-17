@@ -26,14 +26,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           typeof credentials.email !== "string" ||
           typeof credentials.password !== "string"
         ) {
-          throw new Error("Invalid email or password.");
+          return null;
         }
 
         const user = await db.user.findUnique({
           where: { email: credentials.email },
         });
 
-        if (!user) throw new Error("USER_NOT_FOUND");
+        if (!user) {
+          return null;
+        }
 
         if (user.status === "DISABLE") {
           throw new Error("DISABLED_ACCOUNT");
@@ -44,7 +46,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           user.password
         );
 
-        if (!isPasswordCorrect) throw new Error("INVALID_CREDENTIALS");
+        if (!isPasswordCorrect) {
+          return null;
+        }
 
         return {
           id: user.id.toString(),

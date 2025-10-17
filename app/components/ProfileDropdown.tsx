@@ -1,4 +1,3 @@
-import React from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,9 +17,12 @@ import { useModal } from "../hooks/useModal";
 import EditProfileModal from "./EditProfileModal";
 import { FaCircleUser, FaUserGear, FaBoxArchive } from "react-icons/fa6";
 import { BiLogOut } from "react-icons/bi";
+import { useSession } from "next-auth/react";
+import { ProfileSkeleton } from "./Skeleton";
 
 const ProfileDropdown = ({ session }: { session: Session | null }) => {
   const { open, close, isOpen } = useModal();
+  const { status } = useSession();
 
   return (
     <div>
@@ -40,12 +42,18 @@ const ProfileDropdown = ({ session }: { session: Session | null }) => {
               </button>
             </div>
             <div>
-              <p className="font-medium text-[15px]">
-                {session?.user.username}
-              </p>
-              <p className="text-[12px] text-slate-500 font-medium">
-                {session?.user.role}
-              </p>
+              {status === "loading" ? (
+                <ProfileSkeleton />
+              ) : (
+                <>
+                  <p className="font-medium text-[15px]">
+                    {session?.user.username}
+                  </p>
+                  <p className="text-[12px] text-slate-500 font-medium">
+                    {session?.user.role}
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </DropdownMenuTrigger>

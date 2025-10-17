@@ -6,23 +6,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export function HeaderSkeleton() {
+export const HeaderLinksSkeleton = () => (
+  <ul className="bg-white rounded-full p-[5px] flex gap-8 py-[10px] sm:hidden xl:flex">
+    {[1, 2, 3, 4].map((i) => (
+      <li key={i}>
+        <div className="h-5 w-20 bg-gray-200 rounded-full animate-pulse" />
+      </li>
+    ))}
+  </ul>
+);
+
+export function ProfileSkeleton() {
   return (
     <>
-      <div className="fixed top-0 w-full bg-white mb-5 shadow-md z-20 py-6">
-        <div className="flex justify-between items-center px-10 2xl:max-w-screen-3xl mx-auto">
-          <div className="h-6 w-40 rounded bg-gray-100"></div>
-
-          <div className="flex items-center gap-8">
-            <div className="h-4 w-20 bg-gray-200 rounded" />
-            <div className="h-4 w-20 bg-gray-200 rounded" />
-            <div className="h-4 w-20 bg-gray-200 rounded" />
-            <div className="h-4 w-20 bg-gray-200 rounded" />
-          </div>
-          <div className="flex items-center relative">
-            <div className="h-6 w-40 rounded bg-gray-100"></div>
-          </div>
-        </div>
+      <div className="flex flex-col gap-1">
+        <div className="h-4 w-24 rounded bg-gray-200 animate-pulse"></div>
+        <div className="h-3 w-16 rounded bg-gray-200 animate-pulse"></div>
       </div>
     </>
   );

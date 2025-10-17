@@ -126,40 +126,46 @@ const RequestOrderModal = ({ close }: Props) => {
         <form className="pb-[70px] mt-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="overflow-y-auto max-h-[calc(95vh-150px)]">
             <div className="px-8 flex flex-col gap-4 border-b pb-4">
-              <FormField label="Patient Name">
-                <Input
-                  placeholder="patient name"
-                  {...register("patient_name")}
-                  className={`w-full ${
-                    errors.patient_name
-                      ? "border-red-500 focus:ring-red-500"
-                      : ""
-                  }`}
-                />
-              </FormField>
-              {errors.patient_name && (
-                <p className="text-sm text-red-500 mt-1 ">
-                  {" "}
-                  {errors.patient_name.message}
-                </p>
-              )}{" "}
-              <div className="flex items-center gap-8">
-                <FormField label="Room#">
+              <div>
+                <FormField label="Patient Name">
                   <Input
-                    placeholder="room number"
-                    {...register("room_number")}
+                    placeholder="patient name"
+                    {...register("patient_name")}
                     className={`w-full ${
-                      errors.room_number
+                      errors.patient_name
                         ? "border-red-500 focus:ring-red-500"
                         : ""
                     }`}
                   />
                 </FormField>
-                {errors.room_number && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {errors.room_number.message}
+                {errors.patient_name && (
+                  <p className="text-sm text-red-500 mt-1 ">
+                    {" "}
+                    {errors.patient_name.message}
                   </p>
-                )}
+                )}{" "}
+              </div>
+
+              <div className="flex items-center gap-8">
+                <div>
+                  <FormField label="Room#">
+                    <Input
+                      placeholder="room number"
+                      {...register("room_number")}
+                      className={`w-full ${
+                        errors.room_number
+                          ? "border-red-500 focus:ring-red-500"
+                          : ""
+                      }`}
+                    />
+                  </FormField>
+                  {errors.room_number && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.room_number.message}
+                    </p>
+                  )}
+                </div>
+
                 <div className="flex flex-col">
                   <label className="text-sm font-medium">Type</label>
                   <div>

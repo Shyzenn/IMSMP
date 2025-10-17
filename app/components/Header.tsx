@@ -19,7 +19,7 @@ import { pusherClient } from "@/lib/pusher/client";
 import { useEmergencyModal } from "@/lib/store/emergency-modal";
 import EmergencyOrderModal from "./EmergencyModal";
 import { Notification } from "@/lib/interfaces";
-import { HeaderSkeleton } from "./Skeleton";
+import { HeaderLinksSkeleton } from "./Skeleton";
 
 const Header = () => {
   const { data: session, status } = useSession();
@@ -58,10 +58,6 @@ const Header = () => {
     };
   }, [session?.user?.id, emergencyModal]);
 
-  if (status === "loading") {
-    return <HeaderSkeleton />;
-  }
-
   return (
     <div className="fixed top-0 w-full bg-white mb-5 shadow-md z-20">
       <div className="flex justify-between items-center px-10 2xl:max-w-screen-3xl mx-auto">
@@ -73,7 +69,13 @@ const Header = () => {
           className="hidden xl:block"
         />
         <MemoMobileMenu />
-        <HeaderLinks userRole={userRole} />
+
+        {status === "loading" ? (
+          <HeaderLinksSkeleton />
+        ) : (
+          <HeaderLinks userRole={userRole} />
+        )}
+
         <div className="flex items-center relative">
           {userRole === "Pharmacist_Staff" && (
             <>
