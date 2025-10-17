@@ -52,11 +52,19 @@ export async function handleCredentialsSignIn({
     }
 
     // NextAuth will check the OTP (stored as password)
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    let result;
+    try {
+      result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+    } catch (error) {
+      if (error instanceof AuthError && error.type === "CredentialsSignin") {
+        return { message: "Wrong password" };
+      }
+      throw error;
+    }
 
     if (result?.error) {
       return { message: "Invalid OTP" };
@@ -89,7 +97,8 @@ export async function handleCredentialsSignIn({
       }
       return { message: error.message }; 
     }
-    throw error;
+    console.error("Unexpected error in handleCredentialsSignIn:", error);
+    return { message: "Something went wrong. Please try again." };
   }
 
 }
