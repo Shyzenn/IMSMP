@@ -6,20 +6,19 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   pages: {
-    signIn: "auth/signin",
+    signIn: "/auth/signin", 
+    error: "/unauthorized",
   },
+
   session: { strategy: "jwt", maxAge: 24 * 60 * 60 },
   secret: process.env.NEXTAUTH_SECRET,
   adapter: PrismaAdapter(db),
+
   providers: [
     Credentials({
       credentials: {
         email: { label: "Email", type: "email", placeholder: "example@email.com" },
-        password: {
-          label: "Password",
-          type: "password",
-          placeholder: "password",
-        },
+        password: { label: "Password", type: "password", placeholder: "password" },
       },
       async authorize(credentials) {
         if (
@@ -34,69 +33,75 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           where: { email: credentials.email },
         });
 
-        if (user?.status === "DISABLE") {
-          throw new Error("DISABLED_ACCOUNT"); 
+        if (!user) throw new Error("USER_NOT_FOUND");
+
+        if (user.status === "DISABLE") {
+          throw new Error("DISABLED_ACCOUNT");
         }
 
-        if (user && typeof credentials.password === "string") {
-          const isPasswordCorrect = await bcrypt.compare(
-            credentials.password,
-            user.password
-          );
-          if (isPasswordCorrect) {
-            return {
-              id: user.id.toString(),
-              email: user.email,
-              role: user.role,
-              status: user.status,
-              profileImage: user.profileImage
-            };
-          }
-        }
+        const isPasswordCorrect = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
 
-        return null;
+        if (!isPasswordCorrect) throw new Error("INVALID_CREDENTIALS");
+
+        return {
+          id: user.id.toString(),
+          email: user.email,
+          role: user.role,
+          status: user.status,
+          profileImage: user.profileImage,
+          mustChangePassword: user.mustChangePassword,
+        };
       },
     }),
   ],
- callbacks: {
+
+  callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (user) {
-        token.id = user.id as string;
-        token.role = user.role as string;
-        token.email = user.email as string;
-        token.status = user.status as string
-        token.profileImage = user.profileImage as string
+        token.id = user.id;
+        token.role = user.role;
+        token.email = user.email;
+        token.status = user.status;
+        token.profileImage = user.profileImage;
+        token.mustChangePassword = user.mustChangePassword;
       }
+
       if (trigger === "update" && session) {
         token = { ...token, ...session };
       }
+
       return token;
     },
-    async session({ session, token }) {
-       const dbUser = await db.user.findUnique({
-          where: { id: token.id as string },
-          select: { username: true },
-        });
 
-        session.user.id = token.id;
-        session.user.role = token.role;
-        session.user.email = token.email;
-        session.user.status = token.status;
-        session.user.username = dbUser?.username || null;
-        session.user.profileImage = token.profileImage as string | null;
-        return session;
+    async session({ session, token }) {
+      const dbUser = await db.user.findUnique({
+        where: { id: token.id as string },
+        select: { username: true },
+      });
+
+      session.user.id = token.id;
+      session.user.role = token.role;
+      session.user.email = token.email;
+      session.user.status = token.status;
+      session.user.username = dbUser?.username || null;
+      session.user.profileImage = token.profileImage ?? null;
+      session.user.mustChangePassword = token.mustChangePassword ?? false;
+
+      return session;
     },
+
     async signIn({ user }) {
-      
-      if (user.status === "DISABLE") {
-      return false
-      }
+      if (user.status === "DISABLE") return false;
+
       await prisma.user.update({
         where: { id: user.id },
         data: { isOnline: true },
       });
+
       return true;
     },
-
-  }
-}); 
+  },
+});

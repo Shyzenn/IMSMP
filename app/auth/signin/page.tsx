@@ -15,6 +15,7 @@ import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 
 import ForgotPasswordModal from "@/app/components/ForgotPasswordModal";
+import { useRouter } from "next/navigation";
 
 const Login = () => {
   const [manualError, setManualError] = useState<string | null>(null);
@@ -29,6 +30,8 @@ const Login = () => {
     resolver: zodResolver(signInSchema),
   });
 
+  const router = useRouter();
+
   const onSubmit = async (values: TSignInSchema) => {
     try {
       const result = await handleCredentialsSignIn(values);
@@ -36,7 +39,9 @@ const Login = () => {
         setManualError(result.message);
       }
       if (result?.redirectUrl) {
-        window.location.href = result.redirectUrl;
+        setTimeout(() => {
+          router.replace(result.redirectUrl);
+        }, 300);
       }
     } catch (error) {
       console.log("An unexpected error occurred. Please try again.", error);
