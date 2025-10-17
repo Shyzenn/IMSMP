@@ -7,6 +7,9 @@ export async function middleware(request: NextRequest) {
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
+    cookieName: process.env.NODE_ENV === "production"
+    ? "__Secure-authjs.session-token"
+    : "authjs.session-token",
   });
 
   const pathname = request.nextUrl.pathname;
@@ -38,6 +41,9 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
   }
+
+  console.log("🍪 Cookies in middleware:", request.cookies.getAll());
+  console.log("🎫 Token from getToken:", token);
 
   return NextResponse.next();
 }
