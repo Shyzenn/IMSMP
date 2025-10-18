@@ -35,7 +35,10 @@ const EditProfileModal = ({ close }: { close: () => void }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const { data } = await axios.get("/api/user/me");
+        const { data } = await axios.get("/api/user/me", {
+          withCredentials: true,
+        });
+
         if (data) {
           reset({
             username: data.username,
