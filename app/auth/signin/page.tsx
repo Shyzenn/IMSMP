@@ -87,6 +87,11 @@ const Login = () => {
                   type={showPassword ? "text" : "password"}
                   autoComplete="off"
                 />
+                {errors.password && (
+                  <p className="mt-2 text-sm text-red-500">
+                    {errors.password.message}
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -97,11 +102,6 @@ const Login = () => {
                   {showPassword ? <FaRegEye /> : <FaRegEyeSlash />}
                 </button>
                 <div className="flex items-center justify-between">
-                  {errors.password && (
-                    <p className="text-sm text-red-500">
-                      {errors.password.message}
-                    </p>
-                  )}
                   <button
                     className="text-sm text-blue-500 ml-1 cursor-pointer hover:underline"
                     type="button"
@@ -111,7 +111,6 @@ const Login = () => {
                   </button>
                 </div>
               </div>
-
               {manualError && (
                 <p className="mt-2 text-sm text-red-500 text-center">
                   {manualError}

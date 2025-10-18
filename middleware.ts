@@ -12,11 +12,14 @@ export async function middleware(request: NextRequest) {
     : "authjs.session-token",
   });
 
-  const pathname = request.nextUrl.pathname;
+  const { pathname } = request.nextUrl;
 
-  // If not logged in → redirect to login
   if (!token && !publicPaths.includes(pathname)) {
-    return NextResponse.redirect(new URL("/auth/signin", request.url));
+    return NextResponse.redirect(new URL("/auth/signin", request.nextUrl.origin));
+  }
+
+  if (pathname === "/") {
+    return NextResponse.redirect(new URL("/auth/signin", request.nextUrl.origin));
   }
 
   if (token) {
@@ -47,6 +50,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/",
     "/dashboard/:path*",
     "/inventory/products/:path*",
     "/inventory/batches/:path*",
