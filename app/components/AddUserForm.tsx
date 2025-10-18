@@ -39,10 +39,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
     <>
       <Card className="w-[400px] bg-white ">
         <div className="flex justify-end">
-          <button
-            className="mt-2 mx-2 text-2xl"
-            onClick={() => setIsOpen(false)}
-          >
+          <button className="mt-2 mx-2" onClick={() => setIsOpen(false)}>
             <RxCross2 />
           </button>
         </div>
@@ -100,7 +97,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
               </div>
             </div>
             <Button
-              className="w-full py-5 mt-8 text-center bg-green-500 text-white hover:bg-green-600"
+              className="w-full py-5 mt-8 text-center bg-buttonBgColor text-white hover:bg-buttonHover"
               type="submit"
               disabled={isSubmitting}
             >

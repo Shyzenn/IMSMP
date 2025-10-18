@@ -9,6 +9,7 @@ const BatchFilter = () => {
         { label: "All", value: "all" },
         { label: "Product", value: "Product" },
         { label: "Product Batch", value: "Product Batch" },
+        { label: "Order Request", value: "Order Request" },
       ]}
     />
   );

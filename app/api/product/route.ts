@@ -2,7 +2,6 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { addProductSchema } from "@/lib/types";
 import { auth } from "@/auth";
-import { NotificationType } from "@prisma/client";
 
 // create product
 export async function POST(req: Request) {
@@ -79,32 +78,6 @@ export async function POST(req: Request) {
         description: `Product "${newProduct.product_name}" created by ${session.user.username} (${session.user.role})`,
       },
     });
-
-     const managers = await db.user.findMany({
-      where: {role: "Manager"}
-    })
-
-    const notifications = managers.map((manager) => ({
-      title: "New Product Added",
-      message: JSON.stringify({
-        productName: product_name,
-        submittedBy: session.user.username,
-        role: session.user.role
-      }),
-      type: NotificationType.ADD_PRODUCT,
-      senderId: session.user.id,
-      recipientId: manager.id,
-    }))
-
-    await db.notification.createMany({data: notifications})
-
-    //  for (const notification of notifications) {
-    //     sendNotification(notification.recipientId, {
-    //       title: notification.title,
-    //       message: notification.message,
-    //       type: notification.type,
-    //     });
-    //   }
 
     return NextResponse.json({ success: true });
   } catch (error) {
