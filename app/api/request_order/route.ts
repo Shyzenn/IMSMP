@@ -29,86 +29,67 @@ export async function POST(req: Request) {
 
     const { room_number, patient_name, status, products, type, notes } = result.data;
 
-    const newOrder = await db.$transaction(
-      async (tx) => {
-        // Create order
-        const createdOrder = await tx.orderRequest.create({
-          data: {
-            room_number,
-            patient_name,
-            status,
-            userId,
-            type,
-            notes,
-            items: {
-              create: products.map((product) => ({
-                quantity: product.quantity,
-                product: {
-                  connect: {
-                    product_name: product.productId,
-                  },
-                },
-              })),
+    const newOrder = await db.orderRequest.create({
+      data: {
+        room_number,
+        patient_name,
+        status,
+        userId,
+        type,
+        notes,
+        items: {
+          create: products.map((product) => ({
+            quantity: product.quantity,
+            product: {
+              connect: { product_name: product.productId },
             },
-          },
+          })),
+        },
+      },
+      include: {
+        items: { include: { product: true } },
+      },
+    });
+
+    if (type === "EMERGENCY") {
+      const today = new Date();
+
+      for (const item of newOrder.items) {
+        const dbProduct = await db.product.findUnique({
+          where: { id: item.product.id },
           include: {
-            items: {
-              include: {
-                product: true,
+            batches: {
+              where: {
+                expiryDate: { gte: today },
+                quantity: { gt: 0 },
               },
+              orderBy: { expiryDate: "asc" },
             },
           },
         });
 
-        // Deduct if emergency
-        if (type === "EMERGENCY") {
-          const today = new Date();
+        if (!dbProduct) continue;
 
-          for (const item of createdOrder.items) {
-            const dbProduct = await tx.product.findUnique({
-              where: { id: item.product.id },
-              include: {
-                batches: {
-                  where: {
-                    expiryDate: { gte: today },
-                    quantity: { gt: 0 },
-                  },
-                  orderBy: { expiryDate: "asc" },
-                },
-              },
-            });
+        let remainingQty = item.quantity;
 
-            if (!dbProduct) throw new Error(`Product not found: ${item.product.product_name}`);
+        for (const batch of dbProduct.batches) {
+          if (remainingQty <= 0) break;
 
-            let remainingQty = item.quantity;
-            const updates = [];
+          const deduction = Math.min(batch.quantity, remainingQty);
 
-            for (const batch of dbProduct.batches) {
-              if (remainingQty <= 0) break;
+          await db.productBatch.update({
+            where: { id: batch.id },
+            data: { quantity: batch.quantity - deduction },
+          });
 
-              const deduction = Math.min(batch.quantity, remainingQty);
-              updates.push(
-                tx.productBatch.update({
-                  where: { id: batch.id },
-                  data: { quantity: batch.quantity - deduction },
-                })
-              );
-
-              remainingQty -= deduction;
-            }
-
-            if (remainingQty > 0) {
-              throw new Error(`Insufficient stock for ${dbProduct.product_name}`);
-            }
-
-            await Promise.all(updates);
-          }
+          remainingQty -= deduction;
         }
 
-        return createdOrder;
-      },
-      { timeout: 20000 } 
-    );
+        if (remainingQty > 0) {
+          console.warn(`⚠️ Not enough stock for ${dbProduct.product_name}`);
+        }
+      }
+    }
 
     // Send notification to the Pharmacist Staff
     const pharmacists = await db.user.findMany({
