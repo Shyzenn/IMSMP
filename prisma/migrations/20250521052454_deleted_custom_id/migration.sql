@@ -5,7 +5,7 @@
 
 */
 -- DropIndex
-DROP INDEX `OrderRequest_customId_key` ON `orderrequest`;
+DROP INDEX `OrderRequest_customId_key` ON `OrderRequest`;
 
 -- AlterTable
-ALTER TABLE `orderrequest` DROP COLUMN `customId`;
+ALTER TABLE `OrderRequest` DROP COLUMN `customId`;

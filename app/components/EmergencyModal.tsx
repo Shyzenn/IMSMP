@@ -64,10 +64,12 @@ export default function EmergencyOrderModal() {
               </div>
             )}
 
-            <div className="border rounded-lg p-3">
-              <p className="font-semibold text-lg">Notes:</p>
-              {notes}
-            </div>
+            {notes.length > 0 ? (
+              <div className="border rounded-lg p-3">
+                <p className="font-semibold text-lg">Notes:</p>
+                {notes}
+              </div>
+            ) : null}
           </div>
 
           <div className="flex justify-end mt-4 print:hidden gap-4">

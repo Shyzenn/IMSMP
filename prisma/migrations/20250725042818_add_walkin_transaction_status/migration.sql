@@ -5,4 +5,4 @@
 
 */
 -- AlterTable
-ALTER TABLE `walkintransaction` ADD COLUMN `status` ENUM('pending', 'for_payment', 'paid') NOT NULL;
+ALTER TABLE `WalkInTransaction` ADD COLUMN `status` ENUM('pending', 'for_payment', 'paid') NOT NULL;

@@ -1,5 +1,5 @@
 -- AlterTable
-ALTER TABLE `notification` ADD COLUMN `orderId` INTEGER NULL,
+ALTER TABLE `Notification` ADD COLUMN `orderId` INTEGER NULL,
     ADD COLUMN `productId` INTEGER NULL;
 
 -- AddForeignKey

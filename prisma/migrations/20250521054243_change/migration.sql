@@ -12,31 +12,31 @@
 
 */
 -- DropForeignKey
-ALTER TABLE `orderitem` DROP FOREIGN KEY `OrderItem_orderId_fkey`;
+ALTER TABLE `OrderItem` DROP FOREIGN KEY `OrderItem_orderId_fkey`;
 
 -- DropForeignKey
-ALTER TABLE `orderitem` DROP FOREIGN KEY `OrderItem_productId_fkey`;
+ALTER TABLE `OrderItem` DROP FOREIGN KEY `OrderItem_productId_fkey`;
 
 -- DropIndex
-DROP INDEX `OrderItem_orderId_fkey` ON `orderitem`;
+DROP INDEX `OrderItem_orderId_fkey` ON `OrderItem`;
 
 -- DropIndex
-DROP INDEX `OrderItem_productId_fkey` ON `orderitem`;
+DROP INDEX `OrderItem_productId_fkey` ON `OrderItem`;
 
 -- AlterTable
-ALTER TABLE `orderitem` DROP PRIMARY KEY,
+ALTER TABLE `OrderItem` DROP PRIMARY KEY,
     MODIFY `id` INTEGER NOT NULL AUTO_INCREMENT,
     MODIFY `orderId` INTEGER NOT NULL,
     MODIFY `productId` INTEGER NOT NULL,
     ADD PRIMARY KEY (`id`);
 
 -- AlterTable
-ALTER TABLE `orderrequest` DROP PRIMARY KEY,
+ALTER TABLE `OrderRequest` DROP PRIMARY KEY,
     MODIFY `id` INTEGER NOT NULL AUTO_INCREMENT,
     ADD PRIMARY KEY (`id`);
 
 -- AlterTable
-ALTER TABLE `product` DROP PRIMARY KEY,
+ALTER TABLE `Product` DROP PRIMARY KEY,
     MODIFY `id` INTEGER NOT NULL AUTO_INCREMENT,
     ADD PRIMARY KEY (`id`);
 

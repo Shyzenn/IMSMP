@@ -6,5 +6,5 @@
 
 */
 -- AlterTable
-ALTER TABLE `notification` DROP COLUMN `Title`,
+ALTER TABLE `Notification` DROP COLUMN `Title`,
     ADD COLUMN `title` VARCHAR(191) NOT NULL;

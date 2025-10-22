@@ -5,7 +5,7 @@
 
 */
 -- AlterTable
-ALTER TABLE `user` ADD COLUMN `status` ENUM('ACTIVE', 'DISABLE') NOT NULL;
+ALTER TABLE `User` ADD COLUMN `status` ENUM('ACTIVE', 'DISABLE') NOT NULL;
 
 -- CreateTable
 CREATE TABLE `AuditLog` (

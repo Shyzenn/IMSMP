@@ -5,4 +5,4 @@
 
 */
 -- AlterTable
-ALTER TABLE `productbatch` ADD COLUMN `updatedAt` DATETIME(3) NOT NULL;
+ALTER TABLE `ProductBatch` ADD COLUMN `updatedAt` DATETIME(3) NOT NULL;

@@ -5,13 +5,13 @@
 
 */
 -- DropForeignKey
-ALTER TABLE `notification` DROP FOREIGN KEY `Notification_orderId_fkey`;
+ALTER TABLE `Notification` DROP FOREIGN KEY `Notification_orderId_fkey`;
 
 -- DropForeignKey
-ALTER TABLE `notification` DROP FOREIGN KEY `Notification_recipientId_fkey`;
+ALTER TABLE `Notification` DROP FOREIGN KEY `Notification_recipientId_fkey`;
 
 -- DropForeignKey
-ALTER TABLE `notification` DROP FOREIGN KEY `Notification_userId_fkey`;
+ALTER TABLE `Notification` DROP FOREIGN KEY `Notification_userId_fkey`;
 
 -- DropTable
-DROP TABLE `notification`;
+DROP TABLE `Notification`;

@@ -6,13 +6,13 @@
 
 */
 -- DropForeignKey
-ALTER TABLE `notification` DROP FOREIGN KEY `Notification_recipientId_fkey`;
+ALTER TABLE `Notification` DROP FOREIGN KEY `Notification_recipientId_fkey`;
 
 -- DropForeignKey
-ALTER TABLE `notification` DROP FOREIGN KEY `Notification_senderId_fkey`;
+ALTER TABLE `Notification` DROP FOREIGN KEY `Notification_senderId_fkey`;
 
 -- AlterTable
-ALTER TABLE `user` MODIFY `role` ENUM('Pharmacist_Staff', 'Nurse', 'Manager', 'Cashier') NOT NULL;
+ALTER TABLE `User` MODIFY `Role` ENUM('Pharmacist_Staff', 'Nurse', 'Manager', 'Cashier') NOT NULL;
 
 -- DropTable
-DROP TABLE `notification`;
+DROP TABLE `Notification`;

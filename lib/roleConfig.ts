@@ -1,4 +1,17 @@
 export const roleConfig = {
+   SuperAdmin: {
+    base: "/dashboard",
+    routes: [
+      "/dashboard",
+      "/inventory/products",
+      "/inventory/batches",
+      "/transaction",
+      "/audit_log",
+      "/manager_settings",
+      "/user_management",
+      "/archive"
+    ],
+  },
   Manager: {
     base: "/dashboard",
     routes: [

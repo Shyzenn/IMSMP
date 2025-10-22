@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE `orderrequest` ADD COLUMN `notes` VARCHAR(191) NULL;
+ALTER TABLE `OrderRequest` ADD COLUMN `notes` VARCHAR(191) NULL;

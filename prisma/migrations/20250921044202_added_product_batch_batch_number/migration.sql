@@ -5,4 +5,4 @@
 
 */
 -- AlterTable
-ALTER TABLE `productbatch` ADD COLUMN `batchNumber` INTEGER NOT NULL;
+ALTER TABLE `ProductBatch` ADD COLUMN `batchNumber` INTEGER NOT NULL;

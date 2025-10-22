@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE `orderrequest` ADD COLUMN `read` BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE `OrderRequest` ADD COLUMN `read` BOOLEAN NOT NULL DEFAULT false;

@@ -5,5 +5,5 @@
 
 */
 -- AlterTable
-ALTER TABLE `notification` DROP COLUMN `isRead`,
+ALTER TABLE `Notification` DROP COLUMN `isRead`,
     ADD COLUMN `read` BOOLEAN NOT NULL DEFAULT false;

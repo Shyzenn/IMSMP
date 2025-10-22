@@ -64,6 +64,6 @@ export const config = {
     "/change-password",
     "/user_management",
     "/unauthorized",
-     "/archive",
+    "/archive",
   ],
 };

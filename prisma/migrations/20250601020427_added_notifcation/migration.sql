@@ -5,7 +5,7 @@
 
 */
 -- AlterTable
-ALTER TABLE `orderrequest` ADD COLUMN `userId` VARCHAR(191) NOT NULL;
+ALTER TABLE `OrderRequest` ADD COLUMN `userId` VARCHAR(191) NOT NULL;
 
 -- CreateTable
 CREATE TABLE `Notification` (

@@ -7,23 +7,23 @@
 
 */
 -- DropForeignKey
-ALTER TABLE `notification` DROP FOREIGN KEY `Notification_orderId_fkey`;
+ALTER TABLE `Notification` DROP FOREIGN KEY `Notification_orderId_fkey`;
 
 -- DropForeignKey
-ALTER TABLE `notification` DROP FOREIGN KEY `Notification_recipientId_fkey`;
+ALTER TABLE `Notification` DROP FOREIGN KEY `Notification_recipientId_fkey`;
 
 -- DropForeignKey
-ALTER TABLE `notification` DROP FOREIGN KEY `Notification_userId_fkey`;
+ALTER TABLE `Notification` DROP FOREIGN KEY `Notification_userId_fkey`;
 
 -- DropForeignKey
-ALTER TABLE `orderrequest` DROP FOREIGN KEY `OrderRequest_userId_fkey`;
+ALTER TABLE `OrderRequest` DROP FOREIGN KEY `OrderRequest_userId_fkey`;
 
 -- DropIndex
-DROP INDEX `OrderRequest_userId_fkey` ON `orderrequest`;
+DROP INDEX `OrderRequest_userId_fkey` ON `OrderRequest`;
 
 -- AlterTable
-ALTER TABLE `orderrequest` DROP COLUMN `read`,
+ALTER TABLE `OrderRequest` DROP COLUMN `read`,
     DROP COLUMN `userId`;
 
 -- DropTable
-DROP TABLE `notification`;
+DROP TABLE `Notification`;

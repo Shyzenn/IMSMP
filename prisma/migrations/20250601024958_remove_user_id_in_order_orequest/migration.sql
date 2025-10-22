@@ -5,10 +5,10 @@
 
 */
 -- DropForeignKey
-ALTER TABLE `orderrequest` DROP FOREIGN KEY `OrderRequest_userId_fkey`;
+ALTER TABLE `OrderRequest` DROP FOREIGN KEY `OrderRequest_userId_fkey`;
 
 -- DropIndex
-DROP INDEX `OrderRequest_userId_fkey` ON `orderrequest`;
+DROP INDEX `OrderRequest_userId_fkey` ON `OrderRequest`;
 
 -- AlterTable
-ALTER TABLE `orderrequest` DROP COLUMN `userId`;
+ALTER TABLE `OrderRequest` DROP COLUMN `userId`;

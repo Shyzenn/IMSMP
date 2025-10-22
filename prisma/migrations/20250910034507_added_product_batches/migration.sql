@@ -7,7 +7,7 @@
 
 */
 -- AlterTable
-ALTER TABLE `product` DROP COLUMN `expiryDate`,
+ALTER TABLE `Product` DROP COLUMN `expiryDate`,
     DROP COLUMN `quantity`,
     DROP COLUMN `releaseDate`;
 

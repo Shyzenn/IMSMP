@@ -5,7 +5,7 @@
 
 */
 -- AlterTable
-ALTER TABLE `orderrequest` ADD COLUMN `customId` VARCHAR(191) NOT NULL DEFAULT '';
+ALTER TABLE `OrderRequest` ADD COLUMN `customId` VARCHAR(191) NOT NULL DEFAULT '';
 
 -- CreateIndex
 CREATE UNIQUE INDEX `OrderRequest_customId_key` ON `OrderRequest`(`customId`);

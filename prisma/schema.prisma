@@ -7,6 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+seed {
+  run = "ts-node prisma/seed.ts"
+}
+
 model User {
   id       String @id @default(uuid())
   username String @unique
@@ -37,6 +41,14 @@ model User {
   ReceivedNotification Notification[] @relation("ReceivedNotification")
 }
 
+enum Role {
+  SuperAdmin
+  Pharmacist_Staff
+  Nurse
+  Manager
+  Cashier
+}
+
 enum UserStatus {
   ACTIVE
   DISABLE
@@ -53,14 +65,6 @@ model AuditLog {
   description String? // Human-readable summary
 
   createdAt DateTime @default(now())
-}
-
-enum Role {
-  SuperAdmin
-  Pharmacist_Staff
-  Nurse
-  Manager
-  Cashier
 }
 
 model Product {
@@ -83,6 +87,7 @@ model Product {
 
   categoryId Int?
   category   ProductCategory? @relation(fields: [categoryId], references: [id])
+
 }
 
 model ProductBatch {

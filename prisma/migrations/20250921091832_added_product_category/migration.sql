@@ -5,7 +5,7 @@
 
 */
 -- AlterTable
-ALTER TABLE `product` DROP COLUMN `category`,
+ALTER TABLE `Product` DROP COLUMN `category`,
     ADD COLUMN `categoryId` INTEGER NULL;
 
 -- CreateTable

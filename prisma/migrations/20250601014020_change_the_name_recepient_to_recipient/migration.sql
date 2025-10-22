@@ -6,13 +6,13 @@
 
 */
 -- DropForeignKey
-ALTER TABLE `notification` DROP FOREIGN KEY `Notification_recepientId_fkey`;
+ALTER TABLE `Notification` DROP FOREIGN KEY `Notification_recepientId_fkey`;
 
 -- DropIndex
-DROP INDEX `Notification_recepientId_fkey` ON `notification`;
+DROP INDEX `Notification_recepientId_fkey` ON `Notification`;
 
 -- AlterTable
-ALTER TABLE `notification` DROP COLUMN `recepientId`,
+ALTER TABLE `Notification` DROP COLUMN `recepientId`,
     ADD COLUMN `recipientId` VARCHAR(191) NOT NULL;
 
 -- AddForeignKey

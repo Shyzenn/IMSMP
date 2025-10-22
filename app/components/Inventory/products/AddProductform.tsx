@@ -22,6 +22,7 @@ const AddProductForm = () => {
   const { isOpen, open, close } = useModal();
   const [isCategoryModalOpen, setCategoryModalOpen] = useState(false);
   const [newCategory, setNewCategory] = useState("");
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
 
   const {
     register,
@@ -62,12 +63,15 @@ const AddProductForm = () => {
     if (!newCategory.trim()) return;
 
     try {
+      setIsAddingCategory(true);
       await addCategory(newCategory, refetch);
       toast.success("Category added successfully!");
       setCategoryModalOpen(false);
       setNewCategory("");
     } catch {
       toast.error("Failed to add category. Please try again.");
+    } finally {
+      setIsAddingCategory(false);
     }
   };
 
@@ -168,7 +172,11 @@ const AddProductForm = () => {
                 onClick={handleAddCategory}
                 className="px-4 py-2 bg-buttonBgColor text-white rounded-md hover:bg-buttonHover"
               >
-                Save
+                {isAddingCategory ? (
+                  <LoadingButton color="text-white" />
+                ) : (
+                  "Save"
+                )}
               </button>
             </div>
           </div>

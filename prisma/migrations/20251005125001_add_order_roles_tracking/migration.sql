@@ -1,5 +1,5 @@
 -- AlterTable
-ALTER TABLE `orderrequest` ADD COLUMN `processedAt` DATETIME(3) NULL,
+ALTER TABLE `OrderRequest` ADD COLUMN `processedAt` DATETIME(3) NULL,
     ADD COLUMN `processedById` VARCHAR(191) NULL,
     ADD COLUMN `receivedAt` DATETIME(3) NULL,
     ADD COLUMN `receivedById` VARCHAR(191) NULL;
