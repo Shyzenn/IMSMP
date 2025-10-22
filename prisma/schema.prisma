@@ -56,6 +56,7 @@ model AuditLog {
 }
 
 enum Role {
+  SuperAdmin
   Pharmacist_Staff
   Nurse
   Manager
