@@ -10,6 +10,7 @@ import { TableComponentProps } from "@/lib/interfaces";
 import { useSession } from "next-auth/react";
 
 function TableComponent<T extends Record<string, unknown>>({
+  largeContainer,
   columns,
   data,
   setIsOrderModalOpen,
@@ -23,88 +24,103 @@ function TableComponent<T extends Record<string, unknown>>({
   const { data: session } = useSession();
   const userRole = session?.user.role;
 
+  const reusableTalbe = () => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          {columns.map((column) => (
+            <TableHead
+              key={column.accessor}
+              className={column.align === "right" ? "text-right" : "text-left"}
+            >
+              {column.label}
+            </TableHead>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data.length === 0 ? (
+          <TableRow>
+            <TableCell
+              colSpan={columns.length}
+              className="text-center py-4 text-gray-500"
+            >
+              {noDataMessage || "No Data Available"}
+            </TableCell>
+          </TableRow>
+        ) : (
+          data.map((row, i) => {
+            const expiry = new Date(row.expiryDate as string);
+            const today = new Date();
+            const diffInDays = Math.ceil(
+              (expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+            );
+
+            let rowColor = "";
+            if (diffInDays <= 7) {
+              rowColor = "bg-red-50";
+            } else if (diffInDays <= 14) {
+              rowColor = "bg-orange-50";
+            } else if (diffInDays <= 21) {
+              rowColor = "bg-yellow-50";
+            }
+
+            return (
+              <TableRow key={i} className={colorCodeExpiry ? rowColor : ""}>
+                {columns.map((column) => (
+                  <TableCell
+                    key={column.accessor}
+                    className={`${
+                      column.align === "right" ? "text-right" : "text-left"
+                    } ${
+                      (interactiveRows && userRole === "Cashier") ||
+                      userRole === "Nurse"
+                        ? ""
+                        : "cursor-pointer"
+                    }`}
+                    onClick={() => {
+                      if (userRole === "Cashier" || userRole === "Nurse") {
+                        onRowClick?.(row);
+                      } else {
+                        onRowClick?.(row);
+                        setIsOrderModalOpen?.(true);
+                      }
+                    }}
+                  >
+                    {column.render
+                      ? column.render(row)
+                      : String(row[column.accessor])}
+                  </TableCell>
+                ))}
+              </TableRow>
+            );
+          })
+        )}
+      </TableBody>
+    </Table>
+  );
+
   return (
     <>
       <div className="flex items-center justify-between p-2">
         <p className="text-lg font-semibold">{title}</p>
         {filter && <div>{filter}</div>}
       </div>
-
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {columns.map((column) => (
-              <TableHead
-                key={column.accessor}
-                className={
-                  column.align === "right" ? "text-right" : "text-left"
-                }
-              >
-                {column.label}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={columns.length}
-                className="text-center py-4 text-gray-500"
-              >
-                {noDataMessage || "No Data Available"}
-              </TableCell>
-            </TableRow>
-          ) : (
-            data.map((row, i) => {
-              const expiry = new Date(row.expiryDate as string);
-              const today = new Date();
-              const diffInDays = Math.ceil(
-                (expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-              );
-
-              let rowColor = "";
-              if (diffInDays <= 7) {
-                rowColor = "bg-red-50";
-              } else if (diffInDays <= 14) {
-                rowColor = "bg-orange-50";
-              } else if (diffInDays <= 21) {
-                rowColor = "bg-yellow-50";
-              }
-
-              return (
-                <TableRow key={i} className={colorCodeExpiry ? rowColor : ""}>
-                  {columns.map((column) => (
-                    <TableCell
-                      key={column.accessor}
-                      className={`${
-                        column.align === "right" ? "text-right" : "text-left"
-                      } ${
-                        (interactiveRows && userRole === "Cashier") ||
-                        userRole === "Nurse"
-                          ? ""
-                          : "cursor-pointer"
-                      }`}
-                      onClick={() => {
-                        if (userRole === "Cashier" || userRole === "Nurse") {
-                          onRowClick?.(row);
-                        } else {
-                          onRowClick?.(row);
-                          setIsOrderModalOpen?.(true);
-                        }
-                      }}
-                    >
-                      {column.render
-                        ? column.render(row)
-                        : String(row[column.accessor])}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              );
-            })
-          )}
-        </TableBody>
-      </Table>
+      {largeContainer ? (
+        <div className="overflow-x-auto md:max-w-full">
+          <div
+            className={` ${
+              userRole === "Cashier" || userRole === "Nurse"
+                ? "min-w-[800px]"
+                : "min-w-[700px]"
+            }`}
+          >
+            {reusableTalbe()}
+          </div>
+        </div>
+      ) : (
+        reusableTalbe()
+      )}
     </>
   );
 }

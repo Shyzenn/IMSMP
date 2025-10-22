@@ -9,6 +9,7 @@ import ProductFilter from "./Inventory/products/ProductFilter";
 import TransactionFilter from "./transaction/TransactionFilter";
 import AuditFilter from "./auditLog/AuditFilter";
 import ArchiveFilter from "./archive/ArchiveFilter";
+import { MdOutlineFileDownload } from "react-icons/md";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -300,97 +301,110 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
   };
 
   return (
-    <div className="mb-4 flex items-center justify-between gap-4">
-      <p className="text-2xl font-semibold">{title}</p>
+    <>
+      <div className="flex flex-col md:flex-row gap-4 w-full md:justify-between mb-4">
+        <div className="flex items-center gap-4">
+          <p className="text-2xl font-semibold">{title}</p>
+        </div>
+        <div className="w-auto md:w-[10rem] lg:w-[30rem] border px-6 rounded-full flex items-center gap-2 bg-gray-50">
+          <Search placeholder="Search..." />
+        </div>
+        <div className="flex gap-4 flex-col md:flex-row md:items-center md:justify-end">
+          <div className="flex gap-4">
+            {isProductFilter ? (
+              <ProductFilter />
+            ) : isTransactionFilter ? (
+              <TransactionFilter />
+            ) : isBatchFilter ? (
+              <BatchFilter />
+            ) : isArchiveFilter ? (
+              <ArchiveFilter />
+            ) : (
+              <AuditFilter />
+            )}
 
-      <div className="w-[30rem] border px-6 rounded-full flex items-center gap-2 bg-gray-50">
-        <Search placeholder="Search..." />
+            {batchExport && (
+              <>
+                {(session?.user.role === "Manager" ||
+                  session?.user.role === "Pharmacist_Staff") && (
+                  <div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline">PDF Export</Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem
+                          onClick={() => handleDownload("allBatches")}
+                        >
+                          All Batches
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                          onClick={() => handleDownload("expiring")}
+                        >
+                          Expiring Batches
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDownload("expired")}
+                        >
+                          Expired Batches
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          <div className="flex justify-between md:gap-4 md:flex-row-reverse items-center">
+            {hasDateFilter && <DateRangeFilter onChange={handleDateChange} />}
+
+            {transactionExport && (
+              <Button variant="outline" onClick={handleTransactionDownload}>
+                PDF Export
+              </Button>
+            )}
+            {hasAddProduct && (
+              <>
+                {(session?.user.role === "Manager" ||
+                  session?.user.role === "Pharmacist_Staff") && (
+                  <div>
+                    <AddProductForm />
+                  </div>
+                )}
+              </>
+            )}
+            {productExport && (
+              <>
+                {(session?.user.role === "Manager" ||
+                  session?.user.role === "Pharmacist_Staff") && (
+                  <div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="border rounded-md flex py-2 md:py-[7px] md:text-sm px-4 gap-2 items-center font-semibold hover:bg-slate-50 duration-200 ease-in-out">
+                          PDF <MdOutlineFileDownload />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => handleDownload("all")}>
+                          All Products
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                          onClick={() => handleDownload("lowStock")}
+                        >
+                          Low Stock Products
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
       </div>
-
-      {hasDateFilter && <DateRangeFilter onChange={handleDateChange} />}
-
-      <div>
-        {isProductFilter ? (
-          <ProductFilter />
-        ) : isTransactionFilter ? (
-          <TransactionFilter />
-        ) : isBatchFilter ? (
-          <BatchFilter />
-        ) : isArchiveFilter ? (
-          <ArchiveFilter />
-        ) : (
-          <AuditFilter />
-        )}
-      </div>
-
-      {productExport && (
-        <>
-          {(session?.user.role === "Manager" ||
-            session?.user.role === "Pharmacist_Staff") && (
-            <div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline">PDF Export</Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => handleDownload("all")}>
-                    All Products
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem onClick={() => handleDownload("lowStock")}>
-                    Low Stock Products
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
-        </>
-      )}
-
-      {batchExport && (
-        <>
-          {(session?.user.role === "Manager" ||
-            session?.user.role === "Pharmacist_Staff") && (
-            <div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline">PDF Export</Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem
-                    onClick={() => handleDownload("allBatches")}
-                  >
-                    All Batches
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem onClick={() => handleDownload("expiring")}>
-                    Expiring Batches
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleDownload("expired")}>
-                    Expired Batches
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
-        </>
-      )}
-
-      {hasAddProduct && (
-        <>
-          {(session?.user.role === "Manager" ||
-            session?.user.role === "Pharmacist_Staff") && (
-            <div>
-              <AddProductForm />
-            </div>
-          )}
-        </>
-      )}
-      {transactionExport && (
-        <Button variant="outline" onClick={handleTransactionDownload}>
-          PDF Export
-        </Button>
-      )}
 
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent>
@@ -405,7 +419,7 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 };
 

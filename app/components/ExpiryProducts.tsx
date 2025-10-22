@@ -41,6 +41,7 @@ const ExpiryProducts = () => {
   return (
     <div className="mx-4 overflow-auto">
       <TableComponent
+        largeContainer={false}
         data={formattedData}
         columns={columns}
         title="Product Expiring Soon"

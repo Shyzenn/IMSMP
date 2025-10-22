@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/table";
 
 export const HeaderLinksSkeleton = () => (
-  <ul className="bg-white rounded-full p-[5px] flex gap-8 py-[10px] sm:hidden xl:flex">
+  <ul className="bg-white rounded-full p-[5px] lg:flex gap-8 py-[10px] hidden">
     {[1, 2, 3, 4].map((i) => (
       <li key={i}>
         <div className="h-5 w-20 bg-gray-200 rounded-full animate-pulse" />
@@ -125,11 +125,11 @@ export function TableRowSkeleton({
 
 export function CardSkeleton() {
   return (
-    <div className="flex gap-5 h-32">
+    <div className="grid grid-cols-2 gap-4 lg:flex">
       {Array.from({ length: 4 }).map((_, index) => (
         <div
           key={index}
-          className="animate-pulse shadow-sm bg-white flex-1 py-2 px-3 flex flex-col justify-between rounded-md"
+          className="animate-pulse shadow-sm bg-white flex-1 py-2 px-3 flex flex-col justify-between rounded-md h-[7rem] lg:h-[8rem]"
         >
           <div className="flex-1">
             <div className="h-4 bg-gray-300 rounded w-3/4 mb-2" />

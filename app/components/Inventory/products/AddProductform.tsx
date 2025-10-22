@@ -74,7 +74,7 @@ const AddProductForm = () => {
   return (
     <>
       <AddButton
-        label="Add New Product"
+        label="Add Product"
         className="px-4 py-2 flex items-center gap-2"
         onClick={open}
         icon={<IoMdAdd className="text-xl " />}

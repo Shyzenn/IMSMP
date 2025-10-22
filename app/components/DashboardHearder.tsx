@@ -8,6 +8,7 @@ import { CiWarning } from "react-icons/ci";
 import { FaCheckDouble } from "react-icons/fa";
 import { useQuery } from "@tanstack/react-query";
 import RequestOrderBtn from "./RequestOrderBtn";
+import WalkInOrder from "./WalkInOrder";
 
 function getGreeting() {
   const now = new Date();
@@ -83,9 +84,9 @@ const DashboardHeader = ({ session }: { session: Session | null }) => {
   }, [alerts]);
 
   return (
-    <div className="flex justify-between">
+    <div className="lg:flex lg:justify-between">
       {/* Greeting */}
-      <div>
+      <div className="mb-2 lg:mb-0">
         <p className="font-semibold text-gray-700">
           {greeting}, {capitalLetter(name)}
         </p>
@@ -95,9 +96,9 @@ const DashboardHeader = ({ session }: { session: Session | null }) => {
       </div>
 
       {/* Alerts + Add Button */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between mb-4">
         {isLoading ? (
-          <div className="bg-gray-100 px-8 py-3 rounded-md w-[25rem] animate-pulse">
+          <div className="bg-gray-100 px-8 py-3 rounded-md md:w-[25rem] animate-pulse w-full">
             <p className="text-sm text-gray-500">...</p>
           </div>
         ) : error ? (
@@ -105,7 +106,7 @@ const DashboardHeader = ({ session }: { session: Session | null }) => {
             <p className="text-sm text-red-500">Failed to load alerts</p>
           </div>
         ) : alerts.length > 0 ? (
-          <div className="bg-orange-100 flex gap-2 px-8 py-3 rounded-md w-[25rem]">
+          <div className="bg-orange-100 flex gap-2 px-8 py-3 rounded-md md:w-[25rem] w-full">
             <CiWarning className="text-orange-500 text-xl" />
             <p key={animKey} className="text-sm text-amber-700 slow-blink">
               {alerts[currentIndex]}
@@ -121,10 +122,20 @@ const DashboardHeader = ({ session }: { session: Session | null }) => {
         )}
 
         {(role === "Pharmacist_Staff" || role === "Manager") && (
-          <AddProductForm />
+          <div>
+            <AddProductForm />
+          </div>
         )}
-
-        {role === "Nurse" && <RequestOrderBtn />}
+        {role === "Pharmacist_Staff" && (
+          <div className="md:hidden">
+            <WalkInOrder />
+          </div>
+        )}
+        {role === "Nurse" && (
+          <div>
+            <RequestOrderBtn />
+          </div>
+        )}
       </div>
     </div>
   );

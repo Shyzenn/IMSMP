@@ -1,10 +1,8 @@
 import CashierDashboardCards from "@/app/components/CashierDashboardCards";
 import DashboardHearder from "@/app/components/DashboardHearder";
-import ExpiryProducts from "@/app/components/ExpiryProducts";
 import ManagerRecentReqTable from "@/app/components/PharmacistRecentReqTable";
 import SalesByCategory from "@/app/components/SalesByCategory";
 import SalesGraph from "@/app/components/SalesGraph";
-import TopRequestedProducts from "@/app/components/OrderTypeChart";
 import TopSellingProducts from "@/app/components/TopSellingProductChart";
 import { auth } from "@/auth";
 
@@ -17,29 +15,22 @@ export default async function Dashboard() {
     <div className="h-full flex flex-col gap-5 mb-4">
       <DashboardHearder session={session} />
       <CashierDashboardCards />
-      <div className="h-96 flex gap-x-4 w-full">
-        <div className="w-[70%] bg-white rounded-md shadow-md">
+
+      <div className="h-auto lg:h-96 flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
+        <div className="w-full lg:w-[70%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-96">
           <ManagerRecentReqTable userRole={userRole} />
         </div>
-        <div className="bg-white w-[40%] rounded-md shadow-md">
-          <ExpiryProducts />
+        <div className="w-full lg:w-[30%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-96">
+          <SalesByCategory />
         </div>
       </div>
 
-      <div className="h-[30rem] flex gap-x-4 w-full">
-        <div className="bg-white w-[40%] rounded-md shadow-md">
-          <TopRequestedProducts />
-        </div>
-        <div className="w-[60%] h-full bg-white rounded-md shadow-md">
+      <div className="h-auto lg:h-[30rem] flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
+        <div className="bg-white lg:w-[50%] rounded-md shadow-md w-full">
           <TopSellingProducts />
         </div>
-      </div>
-      <div className="h-[28rem] flex gap-x-4 w-full">
-        <div className="w-[65%]">
+        <div className="w-full lg:w-[50%] h-[30rem]">
           <SalesGraph username={username} />
-        </div>
-        <div className="bg-white w-[35%] rounded-md shadow-md">
-          <SalesByCategory />
         </div>
       </div>
     </div>

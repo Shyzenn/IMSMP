@@ -14,30 +14,32 @@ export default async function Dashboard() {
   return (
     <div className="h-full flex flex-col gap-5 mb-4">
       <DashboardHearder session={session} />
+
       <NurseCards />
-      <div className="h-96 flex gap-x-4 w-full">
-        <div className="bg-white w-[40%] rounded-md shadow-md">
-          <ExpiryProducts />
-        </div>
-        <div className="w-[70%] bg-white rounded-md shadow-md">
+      <div className="h-auto lg:h-96 flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
+        <div className="w-full lg:w-[70%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-96">
           <ManagerRecentReqTable userRole={userRole} />
         </div>
+        <div className="w-full lg:w-[30%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-96">
+          <ExpiryProducts />
+        </div>
       </div>
-      <div className="h-[30rem] flex gap-x-4 w-full">
-        <div className="w-[60%] h-full bg-white rounded-md shadow-md">
+
+      <div className="h-auto lg:h-[27rem] flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
+        <div className="bg-white lg:w-[40%] rounded-md shadow-md w-full">
+          <DashboardAuditLog role="nurse" />
+        </div>
+        <div className="w-full lg:w-[60%] h-auto">
           <InventoryByCategoryChart />
         </div>
-        <div className="bg-white w-[40%] rounded-md shadow-md">
-          <DashboardAuditLog role="nurse" entityType="ORDER_REQUEST" />
-        </div>
       </div>
-      <div className="h-[28rem] flex gap-x-4 w-full">
-        <div className="bg-white w-[40%] rounded-md shadow-md">
-          {" "}
-          <OrderTypePieChart />
-        </div>
-        <div className="w-[60%] bg-white rounded-md shadow-md">
+
+      <div className="h-96 lg:h-[30rem] flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
+        <div className="w-full lg:w-[65%] h-full bg-white rounded-md shadow-md ">
           <TopRequestedProducts />
+        </div>
+        <div className="bg-white w-full lg:w-[35%] rounded-md shadow-md">
+          <OrderTypePieChart />
         </div>
       </div>
     </div>

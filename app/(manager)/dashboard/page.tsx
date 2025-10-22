@@ -16,29 +16,33 @@ export default async function Dashboard() {
   return (
     <div className="h-full flex flex-col gap-5 mb-4">
       <DashboardHearder session={session} />
+
       <ManagerDashboardCards userRole={userRole} />
-      <div className="h-96 flex gap-x-4 w-full">
-        <div className="w-[70%] bg-white rounded-md shadow-md">
+
+      <div className="h-auto lg:h-96 flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
+        <div className="w-full lg:w-[70%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-96">
           <ManagerRecentReqTable userRole={userRole} />
         </div>
-        <div className="bg-white w-[40%] rounded-md shadow-md">
+        <div className="w-full lg:w-[30%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-96">
           <ExpiryProducts />
         </div>
       </div>
-      <div className="h-[28rem] flex gap-x-4 w-full">
-        <div className="bg-white w-[35%] rounded-md shadow-md">
-          <SalesByCategory />
+
+      <div className="h-auto lg:h-[30rem] flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
+        <div className="bg-white lg:w-[40%] rounded-md shadow-md w-full">
+          <DashboardAuditLog role="manager" />
         </div>
-        <div className="w-[65%]">
+        <div className="w-full lg:w-[60%] h-[30rem]">
           <SalesGraph username={username} />
         </div>
       </div>
-      <div className="h-[30rem] flex gap-x-4 w-full">
-        <div className="w-[60%] h-full bg-white rounded-md shadow-md">
+
+      <div className="h-auto lg:h-[30rem] flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
+        <div className="w-full lg:w-[65%] h-full bg-white rounded-md shadow-md">
           <TopSellingProducts />
         </div>
-        <div className="bg-white w-[40%] rounded-md shadow-md">
-          <DashboardAuditLog role="manager" />
+        <div className="bg-white w-full lg:w-[35%] rounded-md shadow-md">
+          <SalesByCategory />
         </div>
       </div>
     </div>

@@ -60,13 +60,13 @@ const Header = () => {
 
   return (
     <div className="fixed top-0 w-full bg-white mb-5 shadow-md z-20">
-      <div className="flex justify-between items-center px-10 2xl:max-w-screen-3xl mx-auto">
+      <div className="flex justify-between items-center px-4 lg:px-10 2xl:max-w-screen-3xl mx-auto">
         <Image
           src={PharmacyIcon}
           alt="Macoleen's Pharmacy Icon"
           width={150}
           height={150}
-          className="hidden xl:block"
+          className="hidden lg:block"
         />
         <MemoMobileMenu />
 
@@ -77,17 +77,19 @@ const Header = () => {
         )}
 
         <div className="flex items-center relative">
-          {userRole === "Pharmacist_Staff" && (
+          {status === "authenticated" && (
             <>
-              <WalkInOrder />
-            </>
-          )}
+              <div className="hidden md:block">
+                {userRole === "Pharmacist_Staff" && <WalkInOrder />}
+              </div>
 
-          {userRole !== "Manager" && (
-            <StaffNotificationBell
-              userId={session?.user.id}
-              userRole={userRole}
-            />
+              {userRole !== "Manager" && (
+                <StaffNotificationBell
+                  userId={session?.user.id}
+                  userRole={userRole}
+                />
+              )}
+            </>
           )}
 
           <TooltipProvider>

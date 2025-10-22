@@ -31,6 +31,7 @@ export interface Column {
 }
 
 export interface TableComponentProps<T extends Record<string, unknown>> {
+  largeContainer?: boolean 
   columns: Column[];
   data: T[];
   setIsOrderModalOpen?: React.Dispatch<React.SetStateAction<boolean>>;

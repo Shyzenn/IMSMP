@@ -71,11 +71,7 @@ const CashierDashboardCards = () => {
     },
   ];
 
-  return (
-    <div className="h-32">
-      <DashboardCards cards={cashierCards} />
-    </div>
-  );
+  return <DashboardCards cards={cashierCards} />;
 };
 
 export default CashierDashboardCards;

@@ -1,6 +1,7 @@
 'use client'
 
 import { RiDashboardHorizontalLine } from "react-icons/ri";
+import { AiOutlineAudit } from "react-icons/ai";
 import { MdOutlineInventory2 } from "react-icons/md";
 import { GrTransaction } from "react-icons/gr";
 import { Links } from "./interfaces";
@@ -43,7 +44,7 @@ export const managerLinks: Links[] = [
     ],
   },
   { name: "Transaction", href: "/transaction", icon: GrTransaction },
-  { name: "Audit Log", href: "/audit_log", icon: GrTransaction },
+  { name: "Audit Log", href: "/audit_log", icon: AiOutlineAudit },
 ];
 
 export const pharmacistLinks = [

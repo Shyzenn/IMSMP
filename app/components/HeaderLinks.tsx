@@ -23,7 +23,7 @@ const HeaderLinks = ({ userRole }: { userRole: string | null }) => {
   const links = userRole ? roleLinksMap[userRole] : [];
 
   return (
-    <ul className="bg-white rounded-full p-[5px] flex gap-8 py-[10px] sm:hidden xl:flex">
+    <ul className="bg-white rounded-full p-[5px] lg:flex gap-8 py-[10px] hidden">
       {links?.map((link) => {
         const isSubActive =
           link.subLinks &&

@@ -12,7 +12,7 @@ const RequestOrderBtn = () => {
     <>
       <AddButton
         label="Request Order"
-        className="px-6 py-2 flex items-center gap-2"
+        className="px-6 py-2 flex items-center gap-2 w-auto"
         onClick={open}
       />
 

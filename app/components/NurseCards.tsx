@@ -62,11 +62,7 @@ const NurseCards = () => {
     },
   ];
 
-  return (
-    <div className="h-32">
-      <DashboardCards cards={nurseCards} />
-    </div>
-  );
+  return <DashboardCards cards={nurseCards} />;
 };
 
 export default NurseCards;

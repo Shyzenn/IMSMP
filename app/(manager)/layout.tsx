@@ -23,10 +23,8 @@ export default function AdminLayout({
           <Sidebar links={managerLinks} />
           <Header />
 
-          <div className="mx-auto w-full max-w-screen-3xl px-4 sm:px-6 lg:px-8">
-            <div className=" mx-10 mt-24">
-              <div>{children}</div>
-            </div>
+          <div className="mx-auto w-full max-w-screen-3xl mt-24 px-4 md:px-6 lg:px-16">
+            {children}
           </div>
         </SidebarProvider>
       </div>

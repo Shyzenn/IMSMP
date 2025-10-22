@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -53,14 +53,40 @@ const SalesByOrderTypePie = () => {
     ],
   };
 
+  const [position, setPosition] = useState<"top" | "bottom" | "left" | "right">(
+    "bottom"
+  );
+  const [radius, setRadius] = useState<string | number>("75%");
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1300) {
+        setPosition("right");
+      } else {
+        setPosition("top");
+      }
+      if (window.innerWidth <= 1023) {
+        setPosition("right");
+        setRadius("90%");
+      } else {
+        setPosition("top");
+        setRadius("75%");
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const options: ChartOptions<"doughnut"> = {
     responsive: true,
     maintainAspectRatio: false,
     cutout: "70%",
-    radius: "95%",
+    radius,
     plugins: {
       legend: {
-        position: "right",
+        position: position,
         labels: {
           padding: 15,
           boxWidth: 12,
@@ -97,7 +123,7 @@ const SalesByOrderTypePie = () => {
             No sales data available for this range.
           </p>
         ) : (
-          <div className="relative w-[95%] h-[95%] mt-10">
+          <div className="relative w-[95%] h-[95%]">
             <Doughnut options={options} data={chartData} />
           </div>
         )}

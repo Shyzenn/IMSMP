@@ -19,6 +19,7 @@ import { useProducts } from "../hooks/useProducts";
 import { useProductDropdown } from "../hooks/useProductDropDown";
 import { useProductForm } from "../hooks/useProductForm";
 import { IoAddOutline } from "react-icons/io5";
+import { IoIosWalk } from "react-icons/io";
 
 const WalkInOrder = () => {
   const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
@@ -119,6 +120,7 @@ const WalkInOrder = () => {
   return (
     <>
       <AddButton
+        icon={<IoIosWalk />}
         label="Walk in Order"
         className="px-6 py-2 mr-8"
         onClick={open}

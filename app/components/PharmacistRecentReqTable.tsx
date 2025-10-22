@@ -164,6 +164,7 @@ const ManagerRecentReqTable = ({ userRole }: { userRole?: string }) => {
   return (
     <div className="mx-4">
       <TableComponent
+        largeContainer={true}
         title="Recent Order Request"
         data={formattedData}
         columns={columns}
@@ -192,18 +193,20 @@ const ManagerRecentReqTable = ({ userRole }: { userRole?: string }) => {
         }
       />
 
-      <div className="flex justify-between items-center mt-4">
-        <p className="text-sm text-gray-500">
+      <div className="flex justify-center md:justify-between items-center mt-4 w-full pb-2">
+        <p className="text-sm text-gray-500 hidden md:block">
           Showing <span className="font-semibold">{formattedData.length}</span>{" "}
           of <span className="font-semibold">{total}</span> Results
         </p>
 
-        <Pagination
-          totalPages={totalPages}
-          currentPage={page}
-          onPageChange={setPage}
-          isComponent={true}
-        />
+        <div className="mb-4 md:mb-0">
+          <Pagination
+            totalPages={totalPages}
+            currentPage={page}
+            onPageChange={setPage}
+            isComponent={true}
+          />
+        </div>
       </div>
 
       <OrderDetailsModal

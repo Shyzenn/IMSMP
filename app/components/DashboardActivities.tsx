@@ -99,33 +99,37 @@ export default function DashboardAuditLog({ role, entityType }: AuditLogProps) {
       <div className="px-4 flex flex-col gap-4">
         {logs.length > 0 ? (
           <>
-            {logs.map((log) => {
-              const { icon } = getEntityMeta(log.entityType);
-              return (
-                <div key={log.id} className="border-b pb-4 border-dashed">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-slate-100 w-11 h-12 flex justify-center items-center rounded-sm">
-                      {icon}
+            <div className="overflow-x-auto w-full md:overflow-hidden">
+              <div className="min-w-[500px]">
+                {logs.map((log) => {
+                  const { icon } = getEntityMeta(log.entityType);
+                  return (
+                    <div key={log.id} className="border-b pb-4 border-dashed">
+                      <div className="flex items-center gap-4">
+                        <div className="bg-slate-100 w-11 h-12 flex justify-center items-center rounded-sm shrink-0">
+                          {icon}
+                        </div>
+                        <div className="whitespace-nowrap">
+                          <p className="text-xs text-gray-400 font-semibold">
+                            {new Date(log.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}{" "}
+                            - {new Date(log.createdAt).toLocaleDateString()}
+                          </p>
+                          <p className="text-[12px] text-gray-600 font-semibold">
+                            {log.description}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-400 font-semibold">
-                        {new Date(log.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}{" "}
-                        - {new Date(log.createdAt).toLocaleDateString()}
-                      </p>
-                      <p className="text-[12px] text-gray-600 font-semibold">
-                        {log.description}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            </div>
 
-            <div className="flex justify-between items-center mt-4">
-              <p className="text-sm text-gray-500">
+            <div className="flex justify-center md:justify-between items-center mt-4 mb-4 lg:mb-0">
+              <p className="text-sm text-gray-500 hidden md:block">
                 Showing <span className="font-semibold">{logs.length}</span> of{" "}
                 <span className="font-semibold">{total}</span> Results
               </p>

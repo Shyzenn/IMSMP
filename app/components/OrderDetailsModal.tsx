@@ -175,6 +175,13 @@ const OrderDetailsModal = ({
                   </TableFooter>
                 </Table>
               </div>
+              {selectedOrder.notes && selectedOrder.notes?.length > 0 ? (
+                <div className="border p-2 bg-slate-50 rounded-md shadow-sm print:hidden">
+                  <p className="font-semibold mb-2">Notes:</p>
+                  <p>{selectedOrder.notes}</p>
+                </div>
+              ) : null}
+
               <div>
                 <p className="mt-2 font-semibold">
                   Requested By:{" "}

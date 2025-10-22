@@ -72,11 +72,7 @@ const ManagerDashboardCards = ({ userRole }: { userRole?: string }) => {
     },
   ];
 
-  return (
-    <div className="h-32">
-      <DashboardCards cards={managerCards} />
-    </div>
-  );
+  return <DashboardCards cards={managerCards} />;
 };
 
 export default ManagerDashboardCards;

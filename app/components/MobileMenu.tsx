@@ -8,7 +8,7 @@ const MobileMenu = () => {
   const { isOpen, toggleMenu } = useSidebar();
 
   return (
-    <div className="xl:hidden relative">
+    <div className="lg:hidden relative">
       <div
         className=" cursor-pointer z-20 border border-green-500 size-10 flex items-center justify-center rounded-full"
         onClick={toggleMenu}

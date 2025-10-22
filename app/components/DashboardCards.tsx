@@ -16,7 +16,7 @@ export function AnimatedNumber({ value }: { value: number }) {
 
 const DashboardCards = ({ cards }: { cards: DashboardCardProps[] }) => {
   return (
-    <div className="flex gap-5 h-full">
+    <div className="grid grid-cols-2 gap-4 lg:flex">
       {cards.map((card, index) => {
         const Icon = card.icon;
 
@@ -46,7 +46,7 @@ const DashboardCards = ({ cards }: { cards: DashboardCardProps[] }) => {
         );
 
         const baseCardClasses =
-          "relative shadow-md flex-1 flex flex-col justify-center px-4 rounded-md transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-lg overflow-hidden bg-white";
+          "relative shadow-md flex-1 flex flex-col justify-center px-4 rounded-md transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-lg overflow-hidden bg-white h-[7rem] lg:h-[8rem]";
 
         return card.link ? (
           <Link href={card.link} key={index} className={baseCardClasses}>
