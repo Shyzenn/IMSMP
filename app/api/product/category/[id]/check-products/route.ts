@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 
 export async function GET(
-  request: Request,
+  _request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -34,7 +34,7 @@ export async function GET(
 
 // DELETE category
 export async function DELETE(
-  request: Request,
+  _request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -119,7 +119,7 @@ export async function PUT(
     const { id } = await context.params;
     const categoryId = Number(id);
 
-     const { name } = await request.json();
+    const { name } = await request.json();
 
     if (!name || !name.trim()) {
       return NextResponse.json(
