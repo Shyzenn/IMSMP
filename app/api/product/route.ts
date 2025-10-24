@@ -54,7 +54,7 @@ export async function POST(req: Request) {
 
     if (existingProduct) {
       return NextResponse.json(
-        { errors: { product_name: "Product name is already taken" } },
+        { errors: { product_name: "Product name is already exists." } },
         { status: 400 }
       );
     }

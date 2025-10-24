@@ -38,9 +38,27 @@ export async function POST(req: Request) {
       );
     }
 
+
+    const existingCategory = await db.productCategory.findFirst({
+      where: {
+        name: {
+          equals: name.trim(),
+        },
+      },
+    });
+
+    if (existingCategory) {
+      return NextResponse.json(
+        { error: "Category name already exists." },
+        { status: 400 }
+      );
+    }
+
+    // Create new category
     const category = await db.productCategory.create({
       data: { name: name.trim() },
     });
+
 
      // Audit log
     await db.auditLog.create({
@@ -61,3 +79,5 @@ export async function POST(req: Request) {
     );
   }
 }
+
+

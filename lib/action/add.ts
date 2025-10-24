@@ -21,10 +21,8 @@ export const registerUser = async (data: TSignUpSchema) => {
       return responseData;
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.error("Failed to edit product:", error.message);
       throw error;
     } else {
-      console.error("Unexpected error:", error);
       throw new Error("An unexpected error occurred while editing the product.");
     }
   }
@@ -50,10 +48,8 @@ export const addNewProduct = async (data: TAddProductSchema) => {
     return responseData;
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.error("Failed to add product:", error.message);
       throw error;
     } else {
-      console.error("Unexpected error:", error);
       throw new Error("An unexpected error occurred while adding the product.");
     }
   }
@@ -79,18 +75,20 @@ export const replenishProduct = async (data: TReplenishProductSchema) => {
     return responseData;
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.error("Failed to replenish product:", error.message);
       throw error;
     } else {
-      console.error("Unexpected error:", error);
       throw new Error("An unexpected error occurred while replenish the product.");
     }
   }
 };
 
 // add product category
-export const addCategory = async (newCategory: string, refetch: () => Promise<QueryObserverResult<ProductCategory[], Error>>) => {
+export const addCategory = async (
+  newCategory: string,
+  refetch: () => Promise<QueryObserverResult<ProductCategory[], Error>>
+) => {
   if (!newCategory.trim()) return;
+
   try {
     const res = await fetch("/api/product/category", {
       method: "POST",
@@ -98,17 +96,59 @@ export const addCategory = async (newCategory: string, refetch: () => Promise<Qu
       headers: { "Content-Type": "application/json" },
     });
 
-    if (!res.ok) throw new Error("Failed to add category");
-    await refetch()
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to add category");
+    }
+
+    await refetch();
   } catch (error: unknown) {
-        if (error instanceof Error) {
-          console.error("Failed to add category:", error.message);
-          throw error;
-        } else {
-          console.error("Unexpected error:", error);
-          throw new Error("An unexpected error occurred while adding category.");
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error("An unexpected error occurred while adding category.");
+    }
+  }
+};
+
+// edit category
+export const editCategory = async (
+  selectedCategoryForEdit: ProductCategory,
+  categoryName: string,
+  refetch: () => Promise<QueryObserverResult<ProductCategory[], Error>>
+) => {
+
+  try{
+    const response = await fetch(`/api/product/category/${selectedCategoryForEdit.id}/check-products`, {
+        method: "PUT",
+        body: JSON.stringify({name :categoryName}),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.errors?.product_name) {
+          throw new Error(data.errors.product_name);
         }
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        throw new Error("Failed to update category.");
       }
+
+      await refetch();
+      return data;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error("An unexpected error occurred while editing category.");
+    }
+  }
 };
 
 // edit batch
@@ -131,10 +171,8 @@ export const editBatch = async (data: TEditBatchSchema) => {
       return responseData;
   } catch (error: unknown) {
       if (error instanceof Error) {
-        console.error("Failed to edit batch:", error.message);
         throw error;
       } else {
-        console.error("Unexpected error:", error);
         throw new Error("An unexpected error occurred while editing batch.");
       }
     }
@@ -160,10 +198,8 @@ export const editNewProduct = async (data: TEditProductSchema) => {
       return responseData;
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.error("Failed to edit product:", error.message);
         throw error;
       } else {
-        console.error("Unexpected error:", error);
         throw new Error("An unexpected error occurred while editing product.");
       }
     }
@@ -190,10 +226,8 @@ export const editUser = async (data: TEditUserSchema) => {
     return responseData;
   } catch (error: unknown) {
         if (error instanceof Error) {
-          console.error("Failed to edit user:", error.message);
           throw error;
         } else {
-          console.error("Unexpected error:", error);
           throw new Error("An unexpected error occurred while editing user.");
         }
       }
@@ -220,10 +254,8 @@ export const addRequesOrder = async (data:TAddRequestOrderSchema) => {
       return responseData;
   } catch (error: unknown) {
         if (error instanceof Error) {
-          console.error("Failed to add request order:", error.message);
           throw error;
         } else {
-          console.error("Unexpected error:", error);
           throw new Error("An unexpected error occurred while adding request order.");
         }
       }  
@@ -249,10 +281,8 @@ export const editRequesOrder = async (data:TEditRequestOrderSchema, id: string) 
       return responseData;
   } catch (error: unknown) {
         if (error instanceof Error) {
-          console.error("Failed to add request order:", error.message);
           throw error;
         } else {
-          console.error("Unexpected error:", error);
           throw new Error("An unexpected error occurred while adding request order.");
         }
       }  
@@ -278,10 +308,8 @@ export const walkInOrder = async (data:TWalkInOrderSchema) => {
       return responseData;
   } catch (error: unknown) {
         if (error instanceof Error) {
-          console.error("Failed to add walkin order:", error.message);
           throw error;
         } else {
-          console.error("Unexpected error:", error);
           throw new Error("An unexpected error occurred while adding walkin order.");
         }
       }  

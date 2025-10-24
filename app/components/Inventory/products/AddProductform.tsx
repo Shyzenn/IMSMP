@@ -1,36 +1,39 @@
 "use client";
 
 import React, { useCallback, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { addProductSchema, TAddProductSchema } from "@/lib/types";
-import { addCategory, addNewProduct } from "@/lib/action/add";
+import { addNewProduct } from "@/lib/action/add";
 import AddButton from "../../Button";
 import FormField from "../../FormField";
 import CancelButton from "../../CancelButton";
 import LoadingButton from "@/components/loading-button";
 import { Input } from "@/components/ui/input";
-import CategoryField from "../../CategoryField";
 import { useProductForm } from "@/app/hooks/useProductForm";
 import { useModal } from "@/app/hooks/useModal";
 import { IoMdAdd } from "react-icons/io";
 import { useQuery } from "@tanstack/react-query";
 import { ProductCategory } from "@prisma/client";
+import CategoryDropdown from "../../CategoryDropdown";
+
+export type ModalMode = "add" | "edit" | "delete" | null;
 
 const AddProductForm = () => {
   const { isOpen, open, close } = useModal();
-  const [isCategoryModalOpen, setCategoryModalOpen] = useState(false);
-  const [newCategory, setNewCategory] = useState("");
-  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [modalMode, setModalMode] = useState<ModalMode>(null);
+  const [selectedCategoryForEdit, setSelectedCategoryForEdit] =
+    useState<ProductCategory | null>(null);
+  const [categoryName, setCategoryName] = useState("");
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting, isDirty },
     reset,
     setError,
-    control,
   } = useForm<TAddProductSchema>({
     resolver: zodResolver(addProductSchema),
   });
@@ -59,20 +62,11 @@ const AddProductForm = () => {
     },
   });
 
-  const handleAddCategory = async () => {
-    if (!newCategory.trim()) return;
-
-    try {
-      setIsAddingCategory(true);
-      await addCategory(newCategory, refetch);
-      toast.success("Category added successfully!");
-      setCategoryModalOpen(false);
-      setNewCategory("");
-    } catch {
-      toast.error("Failed to add category. Please try again.");
-    } finally {
-      setIsAddingCategory(false);
-    }
+  // ---- Category Modal Handler ----
+  const openCategoryModal = (mode: ModalMode, category?: ProductCategory) => {
+    setModalMode(mode);
+    setSelectedCategoryForEdit(category ?? null);
+    setCategoryName(category?.name ?? "");
   };
 
   return (
@@ -84,15 +78,18 @@ const AddProductForm = () => {
         icon={<IoMdAdd className="text-xl " />}
       />
 
+      {/* Product Modal */}
       {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
           <div className="bg-white w-full max-w-[500px] max-h-[95vh] rounded-md relative py-4">
             <p className="text-xl text-center font-medium">Add Product</p>
+
             <form
               className="pb-[70px] mt-12 overflow-y-auto max-h-[calc(95vh-150px)]"
               onSubmit={handleSubmit(onSubmit)}
             >
               <div className="flex flex-col gap-8 mb-4 px-12">
+                {/* Product Name */}
                 <FormField
                   label="Product Name"
                   error={errors.product_name?.message}
@@ -103,19 +100,29 @@ const AddProductForm = () => {
                   />
                 </FormField>
 
-                <div className="flex items-end">
-                  <CategoryField
-                    categoryLabel="Select a category"
-                    items={categories || []}
-                    label="Category"
+                {/* Category Field */}
+                <FormField label="Category" error={errors.category?.message}>
+                  <Controller
                     control={control}
                     name="category"
-                    error={errors.category?.message}
-                    categoryModal={setCategoryModalOpen}
-                    hasAddButton={true}
+                    render={({ field }) => (
+                      <CategoryDropdown
+                        setCategoryName={setCategoryName}
+                        setSelectedCategoryForEdit={setSelectedCategoryForEdit}
+                        setModalMode={setModalMode}
+                        refetch={refetch}
+                        modalMode={modalMode}
+                        selectedCategoryForEdit={selectedCategoryForEdit}
+                        categoryName={categoryName}
+                        field={field}
+                        categories={categories}
+                        openCategoryModal={openCategoryModal}
+                      />
+                    )}
                   />
-                </div>
+                </FormField>
 
+                {/* Price Field */}
                 <FormField label="Price" error={errors.price?.message}>
                   <Input
                     {...register("price")}
@@ -125,14 +132,14 @@ const AddProductForm = () => {
                     placeholder="Enter price"
                     onWheel={(e) => e.currentTarget.blur()}
                     onKeyDown={(e) => {
-                      if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+                      if (e.key === "ArrowUp" || e.key === "ArrowDown")
                         e.preventDefault();
-                      }
                     }}
                   />
                 </FormField>
               </div>
 
+              {/* Footer */}
               <div className="flex gap-6 bg-white border-t-2 p-4 absolute bottom-0 left-0 w-full justify-end">
                 <CancelButton onClick={close} reset={reset} />
                 <button
@@ -152,33 +159,6 @@ const AddProductForm = () => {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {isCategoryModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-md w-[400px]">
-            <h2 className="text-lg font-semibold mb-4">Add Category</h2>
-            <Input
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-              placeholder="Enter new category"
-            />
-            <div className="flex justify-end gap-4 mt-4">
-              <CancelButton onClick={() => setCategoryModalOpen(false)} />
-
-              <button
-                onClick={handleAddCategory}
-                className="px-4 py-2 bg-buttonBgColor text-white rounded-md hover:bg-buttonHover"
-              >
-                {isAddingCategory ? (
-                  <LoadingButton color="text-white" />
-                ) : (
-                  "Save"
-                )}
-              </button>
-            </div>
           </div>
         </div>
       )}

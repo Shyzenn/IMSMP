@@ -53,7 +53,7 @@ export async function PATCH(req: Request) {
     if (existingProduct) {
         return NextResponse.json({
             errors: {
-            product_name: "Product name is already taken",
+            product_name: "Product name is already exists.",
             },
         }, { status: 400 });
     }
