@@ -29,6 +29,10 @@ const StaffNotificationList = ({
   connectionStatus: "connected" | "disconnected" | "connecting";
   userRole: string;
 }) => {
+  const uniqueNotifications = Array.from(
+    new Map(notifications.map((n) => [n.id, n])).values()
+  );
+
   return (
     <>
       {dropdown && (
@@ -56,7 +60,7 @@ const StaffNotificationList = ({
                   <span className="text-sm">Mark all as read</span>
                 </p>
               </div>
-              {notifications.map((notification) => {
+              {uniqueNotifications.map((notification) => {
                 const patientName =
                   notification.patientName || notification.order?.patient_name;
                 const roomNumber =
@@ -67,7 +71,7 @@ const StaffNotificationList = ({
 
                 return (
                   <div
-                    key={`${notification.id}-${notification.createdAt}`}
+                    key={notification.id}
                     className="px-4 py-2 border-b hover:bg-gray-50 cursor-pointer"
                   >
                     <p className="font-semibold">{notification.title}</p>
@@ -149,7 +153,7 @@ const StaffNotificationList = ({
                       <p className="text-sm text-gray-700 mt-1">
                         An{" "}
                         <span className="text-red-600 font-semibold">
-                          emergency order
+                          pay later order
                         </span>{" "}
                         has been submitted for patient{" "}
                         <span className="text-blue-600 font-semibold">

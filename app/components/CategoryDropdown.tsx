@@ -17,6 +17,8 @@ import toast from "react-hot-toast";
 import { Input } from "@/components/ui/input";
 import { QueryObserverResult } from "@tanstack/react-query";
 import { addCategory, editCategory } from "@/lib/action/add";
+import { BsExclamationCircle } from "react-icons/bs";
+import { BsExclamationTriangle } from "react-icons/bs";
 
 type CategoryDropdown = {
   field: ControllerRenderProps<TAddProductSchema, "category">;
@@ -83,8 +85,11 @@ const CategoryDropdown: React.FC<CategoryDropdown> = ({
         closeCategoryModal();
         toast.success("Category updated!");
       } else if (modalMode === "delete" && selectedCategoryForEdit) {
+        {
+          /**  ACTUAL DELETING OF CATEGORY **/
+        }
         const res = await fetch(
-          `/api/product/category/${selectedCategoryForEdit.id}/check-products`,
+          `/api/product/category/${selectedCategoryForEdit.id}/delete`,
           { method: "DELETE" }
         );
 
@@ -134,7 +139,9 @@ const CategoryDropdown: React.FC<CategoryDropdown> = ({
 
         <PopoverContent className="w-[25rem] max-h-80 overflow-y-auto py-2 px-0">
           <div className="flex justify-between px-2 py-[2px] items-center border-b pb-2 mb-2 sticky top-0 bg-white">
-            <p className="font-semibold text-sm pl-2">Categories</p>
+            <p className="font-semibold text-sm pl-2">
+              Categories ({categories?.length})
+            </p>
             <button
               type="button"
               onClick={() => {
@@ -151,7 +158,7 @@ const CategoryDropdown: React.FC<CategoryDropdown> = ({
               {categories?.map((c) => (
                 <div
                   key={c.id}
-                  className="flex items-center justify-between px-2 py-[2px] rounded-md text-[13px] gap-4"
+                  className="flex items-center justify-between px-2 py-[2px] text-[13px] gap-4 border-b"
                 >
                   <span
                     className="flex-1 select-none hover:bg-gray-100 py-1 pl-2 rounded-sm"
@@ -177,6 +184,9 @@ const CategoryDropdown: React.FC<CategoryDropdown> = ({
                       type="button"
                       className="border rounded-sm px-1 items-center hover:bg-gray-100"
                       onClick={async () => {
+                        {
+                          /**  FETCH FOR DEPENDENCIES(PRODUCTS if any)  **/
+                        }
                         setIsPopoverOpen(false);
                         setShowDependencyModal(true);
                         setIsCheckingDependencies(true);
@@ -192,6 +202,10 @@ const CategoryDropdown: React.FC<CategoryDropdown> = ({
                             throw new Error(
                               "Failed to check category dependencies"
                             );
+
+                          await new Promise((resolve) =>
+                            setTimeout(resolve, 2000)
+                          );
 
                           if (data.hasProducts) {
                             setProductsInCategory(data.products);
@@ -240,9 +254,10 @@ const CategoryDropdown: React.FC<CategoryDropdown> = ({
             ) : (
               <>
                 {modalMode === "edit" && (
-                  <p className="text-xs text-yellow-600 bg-yellow-50 border border-yellow-100 rounded p-2 mb-4">
-                    Renaming this category will also update its category name on
-                    existing products.
+                  <p className="text-xs text-yellow-600 bg-yellow-50 border border-yellow-100 rounded p-2 mb-4 flex gap-1">
+                    <BsExclamationTriangle className="text-lg" /> Renaming this
+                    category will also update its category name on existing
+                    products.
                   </p>
                 )}
                 <Input
@@ -310,7 +325,8 @@ const CategoryDropdown: React.FC<CategoryDropdown> = ({
               </div>
             ) : productsInCategory.length > 0 ? (
               <>
-                <h2 className="text-lg font-semibold mb-3 text-red-500">
+                <h2 className="text-lg font-semibold mb-3 text-red-500 flex items-center gap-2">
+                  <BsExclamationCircle className="text-2xl" />
                   Cannot Delete Category
                 </h2>
                 <p className="text-sm text-gray-700 mb-3">

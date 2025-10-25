@@ -180,7 +180,7 @@ const RequestOrderModal = ({ close }: Props) => {
                           label="Select an order type"
                           option={[
                             { label: "Regular", value: "REGULAR" },
-                            { label: "Emergency", value: "EMERGENCY" },
+                            { label: "Pay Later", value: "EMERGENCY" },
                           ]}
                         />
                       )}

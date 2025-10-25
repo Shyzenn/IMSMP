@@ -42,7 +42,7 @@ const TransactionTable = async ({
           <TransactionTableHeader userRole={userRole} />
           <TableBody>
             {transactions.map((transaction) => (
-              <TableRow key={transaction.id}>
+              <TableRow key={`${transaction.source}-${transaction.id}`}>
                 <TableCell>{`ORD-${transaction.id}`}</TableCell>
                 <TableCell>{transaction.customer}</TableCell>
                 <TableCell>
@@ -55,7 +55,7 @@ const TransactionTable = async ({
                   {transaction.type === "REGULAR"
                     ? "Regular"
                     : transaction.type === "EMERGENCY"
-                    ? "Emergency"
+                    ? "Pay Later"
                     : ""}
                 </TableCell>
                 <TableCell>{statusLabels[transaction.status]}</TableCell>

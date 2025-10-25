@@ -152,6 +152,7 @@ export const addRequestOrderSchema = z.object({
   status: z.enum(["pending", "for_payment", "paid"]),
   type: z.enum(["REGULAR", "EMERGENCY"]),
   notes: z.string().optional(),
+  remarks: z.enum(["preparing", "prepared", "dispensed"]).optional().default("preparing"),
   products: z.array(
     z.object({
       productId: z.string().min(1, "Product name is required"),

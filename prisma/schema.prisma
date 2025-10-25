@@ -112,7 +112,8 @@ model OrderRequest {
   id           Int      @id @default(autoincrement())
   room_number  String?
   patient_name String?
-  status       Status
+  status       Status  
+  remarks      Remarks  @default(preparing)
   notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -135,6 +136,12 @@ model OrderRequest {
 
   items        OrderItem[]
   Notification Notification[]
+}
+
+enum Remarks {
+  preparing
+  prepared
+  dispensed
 }
 
 enum OrderType {

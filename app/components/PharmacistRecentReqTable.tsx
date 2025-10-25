@@ -41,19 +41,19 @@ export const baseColumns: Column[] = [
       const isEmergency = type.toLowerCase() === "emergency";
       return (
         <span
-          className={`font-semibold ${
-            isEmergency ? "text-red-600" : "text-gray-800"
-          }`}
+          className={`font-semibold 
+           "text-gray-800
+          `}
         >
-          {type}
+          {isEmergency ? "Pay Later" : type}
         </span>
       );
     },
   },
+  { label: "Remarks", accessor: "remarks" },
   {
     label: "Status",
     accessor: "status",
-    align: "right",
     render: (row) => {
       const { status } = row as { status: string };
 

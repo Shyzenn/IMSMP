@@ -74,7 +74,7 @@ export const statusLabels: Record<string, string> = {
 
 export const typeLabels = {
   REGULAR: "Regular",
-  EMERGENCY: "Emergency",
+  EMERGENCY: "Pay Later",
 };
 
 export type   TransactionFilter =

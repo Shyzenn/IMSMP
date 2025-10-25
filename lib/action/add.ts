@@ -112,7 +112,7 @@ export const addCategory = async (
   }
 };
 
-// edit category
+// update category
 export const editCategory = async (
   selectedCategoryForEdit: ProductCategory,
   categoryName: string,
@@ -120,7 +120,7 @@ export const editCategory = async (
 ) => {
 
   try{
-    const response = await fetch(`/api/product/category/${selectedCategoryForEdit.id}/check-products`, {
+    const response = await fetch(`/api/product/category/${selectedCategoryForEdit.id}/update`, {
         method: "PUT",
         body: JSON.stringify({name :categoryName}),
         headers: {

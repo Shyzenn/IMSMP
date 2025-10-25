@@ -27,7 +27,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ errors: zodErrors }, { status: 400 });
     }
 
-    const { room_number, patient_name, status, products, type, notes } = result.data;
+    const { room_number, patient_name, status, products, type, notes, remarks } = result.data;
 
     const newOrder = await db.orderRequest.create({
       data: {
@@ -36,6 +36,7 @@ export async function POST(req: Request) {
         status,
         userId,
         type,
+        remarks,
         notes,
         items: {
           create: products.map((product) => ({
@@ -98,7 +99,7 @@ export async function POST(req: Request) {
 
     const notificationData = newOrder.type === "EMERGENCY" 
       ? {
-          title: "Emergency Order Request!",
+          title: "Pay Later Order Request!",
           type: NotificationType.EMERGENCY_ORDER,
         }
       : {
@@ -154,7 +155,7 @@ export async function POST(req: Request) {
         action: "Requested",
         entityType: "OrderRequest",
         entityId: newOrder.id,
-        description: `User ${session.user.username} (${session.user.role}) created an order (${type}) for patient "${patient_name}" in room ${room_number} with ${products.length} item(s).`,
+        description: `User ${session.user.username} (${session.user.role}) created an order (${type === "EMERGENCY" ? "Pay Later" : "Regular"}) for patient "${patient_name}" in room ${room_number} with ${products.length} item(s).`,
       },
     });
 
@@ -230,6 +231,7 @@ export async function GET(req: NextRequest) {
           : "Unknown",
         createdAt: order.createdAt,
         status: order.status,
+        remarks: order.remarks,
         type: order.type,
         notes: order.notes,
         items: `${totalItems} item${totalItems !== 1 ? "s" : ""}`,
