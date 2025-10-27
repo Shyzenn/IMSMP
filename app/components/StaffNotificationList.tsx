@@ -149,6 +149,7 @@ const StaffNotificationList = ({
                         .
                       </p>
                     )}
+
                     {notification.type === "EMERGENCY_ORDER" && (
                       <p className="text-sm text-gray-700 mt-1">
                         An{" "}
@@ -162,6 +163,28 @@ const StaffNotificationList = ({
                         in room{" "}
                         <span className="text-blue-600 font-semibold">
                           {roomNumber || "Unknown"}
+                        </span>{" "}
+                        by{" "}
+                        <span className="font-medium">
+                          {submittedBy || "Unknown"} ({role || "Unknown"})
+                        </span>
+                        .
+                      </p>
+                    )}
+
+                    {notification.type === "REMARKS" && (
+                      <p className="text-sm text-gray-700 mt-1">
+                        The order for patient{" "}
+                        <span className="text-blue-600 font-semibold">
+                          {patientName || "Unknown"}
+                        </span>{" "}
+                        in room{" "}
+                        <span className="text-blue-600 font-semibold">
+                          {roomNumber || "Unknown"}
+                        </span>{" "}
+                        has been{" "}
+                        <span className="text-green-600 font-semibold">
+                          prepared
                         </span>{" "}
                         by{" "}
                         <span className="font-medium">

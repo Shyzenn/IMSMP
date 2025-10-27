@@ -10,12 +10,12 @@ import { CheckCircle, Clock } from "lucide-react";
 import axios from "axios";
 import { RecentRequestOrderSkeleton } from "./Skeleton";
 import LoadingButton from "@/components/loading-button";
-import CashierReqOrderAction from "./CashierReqOrderAction";
 import { OrderView } from "./transaction/cashier/CashierAction";
 import { FcCancel } from "react-icons/fc";
 import Pagination from "./Pagination";
 import SelectField from "./SelectField";
 import { OrderRequest } from "@prisma/client";
+import ReqOrderAction from "./ReqOrderAction";
 
 export const fetchOrderRequest = async (
   page = 1,
@@ -122,12 +122,19 @@ const ManagerRecentReqTable = ({ userRole }: { userRole?: string }) => {
     return orderRequest.map((order: OrderRequest) => ({
       ...order,
       id: `ORD-0${order.id}`,
+      remarks:
+        order.remarks === "dispensed"
+          ? "Dispensed"
+          : order.remarks === "preparing"
+          ? "Preparing"
+          : "Prepared",
+      type: order.type === "REGULAR" ? "Regular" : "Pay Later",
       createdAt: formattedDateTime(order.createdAt),
     }));
   }, [orderRequest]);
 
   const columns: Column[] = useMemo(() => {
-    if (userRole === "Cashier" || userRole === "Nurse") {
+    if (userRole !== "Manager") {
       return [
         ...baseColumns,
         {
@@ -141,7 +148,7 @@ const ManagerRecentReqTable = ({ userRole }: { userRole?: string }) => {
             if (!originalOrder) return null;
 
             return (
-              <CashierReqOrderAction
+              <ReqOrderAction
                 orderData={originalOrder}
                 userRole={userRole}
                 showCheckbox={true}
@@ -150,6 +157,7 @@ const ManagerRecentReqTable = ({ userRole }: { userRole?: string }) => {
                   setIsOrderModalOpen(true);
                 }}
                 status={originalOrder.status}
+                remarks={originalOrder.remarks}
               />
             );
           },

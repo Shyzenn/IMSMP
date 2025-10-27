@@ -195,6 +195,7 @@ enum NotificationType {
   ORDER_RECEIVED
   PAYMENT_PROCESSED
   EMERGENCY_ORDER
+  REMARKS
 }
 
 model Notification {

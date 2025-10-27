@@ -49,8 +49,7 @@ async function Transaction(props: {
     >
       <PageTableHeader
         title="History"
-        isTransactionFilter={true}
-        batchExport={true}
+        transactionExport={true}
         hasDateFilter={true}
       />
       <div className="mt-4">

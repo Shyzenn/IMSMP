@@ -70,6 +70,25 @@ type TransactionRow = {
   status: string;
 };
 
+type Sales = {
+  product_name: string;
+  category: string;
+  price: number;
+  date: Date;
+  revenue: number;
+};
+
+type TableCell =
+  | string
+  | number
+  | {
+      content: string | number;
+      colSpan?: number;
+      styles?: Record<string, unknown>;
+    };
+
+type TableRow = TableCell[];
+
 const PageTableHeader: React.FC<PageTableHeaderProps> = ({
   title,
   hasAddProduct,
@@ -100,6 +119,137 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
 
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const handleSalesDownload = async () => {
+    try {
+      const res = await fetch(`/api/report/sales`);
+      if (!res.ok) throw new Error("Failed to fetch sales data");
+      const data = await res.json();
+      exportSalesPDF(data);
+    } catch (error) {
+      console.error("Sales download failed:", error);
+    }
+  };
+
+  const exportSalesPDF = (sales: Sales[]) => {
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    // 🔹 Group sales by date
+    const groupedSales = sales.reduce((acc, sale) => {
+      let dateKey = "";
+      if (sale.date && !isNaN(new Date(sale.date).getTime())) {
+        dateKey = new Date(sale.date).toISOString().split("T")[0];
+      }
+
+      if (!dateKey) return acc;
+      if (!acc[dateKey]) acc[dateKey] = [];
+      acc[dateKey].push(sale);
+
+      return acc;
+    }, {} as Record<string, Sales[]>);
+
+    const columns = ["Product Name", "Category", "Price", "Revenue"];
+    const allRows: TableRow[] = [];
+    let grandTotal = 0;
+
+    // 🔹 Build rows grouped by date
+    for (const [date, daySales] of Object.entries(groupedSales)) {
+      const totalRevenue = daySales.reduce(
+        (sum, s) => sum + (Number(s.revenue) || 0),
+        0
+      );
+      grandTotal += totalRevenue;
+
+      // 🗓️ Date header row
+      allRows.push([
+        {
+          content: `Date: ${date}`,
+          colSpan: 4,
+          styles: {
+            halign: "left",
+            fontStyle: "bold",
+            fillColor: [230, 230, 230],
+          },
+        },
+      ]);
+
+      // 💰 Sales rows
+      daySales.forEach((sale) => {
+        const price = Number(sale.price) || 0;
+        allRows.push([
+          sale.product_name || "",
+          sale.category || "",
+          price.toFixed(2),
+          (Number(sale.revenue) || 0).toFixed(2),
+        ]);
+      });
+
+      // ➕ Add subtotal row for this day
+      allRows.push([
+        { content: "Subtotal", styles: { fontStyle: "bold", halign: "right" } },
+        "",
+        "",
+        {
+          content: totalRevenue.toFixed(2),
+          styles: {
+            fontStyle: "bold",
+            halign: "center",
+            fillColor: [240, 240, 240],
+          },
+        },
+      ]);
+
+      // Add a small gap after each day
+      allRows.push(["", "", "", ""]);
+    }
+
+    // 🔹 Grand total at the bottom
+    allRows.push(["", "", "", ""]);
+    allRows.push([
+      {
+        content: "GRAND TOTAL",
+        styles: { fontStyle: "bold", halign: "right" },
+      },
+      "",
+      "",
+      {
+        content: grandTotal.toFixed(2),
+        styles: {
+          fontStyle: "bold",
+          halign: "center",
+          fillColor: [220, 220, 220],
+        },
+      },
+    ]);
+
+    // 🔹 Generate the PDF table
+    autoTable(doc, {
+      head: [columns],
+      body: allRows,
+      startY: 20,
+      theme: "striped",
+      styles: {
+        halign: "center",
+        valign: "middle",
+        cellWidth: "wrap",
+        overflow: "linebreak",
+        fontSize: 10,
+      },
+      headStyles: { fillColor: [41, 128, 185] },
+      margin: { top: 25, bottom: 15 },
+      didDrawPage: () => {
+        doc.text("Sales Report", 14, 15);
+      },
+      showHead: "everyPage",
+      pageBreak: "auto",
+    });
+
+    doc.save("Sales_Report.pdf");
+  };
 
   const handleDateChange = (range: { from?: Date; to?: Date }) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -361,9 +511,20 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
             {hasDateFilter && <DateRangeFilter onChange={handleDateChange} />}
 
             {transactionExport && (
-              <Button variant="outline" onClick={handleTransactionDownload}>
-                PDF Export
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">PDF Export</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={handleSalesDownload}>
+                    Sales
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem onClick={handleTransactionDownload}>
+                    Transaction
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
             {hasAddProduct && (
               <>

@@ -98,7 +98,7 @@ body{
     overflow: visible !important;
   }
    @page {
-    size: auto;
+    size: 58mm auto;
     margin: 0;
   }
 }

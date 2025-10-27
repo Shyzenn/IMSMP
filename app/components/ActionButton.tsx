@@ -18,7 +18,7 @@ const ActionButton = ({
       onClick={onClick}
       type={type}
     >
-      <Icon />
+      <Icon className="text-black" />
     </button>
   );
 };

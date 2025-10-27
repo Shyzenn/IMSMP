@@ -94,7 +94,7 @@ export interface Notification {
   updatedAt?: string | Date;
   senderId: string;
   recipientId: string;
-  type?: "ORDER_REQUEST" | "ADD_PRODUCT" | "ORDER_RECEIVED" | "PAYMENT_PROCESSED" | "EMERGENCY_ORDER";
+  type?: "ORDER_REQUEST" | "ADD_PRODUCT" | "ORDER_RECEIVED" | "PAYMENT_PROCESSED" | "EMERGENCY_ORDER" | "REMARKS";
   orderId?: number | null;
   walkInOrderId?: number | null;
   productId?: number | null;

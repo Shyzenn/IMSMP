@@ -14,11 +14,11 @@ export default async function Dashboard() {
     <div className="h-full flex flex-col gap-5 mb-4">
       <DashboardHearder session={session} />
       <ManagerDashboardCards userRole={userRole} />
-      <div className="h-auto lg:h-96 flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
-        <div className="w-full lg:w-[70%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-96">
+      <div className="h-auto lg:h-96 flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0 mb-12">
+        <div className="w-full lg:w-[70%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-[27rem]">
           <ManagerRecentReqTable userRole={userRole} />
         </div>
-        <div className="w-full lg:w-[30%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-96">
+        <div className="w-full lg:w-[30%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-[27rem]">
           <ExpiryProducts />
         </div>
       </div>

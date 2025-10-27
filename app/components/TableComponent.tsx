@@ -73,13 +73,12 @@ function TableComponent<T extends Record<string, unknown>>({
                     className={`${
                       column.align === "right" ? "text-right" : "text-left"
                     } ${
-                      (interactiveRows && userRole === "Cashier") ||
-                      userRole === "Nurse"
+                      interactiveRows && userRole !== "Manager"
                         ? ""
                         : "cursor-pointer"
                     }`}
                     onClick={() => {
-                      if (userRole === "Cashier" || userRole === "Nurse") {
+                      if (userRole !== "Manager") {
                         onRowClick?.(row);
                       } else {
                         onRowClick?.(row);

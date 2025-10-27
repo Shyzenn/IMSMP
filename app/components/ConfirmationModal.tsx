@@ -1,53 +1,56 @@
-import React from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import React from "react";
 
-const ConfirmationModal = ({
-  button,
-  title,
-  description,
-  submitButton,
-}: {
-  button?: React.ReactNode;
+interface ConfirmationModalProps {
   title: string;
   description: string;
-  submitButton: () => void;
+  onClick: () => void;
+  isPending: boolean;
+  closeModal: () => void;
+  defaultBtnColor: boolean;
+}
+
+const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
+  title,
+  description,
+  onClick,
+  isPending,
+  closeModal,
+  defaultBtnColor,
 }) => {
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (submitButton) submitButton();
-  };
-
   return (
-    <Dialog>
-      <form onSubmit={handleSubmit}>
-        <DialogTrigger asChild>{button}</DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
-          </DialogHeader>
-
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </DialogClose>
-            <Button type="submit" className="bg-green-700 hover:bg-green-600">
-              Confirm
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </form>
-    </Dialog>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 ">
+      <div className="bg-white p-6 rounded-lg shadow-md w-[90%] max-w-sm flex items-start flex-col">
+        <h2 className="text-lg font-semibold mb-2 text-gray-900">{title}</h2>
+        <p className="text-sm text-gray-600 mb-4 text-start">{description}</p>
+        <div className="flex gap-2 justify-end w-full mt-4">
+          <Button
+            variant="outline"
+            onClick={closeModal}
+            className="text-gray-900"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={onClick}
+            className={`text-white ${
+              defaultBtnColor
+                ? "bg-buttonBgColor hover:bg-buttonHover"
+                : "bg-red-600 hover:bg-red-500"
+            }`}
+            disabled={isPending}
+          >
+            {isPending ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : (
+              "Confirm"
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 

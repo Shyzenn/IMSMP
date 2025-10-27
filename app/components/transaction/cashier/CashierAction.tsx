@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import CashierReqOrderAction from "../../CashierReqOrderAction";
+import CashierReqOrderAction from "../../ReqOrderAction";
 import OrderDetailsModal from "../../OrderDetailsModal";
 import { CombinedTransaction } from "@/lib/action/get";
 import { OrderItem } from "@/lib/interfaces";
@@ -19,6 +19,7 @@ export type OrderView = {
   quantity: number;
   price: number;
   total: number;
+  remarks?: "preparing" | "prepared" | "dispensed";
   status: "pending" | "for_payment" | "paid" | "canceled";
   createdAt: Date;
   source: "Walk In" | "Request Order";
@@ -40,7 +41,7 @@ const CashierAction = ({
         onView={() => {
           const orderView: OrderView = {
             ...transaction,
-            id: transaction.id,
+            id: `ORD-${transaction.id}`,
             patient_name: transaction.patient_name ?? "N/A",
             roomNumber: transaction.roomNumber?.toString() ?? "N/A",
             status: transaction.status as

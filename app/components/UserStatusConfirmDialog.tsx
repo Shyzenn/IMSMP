@@ -57,7 +57,7 @@ const UserStatusConfirmDialog = ({
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={confirmButton}
-            className="bg-[#2b9e78] hover:bg-[#4dc49d]"
+            className="bg-buttonBgColor hover:bg-buttonHover"
           >
             {modalButtonLabel}
           </AlertDialogAction>

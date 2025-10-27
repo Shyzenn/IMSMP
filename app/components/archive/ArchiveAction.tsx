@@ -1,18 +1,13 @@
 "use client";
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import React, { useTransition } from "react";
-import LoadingButton from "@/components/loading-button";
 import { restoreBatch, restoreProduct } from "@/lib/action/product";
 import toast from "react-hot-toast";
-import UserStatusConfirmDialog from "../UserStatusConfirmDialog";
 import { LuArchiveRestore } from "react-icons/lu";
 import { restoreOrderRequest } from "@/lib/action/order_request";
+import ConfirmationModal from "../ConfirmationModal";
+import { useModal } from "@/app/hooks/useModal";
+import ActionButton from "../ActionButton";
 
 type ArchiveActionProps = {
   item: {
@@ -22,6 +17,7 @@ type ArchiveActionProps = {
 };
 
 const ArchiveAction = ({ item }: ArchiveActionProps) => {
+  const { open, close, isOpen } = useModal();
   const [isPending, startTransition] = useTransition();
 
   const handleRestore = () => {
@@ -50,27 +46,23 @@ const ArchiveAction = ({ item }: ArchiveActionProps) => {
   };
 
   return (
-    <div className="flex text-xl gap-2">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <UserStatusConfirmDialog
-              iconOnly={true}
-              iconColor="text-gray-900"
-              modalButtonLabel={
-                isPending ? <LoadingButton color="text-white" /> : "Confirm"
-              }
-              buttonLabel="Restore"
-              icon={LuArchiveRestore}
-              title={`Restore ${item.type}`}
-              description={`Are you sure you want to restore this ${item.type}?`}
-              confirmButton={handleRestore}
-            />
-          </TooltipTrigger>
-          <TooltipContent>Restore {item.type}</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    </div>
+    <>
+      <ActionButton
+        icon={LuArchiveRestore}
+        onClick={open}
+        color="hover:bg-slate-200 border-gray-300"
+      />
+      {isOpen && (
+        <ConfirmationModal
+          title={`Restore ${item.type}`}
+          description={`Are you sure you want to restore this ${item.type}?`}
+          closeModal={close}
+          defaultBtnColor={true}
+          isPending={isPending}
+          onClick={() => handleRestore()}
+        />
+      )}
+    </>
   );
 };
 
