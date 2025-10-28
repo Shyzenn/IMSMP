@@ -143,6 +143,7 @@ export async function POST(req: Request) {
           products: newOrder.items.map((item) => ({
             productName: item.product.product_name,
             quantity: item.quantity,
+            price: item.product.price
           })), 
         },
         }

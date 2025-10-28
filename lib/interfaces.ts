@@ -66,6 +66,17 @@ export interface Order {
   itemDetails: OrderItem[];
 }
 
+export type WalkInOrder = {
+  id: number | string;
+  customer: string;
+  quantity: number;
+  price: number;
+  total: number;
+  createdAt: Date;
+  itemDetails: OrderItem[];
+  handledBy: string
+};
+
 export interface EmergencyOrderModalData {
   id: number;
   orderType: "REGULAR" | "EMERGENCY";
@@ -103,6 +114,8 @@ export interface Notification {
     role: string;
   };
   order?: {
+    id: number
+    price?: number
     patient_name: string;
     room_number: string;
     products?: OrderItem[]

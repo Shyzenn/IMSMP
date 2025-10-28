@@ -80,6 +80,9 @@ body{
   #print-section,
   #print-section * {
     visibility: visible;
+    font-family: "Times New Roman", Times, serif !important;
+    font-size: 32px !important;
+    color: black;
   }
 
   #print-section {
@@ -93,15 +96,18 @@ body{
   .print\:hidden {
     display: none !important;
   }
+
   .overflow-auto {
     max-height: none !important;
     overflow: visible !important;
   }
-   @page {
+
+  @page {
     size: 58mm auto;
     margin: 0;
   }
 }
+
 
 @keyframes slow-blink {
   0% { opacity: 0; }

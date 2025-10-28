@@ -7,15 +7,15 @@ import { CombinedTransaction } from "@/lib/action/get";
 import { OrderItem } from "@/lib/interfaces";
 
 export type OrderView = {
-  type?: "REGULAR" | "EMERGENCY";
+  type: "REGULAR" | "EMERGENCY";
   id: number | string;
-  requestedBy?: string;
-  receivedBy?: string;
-  processedBy?: string;
-  customer?: string;
-  patient_name?: string;
-  roomNumber?: string;
-  notes?: string;
+  requestedBy: string;
+  receivedBy: string;
+  processedBy: string;
+  customer: string;
+  patient_name: string;
+  roomNumber: string;
+  notes: string;
   quantity: number;
   price: number;
   total: number;
@@ -44,6 +44,11 @@ const CashierAction = ({
             id: `ORD-${transaction.id}`,
             patient_name: transaction.patient_name ?? "N/A",
             roomNumber: transaction.roomNumber?.toString() ?? "N/A",
+            type: transaction.type ?? "REGULAR",
+            receivedBy: transaction.receivedBy ?? "Unknown",
+            processedBy: transaction.receivedBy ?? "Unknown",
+            requestedBy: transaction.requestedBy ?? "Unknown",
+            notes: transaction.notes ?? "",
             status: transaction.status as
               | "pending"
               | "for_payment"

@@ -1,7 +1,10 @@
 import { Notification } from "@/lib/interfaces";
+import { useOrderModal } from "@/lib/store/useOrderModal";
 import { formattedDateTime } from "@/lib/utils";
 import React from "react";
 import { IoCheckmarkDone } from "react-icons/io5";
+import { OrderView } from "./transaction/cashier/CashierAction";
+import OrderDetailsModal from "./OrderDetailsModal";
 
 export interface NotificationWithDetails extends Notification {
   patientName?: string;
@@ -13,9 +16,32 @@ export interface NotificationWithDetails extends Notification {
     role: string;
   };
   order?: {
+    id: number;
     patient_name: string;
     room_number: string;
   };
+}
+
+interface ApiOrderItem {
+  quantity: number;
+  product: {
+    product_name: string;
+    price: number;
+  } | null;
+}
+
+interface ApiOrderResponse {
+  id: number;
+  type: "REGULAR" | "EMERGENCY";
+  user?: { username?: string };
+  receivedBy?: { username?: string };
+  processedBy?: { username?: string };
+  patient_name?: string;
+  room_number?: string | number;
+  notes?: string;
+  status: "pending" | "for_payment" | "paid" | "canceled";
+  createdAt: string;
+  items: ApiOrderItem[];
 }
 
 const StaffNotificationList = ({
@@ -32,6 +58,53 @@ const StaffNotificationList = ({
   const uniqueNotifications = Array.from(
     new Map(notifications.map((n) => [n.id, n])).values()
   );
+
+  const { openModal } = useOrderModal();
+
+  const handleNotificationClick = async (
+    notification: NotificationWithDetails
+  ) => {
+    if (!notification.order?.id) return;
+
+    try {
+      const res = await fetch(
+        `/api/request_order/${notification.order.id}/notification`
+      );
+      if (!res.ok) throw new Error("Failed to fetch order details");
+
+      const data: ApiOrderResponse = await res.json();
+
+      const orderView: OrderView = {
+        id: `ORD-${data.id}`,
+        type: data.type ?? "REGULAR",
+        requestedBy: data.user?.username ?? "Unknown",
+        receivedBy: data.receivedBy?.username ?? "Unknown",
+        processedBy: data.processedBy?.username ?? "Unknown",
+        customer: data.patient_name ?? "Unknown",
+        patient_name: data.patient_name ?? "Unknown",
+        roomNumber: data.room_number?.toString() ?? "N/A",
+        notes: data.notes ?? "",
+        quantity: data.items?.reduce((sum, i) => sum + i.quantity, 0),
+        price: data.items?.reduce((sum, i) => sum + (i.product?.price ?? 0), 0),
+        total: data.items?.reduce(
+          (sum, i) => sum + i.quantity * (i.product?.price ?? 0),
+          0
+        ),
+        status: data.status,
+        createdAt: new Date(data.createdAt),
+        source: "Request Order",
+        itemDetails: data.items.map((i) => ({
+          productName: i.product?.product_name ?? "Unknown",
+          quantity: i.quantity,
+          price: i.product?.price ?? 0,
+        })),
+      };
+
+      openModal(orderView);
+    } catch (error) {
+      console.error("Error fetching order details:", error);
+    }
+  };
 
   return (
     <>
@@ -73,6 +146,7 @@ const StaffNotificationList = ({
                   <div
                     key={notification.id}
                     className="px-4 py-2 border-b hover:bg-gray-50 cursor-pointer"
+                    onClick={() => handleNotificationClick(notification)}
                   >
                     <p className="font-semibold">{notification.title}</p>
 
@@ -204,6 +278,7 @@ const StaffNotificationList = ({
           )}
         </div>
       )}
+      <OrderDetailsModal hasPrint={true} />
     </>
   );
 };

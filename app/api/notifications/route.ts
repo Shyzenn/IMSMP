@@ -22,6 +22,7 @@ export async function GET() {
       },
       order: {
         select: {
+          id: true,                
           patient_name: true,
           room_number: true,
         },

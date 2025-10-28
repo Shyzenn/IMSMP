@@ -1,6 +1,6 @@
 "use client";
 
-import { formattedDateTime } from "@/lib/utils";
+import { formattedDateTime, handleEmergencyPrint } from "@/lib/utils";
 import { OrderItem } from "@/lib/interfaces";
 import { useEmergencyModal } from "@/lib/store/emergency-modal";
 import { MdAddAlert } from "react-icons/md";
@@ -13,11 +13,6 @@ export default function EmergencyOrderModal() {
   if (!isOpen || !orderData) return null;
 
   const { order, sender, createdAt, notes } = orderData;
-
-  const handlePrint = async () => {
-    window.print();
-    closeModal();
-  };
 
   return (
     <>
@@ -75,7 +70,7 @@ export default function EmergencyOrderModal() {
           <div className="flex justify-end mt-4 print:hidden gap-4">
             <CancelButton setIsModalOpen={closeModal} />
             <button
-              onClick={handlePrint}
+              onClick={() => handleEmergencyPrint(orderData, closeModal)}
               className="bg-green-500 hover:bg-green-600 text-white px-8 py-2 rounded-md flex items-center gap-2"
             >
               <LuPrinter />

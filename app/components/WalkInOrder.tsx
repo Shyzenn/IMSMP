@@ -2,7 +2,7 @@
 
 import AddButton from "./Button";
 import React, { useState } from "react";
-import { ProductData } from "@/lib/interfaces";
+import type { WalkInOrder, ProductData } from "@/lib/interfaces";
 import { Input } from "@/components/ui/input";
 import { IoIosClose } from "react-icons/io";
 import { Path, useFieldArray, useForm } from "react-hook-form";
@@ -10,7 +10,7 @@ import { TWalkInOrderSchema, WalkInOrderSchema } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import LoadingButton from "@/components/loading-button";
-import { capitalLetter } from "@/lib/utils";
+import { capitalLetter, handleWalkInPrint } from "@/lib/utils";
 import FormField from "./FormField";
 import { walkInOrder } from "@/lib/action/add";
 import CancelButton from "./CancelButton";
@@ -20,9 +20,12 @@ import { useProductDropdown } from "../hooks/useProductDropDown";
 import { useProductForm } from "../hooks/useProductForm";
 import { IoAddOutline } from "react-icons/io5";
 import { IoIosWalk } from "react-icons/io";
+import { LuPrinter } from "react-icons/lu";
+import { useSession } from "next-auth/react";
 
 const WalkInOrder = () => {
   const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
+  const { data: session } = useSession();
 
   const { isOpen, open, close } = useModal();
   const { products, fetchProducts } = useProducts();
@@ -114,7 +117,63 @@ const WalkInOrder = () => {
 
     if (hasInvalidProduct) return;
 
-    await handleSubmitWrapper(() => walkInOrder(data));
+    // CRITICAL: Open print window IMMEDIATELY (synchronously) to avoid popup blocker
+    const printWindow = window.open("", "printReceipt", "width=400,height=600");
+
+    if (!printWindow) {
+      toast.error("Please allow popups for printing receipts");
+      return;
+    }
+
+    // Show loading message in print window
+    printWindow.document.write(`
+    <html>
+      <head><title>Preparing Receipt...</title></head>
+      <body style="font-family: Arial; text-align: center; padding: 50px;">
+        <h2>Preparing your receipt...</h2>
+        <p>Please wait</p>
+      </body>
+    </html>
+  `);
+
+    // Prepare order data with prices
+    const enrichedProducts = data.products.map((product) => {
+      const matchedProduct = products.find(
+        (p: ProductData) =>
+          p.productName.toLowerCase() === product.productId.toLowerCase()
+      );
+      return {
+        ...product,
+        price: matchedProduct ? Number(matchedProduct.price || 0) : 0,
+      };
+    });
+
+    const selectedOrder: WalkInOrder = {
+      id: Date.now(),
+      customer: data.customer_name ?? "Unknown",
+      quantity: enrichedProducts.reduce((sum, i) => sum + i.quantity, 0),
+      price: enrichedProducts.reduce((sum, i) => sum + (i.price ?? 0), 0),
+      total: enrichedProducts.reduce(
+        (sum, i) => sum + i.quantity * (i.price ?? 0),
+        0
+      ),
+      createdAt: new Date(),
+      itemDetails: enrichedProducts.map((p) => ({
+        productName: p.productId,
+        quantity: p.quantity,
+        price: p.price ?? 0,
+      })),
+      handledBy: String(session?.user?.username ?? "Unknown"),
+    };
+
+    await handleSubmitWrapper(async () => {
+      await walkInOrder(data);
+
+      // populate the already-open print window with the actual receipt
+      handleWalkInPrint(selectedOrder, printWindow);
+
+      return { success: true };
+    });
   };
 
   return (
@@ -345,7 +404,9 @@ const WalkInOrder = () => {
                     {isSubmitting ? (
                       <LoadingButton color="text-white" />
                     ) : (
-                      "Submit"
+                      <div className="flex items-center gap-2">
+                        <LuPrinter /> <p>Print</p>
+                      </div>
                     )}
                   </button>
                 </div>

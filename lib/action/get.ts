@@ -515,6 +515,9 @@ export async function fetchAuditPages(query: string, filter: string = "all", dat
 export type CombinedTransaction = {
   id: number; 
   type: "REGULAR" | "EMERGENCY" | undefined;
+  processedBy?: string,
+  receivedBy?: string,
+  notes?: string,
   requestedBy?: string
   customer: string;
   patient_name?: string;
