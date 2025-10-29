@@ -161,21 +161,20 @@ const buildReceipt = (data: ReceiptData): string => {
 // Print Function
 // ============================================
 
-function printReceipt(receipt: string): boolean {
+export function printReceipt(receipt: string): boolean {
   try {
     const isAndroid = /Android/i.test(navigator.userAgent);
 
-    // ESC/POS printer control codes
+    // ESC/POS Commands
     const ESC = "\x1B";
     const GS = "\x1D";
-    const escInit = ESC + "@"; // Initialize printer
+    const escInit = ESC + "@";
     const escAlignCenter = ESC + "a" + "\x01";
     const escAlignLeft = ESC + "a" + "\x00";
     const escBoldOn = ESC + "E" + "\x01";
     const escBoldOff = ESC + "E" + "\x00";
-    const escCut = GS + "V" + "\x00"; // Cut command
+    const escCut = GS + "V" + "\x00";
 
-    // Build formatted ESC/POS content
     const escposData =
       escInit +
       escAlignCenter +
@@ -195,28 +194,31 @@ function printReceipt(receipt: string): boolean {
       escCut;
 
     if (isAndroid) {
-      // Encode safely to Base64 for RawBT
-      const utf8Bytes = new TextEncoder().encode(escposData);
-      const base64Data = btoa(
-        Array.from(utf8Bytes, (b) => String.fromCharCode(b)).join("")
-      );
+      // Convert to binary Uint8Array
+      const encoder = new TextEncoder();
+      const bytes = encoder.encode(escposData);
 
+      // Convert bytes to Base64 properly
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64Data = btoa(binary);
+
+      // Send to RawBT
       const rawbtUrl = `rawbt:base64,${base64Data}`;
       window.location.href = rawbtUrl;
       console.log("Sent to RawBT:", rawbtUrl);
       return true;
     } else {
-      // Fallback for browser print (desktop or iOS)
+      // Desktop fallback
       const printWindow = window.open("", "printReceipt", "width=400,height=600");
-      if (!printWindow) {
-        console.error("Failed to open print window");
-        return false;
-      }
+      if (!printWindow) return false;
 
       printWindow.document.write(`
         <html>
           <head>
-            <title>Macoleen's Pharmacy Receipt</title>
+            <title>Receipt</title>
             <style>
               @page { margin: 0; }
               body {
@@ -239,8 +241,8 @@ function printReceipt(receipt: string): boolean {
       printWindow.close();
       return true;
     }
-  } catch (error) {
-    console.error("Print error:", error);
+  } catch (err) {
+    console.error("Print error:", err);
     return false;
   }
 }
