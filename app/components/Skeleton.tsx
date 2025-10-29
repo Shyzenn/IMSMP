@@ -178,3 +178,41 @@ export function ExpiryProductsSkeleton() {
     </>
   );
 }
+
+export const OrderModalSkeleton = () => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40">
+      <div className="bg-white w-full max-w-[500px] rounded-md relative overflow-auto p-4 flex flex-col gap-8 pb-16">
+        <div className="flex gap-2 flex-col">
+          <div className="h-6 w-24 rounded bg-gray-100 animate-pulse"></div>
+          <div className="h-6 w-32 rounded bg-gray-100 animate-pulse"></div>
+        </div>
+        <div className="flex gap-2 flex-col">
+          <div className="h-6 w-44 rounded bg-gray-100 animate-pulse"></div>
+          <div className="h-6 w-36 rounded bg-gray-100 animate-pulse"></div>
+          <div className="h-6 w-56 rounded bg-gray-100 animate-pulse"></div>
+          <div className="h-6 w-36 rounded bg-gray-100 animate-pulse"></div>
+        </div>
+        <div className="flex gap-2 justify-between px-2">
+          <div className="h-5 w-24 rounded bg-gray-100 animate-pulse"></div>
+          <div className="h-5 w-28 rounded bg-gray-100 animate-pulse"></div>
+          <div className="h-5 w-20 rounded bg-gray-100 animate-pulse"></div>
+        </div>
+        <div className="flex gap-2 justify-between px-2">
+          <div className="h-5 w-24 rounded bg-gray-100 animate-pulse"></div>
+          <div className="h-5 w-28 rounded bg-gray-100 animate-pulse"></div>
+          <div className="h-5 w-20 rounded bg-gray-100 animate-pulse"></div>
+        </div>
+        <div className="flex gap-2 justify-between px-2">
+          <div className="h-5 w-24 rounded bg-gray-100 animate-pulse"></div>
+          <div className="h-5 w-28 rounded bg-gray-100 animate-pulse"></div>
+          <div className="h-5 w-20 rounded bg-gray-100 animate-pulse"></div>
+        </div>
+        <div className="flex gap-2 justify-between px-2">
+          <div className="h-5 w-24 rounded bg-gray-100 animate-pulse"></div>
+          <div className="h-5 w-28 rounded bg-gray-100 animate-pulse"></div>
+        </div>
+      </div>
+    </div>
+  );
+};

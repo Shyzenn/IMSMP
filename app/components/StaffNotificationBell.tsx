@@ -29,6 +29,8 @@ const StaffNotificationBell = ({ userId, userRole }: NotificationBellProps) => {
 
   const prevNotificationIdsRef = useRef<Set<number>>(new Set());
   const audioEnabledRef = useRef(false);
+  const isInitialLoadCompleteRef = useRef(false);
+  const hasInitialFetchStartedRef = useRef(false);
 
   // Unlock audio on first user interaction
   useEffect(() => {
@@ -36,7 +38,6 @@ const StaffNotificationBell = ({ userId, userRole }: NotificationBellProps) => {
       if (!audioEnabledRef.current) {
         audioEnabledRef.current = true;
         console.log("🔊 Audio unlocked! Notifications can now ring.");
-        setFlashBell(false);
       }
     };
 
@@ -63,10 +64,12 @@ const StaffNotificationBell = ({ userId, userRole }: NotificationBellProps) => {
   // Fetch initial notifications
   useEffect(() => {
     const fetchNotification = async () => {
+      if (hasInitialFetchStartedRef.current) return;
+      hasInitialFetchStartedRef.current = true;
+
       try {
         const response = await fetch("/api/notifications");
         const data = await response.json();
-        setNotifications(data);
 
         const initialIds = new Set<number>(
           data
@@ -77,9 +80,17 @@ const StaffNotificationBell = ({ userId, userRole }: NotificationBellProps) => {
             .map((n: Notification) => n.id as number)
         );
 
+        // Set the ref FIRST before updating notifications
         prevNotificationIdsRef.current = initialIds;
+
+        // Mark initial load as complete BEFORE setting notifications
+        isInitialLoadCompleteRef.current = true;
+
+        // Now set notifications
+        setNotifications(data);
       } catch (error) {
         console.error("Failed to fetch notifications:", error);
+        isInitialLoadCompleteRef.current = true;
       }
     };
 
@@ -93,11 +104,21 @@ const StaffNotificationBell = ({ userId, userRole }: NotificationBellProps) => {
 
   // Handle new notifications (sound + flash)
   useEffect(() => {
-    if (notifications.length === 0) return;
+    // Skip if initial load not complete or no notifications
+    if (!isInitialLoadCompleteRef.current || notifications.length === 0) {
+      return;
+    }
 
     const currentIds = new Set<number>(
       notifications.map((n) => n.id as number)
     );
+
+    // If prevNotificationIdsRef is empty, this is the first time setting notifications
+    // after the component mounted - treat these as initial, not new
+    if (prevNotificationIdsRef.current.size === 0) {
+      prevNotificationIdsRef.current = currentIds;
+      return;
+    }
 
     const newNotificationIds = [...currentIds].filter(
       (id) => !prevNotificationIdsRef.current.has(id)
@@ -111,14 +132,15 @@ const StaffNotificationBell = ({ userId, userRole }: NotificationBellProps) => {
       const isPharmacist = userRole === "Pharmacist_Staff";
 
       const shouldRing =
-        (isPharmacist &&
-          newNotifications.some(
-            (n) => n.type === "ORDER_REQUEST" || n.type === "PAYMENT_PROCESSED"
-          )) ||
-        (!isPharmacist &&
-          newNotifications.some((n) => n.type === "ORDER_RECEIVED"));
+        isPharmacist &&
+        newNotifications.some(
+          (n) => n.type === "ORDER_REQUEST" || n.type === "PAYMENT_PROCESSED"
+        );
 
-      if (shouldRing) {
+      // Only ring/flash if there are actually UNREAD notifications
+      const hasUnreadNew = newNotifications.some((n) => !n.read);
+
+      if (shouldRing && hasUnreadNew) {
         if (audioEnabledRef.current && audioRef.current) {
           audioRef.current.pause();
           audioRef.current.currentTime = 0;
@@ -135,12 +157,15 @@ const StaffNotificationBell = ({ userId, userRole }: NotificationBellProps) => {
     prevNotificationIdsRef.current = currentIds;
   }, [notifications, userRole]);
 
-  // Stop sound when all notifications are read
+  // Stop sound and flash when all notifications are read
   useEffect(() => {
-    if (audioRef.current && unreadCount === 0) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      audioRef.current.loop = false;
+    if (unreadCount === 0) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current.loop = false;
+      }
+      setFlashBell(false);
     }
   }, [unreadCount]);
 
@@ -181,11 +206,11 @@ const StaffNotificationBell = ({ userId, userRole }: NotificationBellProps) => {
               aria-label="Notifications"
             >
               <PiBellThin className="text-2xl" />
-              {unreadCount > 0 && (
+              {unreadCount > 0 ? (
                 <div className="absolute bg-red-500 w-4 h-4 rounded-full -top-1 right-0 text-white text-center text-[10px]">
                   {unreadCount}
                 </div>
-              )}
+              ) : null}
             </button>
           </TooltipTrigger>
           <TooltipContent>

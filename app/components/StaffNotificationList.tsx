@@ -1,10 +1,13 @@
-import { Notification } from "@/lib/interfaces";
+import { EmergencyOrderModalData, Notification } from "@/lib/interfaces";
 import { useOrderModal } from "@/lib/store/useOrderModal";
 import { formattedDateTime } from "@/lib/utils";
-import React from "react";
+import React, { useState } from "react";
 import { IoCheckmarkDone } from "react-icons/io5";
 import { OrderView } from "./transaction/cashier/CashierAction";
 import OrderDetailsModal from "./OrderDetailsModal";
+import { useEmergencyModal } from "@/lib/store/emergency-modal";
+import EmergencyOrderModal from "./EmergencyModal";
+import { OrderModalSkeleton } from "./Skeleton";
 
 export interface NotificationWithDetails extends Notification {
   patientName?: string;
@@ -59,12 +62,17 @@ const StaffNotificationList = ({
     new Map(notifications.map((n) => [n.id, n])).values()
   );
 
+  const [loading, setLoading] = useState(false);
+
   const { openModal } = useOrderModal();
+  const { openModal: openEmergencyModal } = useEmergencyModal();
 
   const handleNotificationClick = async (
     notification: NotificationWithDetails
   ) => {
     if (!notification.order?.id) return;
+
+    setLoading(true);
 
     try {
       const res = await fetch(
@@ -73,6 +81,32 @@ const StaffNotificationList = ({
       if (!res.ok) throw new Error("Failed to fetch order details");
 
       const data: ApiOrderResponse = await res.json();
+
+      if (data.type === "EMERGENCY") {
+        const payLaterData: EmergencyOrderModalData = {
+          id: data.id,
+          orderType: data.type,
+          order: {
+            id: data.id,
+            patient_name: data.patient_name ?? "Unknown",
+            room_number: data.room_number?.toString() ?? "Unknown",
+            status: data.status,
+            products: data.items.map((item) => ({
+              productName: item.product?.product_name ?? "Unknown",
+              quantity: item.quantity,
+              price: item.product?.price ?? 0,
+            })),
+          },
+          createdAt: new Date(data.createdAt),
+          notes: data.notes ?? "",
+          sender: {
+            username: notification.sender?.username ?? "Unknown",
+            role: notification.sender?.role ?? "Unknown",
+          },
+        };
+        openEmergencyModal(payLaterData);
+        return; // prevent opening regular order
+      }
 
       const orderView: OrderView = {
         id: `ORD-${data.id}`,
@@ -103,6 +137,8 @@ const StaffNotificationList = ({
       openModal(orderView);
     } catch (error) {
       console.error("Error fetching order details:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -278,7 +314,9 @@ const StaffNotificationList = ({
           )}
         </div>
       )}
+      {loading && <OrderModalSkeleton />}
       <OrderDetailsModal hasPrint={true} />
+      <EmergencyOrderModal />
     </>
   );
 };

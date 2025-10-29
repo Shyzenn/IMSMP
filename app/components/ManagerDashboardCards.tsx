@@ -36,7 +36,7 @@ const ManagerDashboardCards = ({ userRole }: { userRole?: string }) => {
 
   const managerCards = [
     {
-      title: "Sales",
+      title: "Total Revenue",
       value: `₱${Number(totalSales).toLocaleString("en-PH", {
         minimumFractionDigits: 0,
       })}`,

@@ -5,7 +5,7 @@ import TableComponent from "./TableComponent";
 import { formattedDateTime } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import OrderDetailsModal from "./OrderDetailsModal";
-import { Column } from "@/lib/interfaces";
+import { Column, EmergencyOrderModalData } from "@/lib/interfaces";
 import { CheckCircle, Clock } from "lucide-react";
 import axios from "axios";
 import { RecentRequestOrderSkeleton } from "./Skeleton";
@@ -16,6 +16,8 @@ import Pagination from "./Pagination";
 import SelectField from "./SelectField";
 import { OrderRequest } from "@prisma/client";
 import ReqOrderAction from "./ReqOrderAction";
+import { useEmergencyModal } from "@/lib/store/emergency-modal";
+import EmergencyOrderModal from "./EmergencyModal";
 
 export const fetchOrderRequest = async (
   page = 1,
@@ -107,6 +109,7 @@ const ManagerRecentReqTable = ({ userRole }: { userRole?: string }) => {
 
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderView | null>(null);
+  const { openModal } = useEmergencyModal();
 
   const { data, isLoading } = useQuery({
     queryKey: ["request_order", page, filter],
@@ -153,8 +156,35 @@ const ManagerRecentReqTable = ({ userRole }: { userRole?: string }) => {
                 userRole={userRole}
                 showCheckbox={true}
                 onView={() => {
-                  setSelectedOrder(originalOrder);
-                  setIsOrderModalOpen(true);
+                  if (
+                    originalOrder.type === "Pay Later" &&
+                    originalOrder.status === "for_payment"
+                  ) {
+                    const payLaterData: EmergencyOrderModalData = {
+                      id: originalOrder.id,
+                      createdAt: new Date(originalOrder.createdAt),
+                      notes: originalOrder.notes ?? "",
+                      order: {
+                        id:
+                          typeof originalOrder.id === "string"
+                            ? Number(originalOrder.id.replace("ORD-0", ""))
+                            : originalOrder.id,
+                        patient_name: originalOrder.patient_name ?? "Unknown",
+                        products: originalOrder.itemDetails ?? [],
+                        room_number: originalOrder.roomNumber ?? "Unknown",
+                        status: originalOrder.status,
+                      },
+                      orderType: originalOrder.type,
+                      sender: {
+                        username: originalOrder.requestedBy ?? "Unknown",
+                      },
+                    };
+
+                    openModal(payLaterData);
+                  } else {
+                    setSelectedOrder(originalOrder);
+                    setIsOrderModalOpen(true);
+                  }
                 }}
                 status={originalOrder.status}
                 remarks={originalOrder.remarks}
@@ -165,7 +195,7 @@ const ManagerRecentReqTable = ({ userRole }: { userRole?: string }) => {
       ];
     }
     return baseColumns;
-  }, [userRole, formattedData]);
+  }, [userRole, formattedData, openModal]);
 
   if (isLoading) return <RecentRequestOrderSkeleton />;
 
@@ -223,6 +253,8 @@ const ManagerRecentReqTable = ({ userRole }: { userRole?: string }) => {
         selectedOrder={selectedOrder}
         hasPrint={true}
       />
+
+      <EmergencyOrderModal />
     </div>
   );
 };

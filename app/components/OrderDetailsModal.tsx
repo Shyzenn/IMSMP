@@ -1,7 +1,7 @@
 "use client";
 
 import { OrderItem } from "@/lib/interfaces";
-import { capitalLetter, handlePrint } from "@/lib/utils";
+import { capitalLetter } from "@/lib/utils";
 import React, { Dispatch, SetStateAction, useState } from "react";
 import { LuPrinter } from "react-icons/lu";
 import CancelButton from "./CancelButton";
@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { handlePrint } from "@/lib/printUtlis";
 
 interface OrderDetailsModalProps {
   isOrderModalOpen?: boolean;

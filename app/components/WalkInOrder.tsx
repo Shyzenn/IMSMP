@@ -10,7 +10,7 @@ import { TWalkInOrderSchema, WalkInOrderSchema } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import LoadingButton from "@/components/loading-button";
-import { capitalLetter, handleWalkInPrint } from "@/lib/utils";
+import { capitalLetter } from "@/lib/utils";
 import FormField from "./FormField";
 import { walkInOrder } from "@/lib/action/add";
 import CancelButton from "./CancelButton";
@@ -22,6 +22,7 @@ import { IoAddOutline } from "react-icons/io5";
 import { IoIosWalk } from "react-icons/io";
 import { LuPrinter } from "react-icons/lu";
 import { useSession } from "next-auth/react";
+import { handleWalkInPrint } from "@/lib/printUtlis";
 
 const WalkInOrder = () => {
   const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
@@ -84,7 +85,7 @@ const WalkInOrder = () => {
   });
 
   const notify = () =>
-    toast.success("Request Order Submitted successfully! 🎉", {
+    toast.success("Walk In Order Submitted successfully! 🎉", {
       icon: "✅",
     });
 
@@ -117,7 +118,7 @@ const WalkInOrder = () => {
 
     if (hasInvalidProduct) return;
 
-    // CRITICAL: Open print window IMMEDIATELY (synchronously) to avoid popup blocker
+    //  Open print window IMMEDIATELY (synchronously) to avoid popup blocker
     const printWindow = window.open("", "printReceipt", "width=400,height=600");
 
     if (!printWindow) {

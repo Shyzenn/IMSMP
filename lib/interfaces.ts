@@ -78,11 +78,11 @@ export type WalkInOrder = {
 };
 
 export interface EmergencyOrderModalData {
-  id: number;
+  id: number | string;
   orderType: "REGULAR" | "EMERGENCY";
   sender: {
       username: string;
-      role: string;
+      role?: string;
     };
   order: {
       id?: number | string;

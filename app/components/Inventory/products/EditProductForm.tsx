@@ -49,7 +49,7 @@ const EditProductForm = ({
   });
 
   const onSubmit = async (data: TEditProductSchema) => {
-    handleSubmitWrapper(() => editNewProduct(data));
+    await handleSubmitWrapper(() => editNewProduct(data));
   };
 
   const getCategories = async () => {

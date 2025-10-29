@@ -133,11 +133,13 @@ export async function POST(req: Request) {
           createdAt: notification.createdAt,
           type: notification.type,
           notes: newOrder.notes || "",
+          read: false,
           sender: {
             username: notification.sender.username,
             role: notification.sender.role,
           },
          order: {
+          id: newOrder.id,
           patient_name: patient_name,
           room_number: room_number,
           products: newOrder.items.map((item) => ({

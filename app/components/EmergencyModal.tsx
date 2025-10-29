@@ -1,11 +1,12 @@
 "use client";
 
-import { formattedDateTime, handleEmergencyPrint } from "@/lib/utils";
+import { formattedDateTime } from "@/lib/utils";
 import { OrderItem } from "@/lib/interfaces";
 import { useEmergencyModal } from "@/lib/store/emergency-modal";
 import { MdAddAlert } from "react-icons/md";
 import CancelButton from "./CancelButton";
 import { LuPrinter } from "react-icons/lu";
+import { handleEmergencyPrint } from "@/lib/printUtlis";
 
 export default function EmergencyOrderModal() {
   const { isOpen, orderData, closeModal } = useEmergencyModal();
@@ -16,7 +17,7 @@ export default function EmergencyOrderModal() {
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35">
         <div
           id="print-section"
           className="bg-white max-w-lg w-full p-6 border-t-8 border-red-600 rounded-2xl shadow-2xl print:block"
@@ -29,6 +30,7 @@ export default function EmergencyOrderModal() {
             <p className="font-semibold text-center text-xl">Emergency Order</p>
 
             <div className="border rounded-lg p-3 bg-gray-50">
+              <p className="font-semibold text-lg mb-2">{`ORD-0${order.id}`}</p>
               <p>
                 <span className="font-semibold">Patient:</span>{" "}
                 {order.patient_name}
@@ -38,7 +40,7 @@ export default function EmergencyOrderModal() {
               </p>
               <p>
                 <span className="font-semibold">Requested by:</span>{" "}
-                {sender.username} ({sender.role})
+                {sender.username}
               </p>
               <p className="text-sm text-gray-500 mt-1">
                 {formattedDateTime(createdAt)}
@@ -71,7 +73,7 @@ export default function EmergencyOrderModal() {
             <CancelButton setIsModalOpen={closeModal} />
             <button
               onClick={() => handleEmergencyPrint(orderData, closeModal)}
-              className="bg-green-500 hover:bg-green-600 text-white px-8 py-2 rounded-md flex items-center gap-2"
+              className="bg-buttonBgColor hover:bg-buttonHover text-white px-8 py-2 rounded-md flex items-center gap-2"
             >
               <LuPrinter />
               Print

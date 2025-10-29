@@ -4,25 +4,42 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const walkInSales = await db.walkInTransaction.aggregate({
-      _sum: { totalAmount: true },
-    });
-    const totalWalkInSales = Number(walkInSales._sum.totalAmount ?? 0);
-
-    const orderItems = await db.orderItem.findMany({
-      include: {
-        product: {
-          select: { price: true },
+    // Fetch all paid orders
+    const [paidOrderRequest, paidWalkIn] = await Promise.all([
+      db.orderRequest.findMany({
+        where: { status: "paid" },
+        include: {
+          items: {
+            include: { product: true },
+          },
         },
-      },
-    });
+      }),
+      db.walkInTransaction.findMany({
+        where: { status: "paid" },
+        include: {
+          items: {
+            include: { product: true },
+          },
+        },
+      })
+    ])
 
-    const totalRequestSales = orderItems.reduce(
-      (sum, item) => sum + Number(item.quantity) * Number(item.product.price),
-      0
-    );
+    // Calculate total revenue
+    const orderRequesttotalRevenue = paidOrderRequest.reduce((acc, order) => {
+      const orderTotal = order.items.reduce((sum, item) => {
+        return sum + (Number(item.product.price) || 0) * item.quantity;
+      }, 0);
+      return acc + orderTotal;
+    }, 0);
 
-    const totalSales = totalWalkInSales + totalRequestSales;
+    const walkInttotalRevenue = paidWalkIn.reduce((acc, order) => {
+      const orderTotal = order.items.reduce((sum, item) => {
+        return sum + (Number(item.product.price) || 0) * item.quantity;
+      }, 0);
+      return acc + orderTotal;
+    }, 0);
+
+    const totalRevenue = orderRequesttotalRevenue + walkInttotalRevenue
 
     const productWithStock = await db.product.findMany({
       select: {
@@ -57,7 +74,7 @@ export async function GET() {
     });
 
     return NextResponse.json(
-      [totalSales, lowStock, highStock, expiring],
+      [totalRevenue, lowStock, highStock, expiring],
       { status: 200 }
     );
 
