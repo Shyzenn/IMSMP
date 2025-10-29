@@ -69,6 +69,7 @@
     "@types/nodemailer": "^7.0.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/web-bluetooth": "^0.0.21",
     "@types/ws": "^8.18.1",
     "eslint": "^9",
     "eslint-config-next": "15.1.6",
@@ -80,5 +81,4 @@
   "prisma": {
     "seed": "node prisma/seed.js"
   }
-
 }
