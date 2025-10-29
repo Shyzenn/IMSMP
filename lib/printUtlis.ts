@@ -63,6 +63,7 @@ const escapeHtml = (s: string): string =>
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;");
+    
 
 // ============================================
 // Receipt Builder
@@ -160,16 +161,44 @@ const buildReceipt = (data: ReceiptData): string => {
 // Print Function
 // ============================================
 
-const printReceipt = (receipt: string): boolean => {
+function printReceipt(receipt: string): boolean {
   try {
-    // Check if running on Android (for RawBT)
     const isAndroid = /Android/i.test(navigator.userAgent);
 
+    // ESC/POS printer control codes
+    const ESC = "\x1B";
+    const GS = "\x1D";
+    const escInit = ESC + "@"; // Initialize printer
+    const escAlignCenter = ESC + "a" + "\x01";
+    const escAlignLeft = ESC + "a" + "\x00";
+    const escBoldOn = ESC + "E" + "\x01";
+    const escBoldOff = ESC + "E" + "\x00";
+    const escCut = GS + "V" + "\x00"; // Cut command
+
+    // Build formatted ESC/POS content
+    const escposData =
+      escInit +
+      escAlignCenter +
+      escBoldOn +
+      "Macoleen's Pharmacy\n" +
+      escBoldOff +
+      "Order Receipt\n" +
+      "-".repeat(32) +
+      "\n" +
+      escAlignLeft +
+      receipt +
+      "\n" +
+      "-".repeat(32) +
+      "\n" +
+      escAlignCenter +
+      "Thank you!\n\n\n" +
+      escCut;
+
     if (isAndroid) {
-      // Modern UTF-8 safe encoding
-      const utf8Bytes = new TextEncoder().encode(receipt);
+      // Encode safely to Base64 for RawBT
+      const utf8Bytes = new TextEncoder().encode(escposData);
       const base64Data = btoa(
-        Array.from(utf8Bytes, (byte) => String.fromCharCode(byte)).join("")
+        Array.from(utf8Bytes, (b) => String.fromCharCode(b)).join("")
       );
 
       const rawbtUrl = `rawbt:base64,${base64Data}`;
@@ -177,8 +206,7 @@ const printReceipt = (receipt: string): boolean => {
       console.log("Sent to RawBT:", rawbtUrl);
       return true;
     } else {
-      
-      // Desktop or non-Android fallback — normal browser print
+      // Fallback for browser print (desktop or iOS)
       const printWindow = window.open("", "printReceipt", "width=400,height=600");
       if (!printWindow) {
         console.error("Failed to open print window");
@@ -199,15 +227,9 @@ const printReceipt = (receipt: string): boolean => {
                 margin: 0;
                 padding: 0 8px 150px 8px;
               }
-              pre {
-                margin: 0;
-                line-height: 1.6;
-              }
             </style>
           </head>
-          <body>
-            <pre>${escapeHtml(receipt)}</pre>
-          </body>
+          <body><pre>${escapeHtml(receipt)}</pre></body>
         </html>
       `);
 
@@ -215,16 +237,13 @@ const printReceipt = (receipt: string): boolean => {
       printWindow.focus();
       printWindow.print();
       printWindow.close();
-
       return true;
     }
   } catch (error) {
     console.error("Print error:", error);
     return false;
   }
-};
-
-
+}
 
 export const handlePrint = async (
   selectedOrder: OrderView | null,
