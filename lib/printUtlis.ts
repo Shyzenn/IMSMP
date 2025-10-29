@@ -73,7 +73,7 @@ const wrapText = (text: string, maxWidth: number): string[] => {
   return lines;
 };
 
-const toNumber = (value: unknown): number => {
+const toNumber = (value: number | null | undefined): number => {
   const num = Number(value);
   return isNaN(num) ? 0 : num;
 };
