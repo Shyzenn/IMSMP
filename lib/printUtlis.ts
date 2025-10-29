@@ -165,53 +165,50 @@ export function printReceipt(receipt: string): boolean {
   try {
     const isAndroid = /Android/i.test(navigator.userAgent);
 
-    // ESC/POS Commands
+    // ESC/POS control codes
     const ESC = "\x1B";
     const GS = "\x1D";
-    const escInit = ESC + "@";
-    const escAlignCenter = ESC + "a" + "\x01";
-    const escAlignLeft = ESC + "a" + "\x00";
-    const escBoldOn = ESC + "E" + "\x01";
-    const escBoldOff = ESC + "E" + "\x00";
-    const escCut = GS + "V" + "\x00";
 
+    const INIT = ESC + "@"; // Initialize printer
+    const ALIGN_LEFT = ESC + "a" + "\x00";
+    const ALIGN_CENTER = ESC + "a" + "\x01";
+    const BOLD_ON = ESC + "E" + "\x01";
+    const BOLD_OFF = ESC + "E" + "\x00";
+    const FEED_3_LINES = ESC + "d" + "\x03";
+    const CUT = GS + "V" + "\x00"; // Partial cut (ignored if printer has no cutter)
+
+    // Format your printable data
     const escposData =
-      escInit +
-      escAlignCenter +
-      escBoldOn +
+      INIT +
+      ALIGN_CENTER +
+      BOLD_ON +
       "Macoleen's Pharmacy\n" +
-      escBoldOff +
+      BOLD_OFF +
       "Order Receipt\n" +
-      "-".repeat(32) +
-      "\n" +
-      escAlignLeft +
-      receipt +
-      "\n" +
-      "-".repeat(32) +
-      "\n" +
-      escAlignCenter +
-      "Thank you!\n\n\n" +
-      escCut;
+      "-".repeat(32) + "\n" +
+      ALIGN_LEFT +
+      receipt.trimEnd() + "\n" +
+      "-".repeat(32) + "\n" +
+      ALIGN_CENTER +
+      "Thank you!\n" +
+      FEED_3_LINES +
+      CUT;
 
     if (isAndroid) {
-      // Convert to binary Uint8Array
-      const encoder = new TextEncoder();
-      const bytes = encoder.encode(escposData);
-
-      // Convert bytes to Base64 properly
+      // Encode safely for RawBT
+      const utf8Bytes = new TextEncoder().encode(escposData);
       let binary = "";
-      for (let i = 0; i < bytes.length; i++) {
-        binary += String.fromCharCode(bytes[i]);
+      for (let i = 0; i < utf8Bytes.length; i++) {
+        binary += String.fromCharCode(utf8Bytes[i]);
       }
       const base64Data = btoa(binary);
 
-      // Send to RawBT
       const rawbtUrl = `rawbt:base64,${base64Data}`;
       window.location.href = rawbtUrl;
       console.log("Sent to RawBT:", rawbtUrl);
       return true;
     } else {
-      // Desktop fallback
+      // Fallback for desktop browsers
       const printWindow = window.open("", "printReceipt", "width=400,height=600");
       if (!printWindow) return false;
 
@@ -231,10 +228,9 @@ export function printReceipt(receipt: string): boolean {
               }
             </style>
           </head>
-          <body><pre>${escapeHtml(receipt)}</pre></body>
+          <body><pre>${escapeHtml2(receipt)}</pre></body>
         </html>
       `);
-
       printWindow.document.close();
       printWindow.focus();
       printWindow.print();
@@ -246,6 +242,10 @@ export function printReceipt(receipt: string): boolean {
     return false;
   }
 }
+
+// Escapes HTML for safe display in desktop print
+const escapeHtml2 = (s: string): string =>
+  s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 
 export const handlePrint = async (
   selectedOrder: OrderView | null,
