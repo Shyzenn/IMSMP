@@ -1,5 +1,5 @@
 import { OrderView } from "@/app/components/transaction/cashier/CashierAction";
-import { EmergencyOrderModalData } from "@/lib/interfaces";
+import { EmergencyOrderModalData, WalkInOrder } from "@/lib/interfaces";
 
 // ============================================
 // Constants
@@ -531,4 +531,61 @@ export const handleEmergencyPrint = async (
 // Optional: Export function to manually connect to printer
 export const manualConnectPrinter = async (): Promise<boolean> => {
   return await connectBluetoothPrinter();
+};
+
+export const handleWalkInPrint = async (
+  selectedOrder: WalkInOrder | null,
+  printWindow: Window
+): Promise<void> => {
+  if (!selectedOrder) return;
+  
+  try {
+    const receiptData: ReceiptData = {
+      orderInfo: {
+        Customer: selectedOrder.customer,
+        Date: new Date(selectedOrder.createdAt).toLocaleString("en-PH"),
+        Type: "Walk In",
+      },
+      items: selectedOrder.itemDetails,
+      footer: {
+        handledBy: selectedOrder.handledBy,
+      },
+    };
+    
+    const receipt = buildReceipt(receiptData);
+    
+    // Use provided window for walk-in
+    printWindow.document.open();
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Macoleen's Pharmacy Receipt</title>
+          <style>
+            @page { margin: 0; }
+            body {
+              font-family: 'Courier New', monospace;
+              font-size: 12px;
+              line-height: 1.4;
+              white-space: pre;
+              margin: 0;
+              padding: 0 8px 150px 8px;
+            }
+            pre {
+              margin: 0;
+              line-height: 1.6;
+            }
+          </style>
+        </head>
+        <body>
+          <pre>${escapeHtml(receipt)}</pre>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  } catch (error) {
+    console.error("Error in handleWalkInPrint:", error);
+  }
 };
