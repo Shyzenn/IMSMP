@@ -5,6 +5,8 @@ export const signUpSchema = z
   .object({
     username: z.string().min(4, "Username must contain at least 4 characters"),
     role: z.enum(["Pharmacist_Staff", "Nurse","Manager", "Cashier"], { message: "User Type is required." }),
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is Required"),
     email: z
     .string()
     .min(1, "Email is required")
@@ -51,6 +53,20 @@ export type TChangePasswordSchema = z.infer<typeof changePasswordSchema>;
 export const editUserSchema = () =>
   z.object({
       id: z.string(),
+      username: z.string().min(4, "Username must contain at least 4 characters"),
+      email: z
+        .string()
+        .min(1, "Email is required")
+        .email("Invalid email address")
+        .refine(
+          (val) =>
+            val.endsWith("@gmail.com"),
+          {
+            message: "Only Gmail are allowed",
+          }
+      ),
+      firstName: z.string().min(1, "First name is required"),
+      lastName: z.string().min(1, "Last name is Required"),
       role: z.string().min(1, "Role is required"),
   })
 
@@ -59,6 +75,8 @@ export type TEditUserSchema = z.infer<ReturnType<typeof editUserSchema>>;
 // Edit User Profile
 export const editUserProfileSchema = z.object({
     profileImage: z.string().optional(),
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is Required"),
     username: z.string().min(1, "Username is required"),
     email: z
       .string()

@@ -1,5 +1,5 @@
 import DashboardAuditLog from "@/app/components/DashboardActivities";
-import DashboardHearder from "@/app/components/DashboardHearder";
+import DashboardHeader from "@/app/components/DashboardHeader";
 import ExpiryProducts from "@/app/components/ExpiryProducts";
 import ManagerDashboardCards from "@/app/components/ManagerDashboardCards";
 import ManagerRecentReqTable from "@/app/components/PharmacistRecentReqTable";
@@ -15,7 +15,7 @@ export default async function Dashboard() {
 
   return (
     <div className="h-full flex flex-col gap-5 mb-4">
-      <DashboardHearder session={session} />
+      <DashboardHeader session={session} />
 
       <ManagerDashboardCards userRole={userRole} />
 

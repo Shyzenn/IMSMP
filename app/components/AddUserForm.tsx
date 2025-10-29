@@ -50,6 +50,25 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid w-full items-center gap-4">
+              <div className="flex gap-4">
+                <FormField label="First Name" error={errors.firstName?.message}>
+                  <Input
+                    {...register("firstName")}
+                    id="firstName"
+                    placeholder="enter first name"
+                    type="text"
+                  />
+                </FormField>
+
+                <FormField label="Last Name" error={errors.lastName?.message}>
+                  <Input
+                    {...register("lastName")}
+                    id="lastName"
+                    placeholder="enter last name"
+                    type="text"
+                  />
+                </FormField>
+              </div>
               <FormField label="Username" error={errors.username?.message}>
                 <Input
                   {...register("username")}

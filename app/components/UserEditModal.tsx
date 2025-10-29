@@ -14,6 +14,8 @@ import { editUser } from "@/lib/action/add";
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import ResetPasswordModal from "./ResetPasswordModal";
+import FormField from "./FormField";
+import { Input } from "@/components/ui/input";
 
 const UserEditModal = ({
   setIsModalOpen,
@@ -29,10 +31,15 @@ const UserEditModal = ({
     formState: { errors, isSubmitting, isDirty },
     handleSubmit,
     control,
+    register,
   } = useForm<TEditUserSchema>({
     resolver: zodResolver(editUserSchema()),
     defaultValues: {
       id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
       role: user.role,
     },
   });
@@ -88,6 +95,42 @@ const UserEditModal = ({
           onSubmit={handleSubmit(onSubmit)}
         >
           <div className="flex flex-col gap-6 mb-4 px-12">
+            <div className="flex gap-4">
+              <FormField label="First Name" error={errors.firstName?.message}>
+                <Input
+                  {...register("firstName")}
+                  id="firstName"
+                  placeholder="enter first name"
+                  type="text"
+                />
+              </FormField>
+
+              <FormField label="Last Name" error={errors.lastName?.message}>
+                <Input
+                  {...register("lastName")}
+                  id="lastName"
+                  placeholder="enter last name"
+                  type="text"
+                />
+              </FormField>
+            </div>
+            <FormField label="Username" error={errors.username?.message}>
+              <Input
+                {...register("username")}
+                id="username"
+                placeholder="username"
+                type="text"
+              />
+            </FormField>
+
+            <FormField label="Email" error={errors.email?.message}>
+              <Input
+                {...register("email")}
+                id="email"
+                placeholder="example@email.com"
+                type="email"
+              />
+            </FormField>
             <CategoryField
               label="User Type"
               control={control}
@@ -123,7 +166,7 @@ const UserEditModal = ({
               className={`px-12 rounded-md ${
                 !isDirty || isSubmitting
                   ? "bg-gray-400 cursor-not-allowed"
-                  : " cursor-pointer bg-green-500 hover:bg-green-600 text-white"
+                  : " cursor-pointer bg-buttonBgColor hover:bg-buttonHover text-white"
               }`}
               type="submit"
             >

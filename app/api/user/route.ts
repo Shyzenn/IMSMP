@@ -9,13 +9,15 @@ import { sendOTPEmail } from "@/lib/mailer";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { username, email, role, password, status } = body;
+    const { username, firstName, lastName, email, role, password, status } = body;
     const otp = String(randomInt(10000000, 99999999)); // 8-digit
     const hashedOtp = await bcrypt.hash(otp, 10);
 
     // Validate input using Zod schema
     const result = signUpSchema.safeParse({
       username,
+      firstName,
+      lastName,
       email,
       role,
       password,
@@ -53,6 +55,8 @@ export async function POST(req: Request) {
       await db.user.create({
         data: {
           username: normalizedUsername,
+          firstName,
+          lastName,
           email,
           role,
           password: hashedOtp, 

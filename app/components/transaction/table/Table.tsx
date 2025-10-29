@@ -43,7 +43,7 @@ const TransactionTable = async ({
           <TableBody>
             {transactions.map((transaction) => (
               <TableRow key={`${transaction.source}-${transaction.id}`}>
-                <TableCell>{`ORD-${transaction.id}`}</TableCell>
+                <TableCell>{`ORD-0${transaction.id}`}</TableCell>
                 <TableCell>{transaction.customer}</TableCell>
                 <TableCell>
                   {formattedDateTime(transaction.createdAt)}

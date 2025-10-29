@@ -16,6 +16,8 @@ export async function GET() {
       username: true,
       email: true,
       role: true,
+      firstName: true,
+      lastName: true,
       profileImage: true,
     },
   });
@@ -35,17 +37,28 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { username, email, profileImage } = await req.json();
+    const { username, email, profileImage, firstName, lastName } = await req.json();
 
     const updatedUser = await db.user.update({
       where: { email: session.user.email },
-      data: { username, email, profileImage },
+      data: { username, email, profileImage, firstName, lastName },
       select: {
         id: true,
         username: true,
         email: true,
+        firstName: true,
+        lastName: true,
         role: true,
         profileImage: true,
+      },
+    });
+
+    await db.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: "Updated",
+        entityType: "Session",
+        description: `User ${session.user.username} (${session.user.role}) updated their profile information.`,
       },
     });
 

@@ -6,8 +6,8 @@ import { Prisma } from "@prisma/client";
 // update user
 export async function PATCH(req: Request) {
   try {
-     const body = await req.json();
-    const { id, role} = body;
+    const body = await req.json();
+    const { id, role, username, email, firstName, lastName} = body;
 
     // Validate input with conditional schema
     const result = editUserSchema().safeParse(body);
@@ -30,11 +30,15 @@ export async function PATCH(req: Request) {
 
         const updateData: Prisma.UserUpdateInput = { 
           role: roleMap[role] || role, 
+          username,
+          email,
+          firstName,
+          lastName
         };
 
     await db.user.update({
       where: { id },
-      data: updateData,
+      data: updateData
     });
 
     return NextResponse.json({ success: true });

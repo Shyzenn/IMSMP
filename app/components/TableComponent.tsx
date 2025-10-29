@@ -112,7 +112,7 @@ function TableComponent<T extends Record<string, unknown>>({
               userRole === "Cashier" || userRole === "Nurse"
                 ? "min-w-[800px]"
                 : "min-w-[700px]"
-            } ${userRole === "Pharmacist_Staff" ? "min-w-[900px]" : ""}`}
+            } ${userRole === "Pharmacist_Staff" ? "min-w-[950px]" : ""}`}
           >
             {reusableTalbe()}
           </div>

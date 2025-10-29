@@ -1,19 +1,19 @@
 import NurseCards from "@/app/components/NurseCards";
 import { auth } from "@/auth";
-import DashboardHearder from "@/app/components/DashboardHearder";
 import ExpiryProducts from "@/app/components/ExpiryProducts";
 import InventoryByCategoryChart from "@/app/components/InventoryByCategoryChart";
 import ManagerRecentReqTable from "@/app/components/PharmacistRecentReqTable";
 import OrderTypePieChart from "@/app/components/OrderTypeChart";
 import TopRequestedProducts from "@/app/components/TopRequestedProduct";
 import DashboardAuditLog from "@/app/components/DashboardActivities";
+import DashboardHeader from "@/app/components/DashboardHeader";
 
 export default async function Dashboard() {
   const session = await auth();
   const userRole = session?.user.role;
   return (
     <div className="h-full flex flex-col gap-5 mb-4">
-      <DashboardHearder session={session} />
+      <DashboardHeader session={session} />
 
       <NurseCards />
       <div className="h-auto lg:h-96 flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">

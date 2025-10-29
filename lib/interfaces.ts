@@ -133,6 +133,8 @@ export interface Links {
 export type UserFormValues = {
   id?: string
   username: string;
+  firstName: string
+  lastName: string
   role: "Pharmacist_Staff" | "Nurse" | "Manager" | "Cashier";
   password?: string;
   confirmPassword?: string;

@@ -1,5 +1,5 @@
 import CashierDashboardCards from "@/app/components/CashierDashboardCards";
-import DashboardHearder from "@/app/components/DashboardHearder";
+import DashboardHeader from "@/app/components/DashboardHeader";
 import ManagerRecentReqTable from "@/app/components/PharmacistRecentReqTable";
 import SalesByCategory from "@/app/components/SalesByCategory";
 import SalesGraph from "@/app/components/SalesGraph";
@@ -13,7 +13,7 @@ export default async function Dashboard() {
 
   return (
     <div className="h-full flex flex-col gap-5 mb-4">
-      <DashboardHearder session={session} />
+      <DashboardHeader session={session} />
       <CashierDashboardCards />
 
       <div className="h-auto lg:h-96 flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">

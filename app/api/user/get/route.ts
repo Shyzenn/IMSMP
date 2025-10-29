@@ -8,11 +8,15 @@ export async function GET() {
             orderBy:{
                 createdAt: 'desc'
             },
-            take:20
         })
 
-        const formattedProducts = users.map((user) => ({
+        const removeSuperAdmin = users.filter((user) => user.role !== "SuperAdmin")
+
+        const formattedProducts = removeSuperAdmin.map((user) => ({
             id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
             username:user.username,
             password: "*********",
             role: user.role ? user.role.replace("_", " ") : "N/A",

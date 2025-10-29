@@ -14,6 +14,9 @@ import clsx from "clsx";
 import { TableRowSkeleton } from "./Skeleton";
 
 const sortableHeaders = [
+  { label: "Email", key: "email" },
+  { label: "First Name", key: "firstName" },
+  { label: "Last Name", key: "lastName" },
   { label: "Username", key: "username" },
   { label: "User Type", key: "role" },
   { label: "Status", key: "status" },
@@ -54,6 +57,9 @@ const UserTable = ({
           <TableBody>
             {usersData.map((user, i) => (
               <TableRow key={i}>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.firstName}</TableCell>
+                <TableCell>{user.lastName}</TableCell>
                 <TableCell>{user.username}</TableCell>
                 <TableCell>{user.role}</TableCell>
                 <TableCell>

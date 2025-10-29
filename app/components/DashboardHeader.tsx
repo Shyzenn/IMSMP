@@ -84,7 +84,7 @@ const DashboardHeader = ({ session }: { session: Session | null }) => {
   }, [alerts]);
 
   return (
-    <div className="lg:flex lg:justify-between">
+    <div className="lg:flex lg:justify-between bg-white p-8 shadow-md items-center rounded-md">
       {/* Greeting */}
       <div className="mb-2 lg:mb-0">
         <p className="font-semibold text-gray-700">
@@ -96,11 +96,9 @@ const DashboardHeader = ({ session }: { session: Session | null }) => {
       </div>
 
       {/* Alerts + Add Button */}
-      <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between mb-4">
+      <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
         {isLoading ? (
-          <div className="bg-gray-100 px-8 py-3 rounded-md md:w-[25rem] animate-pulse w-full">
-            <p className="text-sm text-gray-500">...</p>
-          </div>
+          <div className="bg-gray-100 px-8 py-[22px] rounded-md md:w-[25rem] animate-pulse w-full"></div>
         ) : error ? (
           <div className="bg-red-100 px-8 py-3 rounded-md w-[25rem]">
             <p className="text-sm text-red-500">Failed to load alerts</p>

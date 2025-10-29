@@ -162,49 +162,68 @@ const buildReceipt = (data: ReceiptData): string => {
 
 const printReceipt = (receipt: string): boolean => {
   try {
-    const printWindow = window.open("", "printReceipt", "width=400,height=600");
-    if (!printWindow) {
-      console.error("Failed to open print window");
-      return false;
+    // Check if running on Android (for RawBT)
+    const isAndroid = /Android/i.test(navigator.userAgent);
+
+    if (isAndroid) {
+      // Modern UTF-8 safe encoding
+      const utf8Bytes = new TextEncoder().encode(receipt);
+      const base64Data = btoa(
+        Array.from(utf8Bytes, (byte) => String.fromCharCode(byte)).join("")
+      );
+
+      const rawbtUrl = `rawbt:base64,${base64Data}`;
+      window.location.href = rawbtUrl;
+      console.log("Sent to RawBT:", rawbtUrl);
+      return true;
+    } else {
+      
+      // Desktop or non-Android fallback — normal browser print
+      const printWindow = window.open("", "printReceipt", "width=400,height=600");
+      if (!printWindow) {
+        console.error("Failed to open print window");
+        return false;
+      }
+
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Macoleen's Pharmacy Receipt</title>
+            <style>
+              @page { margin: 0; }
+              body {
+                font-family: 'Courier New', monospace;
+                font-size: 12px;
+                line-height: 1.4;
+                white-space: pre;
+                margin: 0;
+                padding: 0 8px 150px 8px;
+              }
+              pre {
+                margin: 0;
+                line-height: 1.6;
+              }
+            </style>
+          </head>
+          <body>
+            <pre>${escapeHtml(receipt)}</pre>
+          </body>
+        </html>
+      `);
+
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+
+      return true;
     }
-    
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Macoleen's Pharmacy Receipt</title>
-          <style>
-            @page { margin: 0; }
-            body {
-              font-family: 'Courier New', monospace;
-              font-size: 12px;
-              line-height: 1.4;
-              white-space: pre;
-              margin: 0;
-              padding: 0 8px 150px 8px;
-            }
-            pre {
-              margin: 0;
-              line-height: 1.6;
-            }
-          </style>
-        </head>
-        <body>
-          <pre>${escapeHtml(receipt)}</pre>
-        </body>
-      </html>
-    `);
-    
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
-    
-    return true;
   } catch (error) {
     console.error("Print error:", error);
     return false;
   }
 };
+
 
 
 export const handlePrint = async (

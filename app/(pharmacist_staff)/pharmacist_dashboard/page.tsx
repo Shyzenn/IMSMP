@@ -1,4 +1,4 @@
-import DashboardHearder from "@/app/components/DashboardHearder";
+import DashboardHeader from "@/app/components/DashboardHeader";
 import ExpiryProducts from "@/app/components/ExpiryProducts";
 import ManagerDashboardCards from "@/app/components/ManagerDashboardCards";
 import ManagerRecentReqTable from "@/app/components/PharmacistRecentReqTable";
@@ -12,7 +12,7 @@ export default async function Dashboard() {
 
   return (
     <div className="h-full flex flex-col gap-5 mb-4">
-      <DashboardHearder session={session} />
+      <DashboardHeader session={session} />
       <ManagerDashboardCards userRole={userRole} />
       <div className="h-auto lg:h-96 flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0 mb-12">
         <div className="w-full lg:w-[70%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-[27rem]">

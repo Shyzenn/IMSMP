@@ -145,7 +145,7 @@ const StaffNotificationList = ({
   return (
     <>
       {dropdown && (
-        <div className="bg-white w-[400px] h-auto absolute shadow-lg z-20 top-11 -right-24 rounded-md max-w-[500px] max-h-[95vh] overflow-auto">
+        <div className="bg-white w-[380px] md:w-[400px] h-auto absolute shadow-lg z-20 top-11 md:-right-56 -right-60 rounded-md max-w-[500px] max-h-[90vh] overflow-auto">
           {notifications.length === 0 ? (
             <p className="text-center p-10 text-gray-400">No Notifications</p>
           ) : (
@@ -184,6 +184,9 @@ const StaffNotificationList = ({
                     className="px-4 py-2 border-b hover:bg-gray-50 cursor-pointer"
                     onClick={() => handleNotificationClick(notification)}
                   >
+                    {!notification.read && (
+                      <span className="w-2 h-2 mt-2 bg-blue-500 rounded-full flex-shrink-0"></span>
+                    )}
                     <p className="font-semibold">{notification.title}</p>
 
                     {notification.type === "ORDER_REQUEST" && (
