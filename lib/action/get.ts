@@ -514,7 +514,7 @@ export async function fetchAuditPages(query: string, filter: string = "all", dat
 // Transaction
 export type CombinedTransaction = {
   id: number; 
-  type: "REGULAR" | "EMERGENCY" | undefined;
+  type: "REGULAR" | "EMERGENCY" | "Walk In";
   processedBy?: string,
   receivedBy?: string,
   notes?: string,
@@ -606,7 +606,7 @@ export const getTransactionList = async (
       return {
         id: tx.id,
         customer: tx.customer_name?.trim() || "Unknown",
-        type: undefined,
+        type: "Walk In",
         patient_name: undefined, 
         roomNumber: undefined,   
         requestedBy: "Unknown",

@@ -17,6 +17,7 @@ export async function GET() {
       email: true,
       role: true,
       firstName: true,
+      middleName: true,
       lastName: true,
       profileImage: true,
     },
@@ -37,16 +38,17 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { username, email, profileImage, firstName, lastName } = await req.json();
+    const { username, email, profileImage, firstName, lastName, middleName } = await req.json();
 
     const updatedUser = await db.user.update({
       where: { email: session.user.email },
-      data: { username, email, profileImage, firstName, lastName },
+      data: { username, email, profileImage, firstName, lastName, middleName },
       select: {
         id: true,
         username: true,
         email: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         role: true,
         profileImage: true,

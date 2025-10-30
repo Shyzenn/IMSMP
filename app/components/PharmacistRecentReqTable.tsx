@@ -18,6 +18,7 @@ import { OrderRequest } from "@prisma/client";
 import ReqOrderAction from "./ReqOrderAction";
 import { useEmergencyModal } from "@/lib/store/emergency-modal";
 import EmergencyOrderModal from "./EmergencyModal";
+import { RiRefund2Line } from "react-icons/ri";
 
 export const fetchOrderRequest = async (
   page = 1,
@@ -66,6 +67,8 @@ export const baseColumns: Column[] = [
           ? "Paid"
           : status === "pending"
           ? "Pending"
+          : status === "refunded"
+          ? "Refunded"
           : "Canceled";
 
       let bg = "bg-gray-100";
@@ -84,6 +87,10 @@ export const baseColumns: Column[] = [
         bg = "bg-red-100";
         text = "text-red-700";
         icon = <FcCancel className="text-xl" />;
+      } else if (displayStatus === "Refunded") {
+        bg = "bg-orange-100";
+        text = "text-orange-700";
+        icon = <RiRefund2Line className="text-orange-500 text-xl" />;
       }
 
       return (
@@ -98,11 +105,17 @@ export const baseColumns: Column[] = [
   },
 ];
 
-type FilterOption = "All" | "Pending" | "For Payment" | "Paid" | "Cancelled";
+type FilterOption =
+  | "All"
+  | "Pending"
+  | "For Payment"
+  | "Paid"
+  | "Cancelled"
+  | "Refunded";
 
 const ManagerRecentReqTable = ({ userRole }: { userRole?: string }) => {
   const [filter, setFilter] = useState<
-    "All" | "Pending" | "For Payment" | "Paid" | "Cancelled"
+    "All" | "Pending" | "For Payment" | "Paid" | "Cancelled" | "Refunded"
   >("All");
   const [page, setPage] = useState(1);
   const itemsPerPage = 5;
@@ -221,6 +234,7 @@ const ManagerRecentReqTable = ({ userRole }: { userRole?: string }) => {
               { label: "For Payment", value: "for_payment" },
               { label: "Paid", value: "paid" },
               { label: "Canceled", value: "canceled" },
+              { label: "Refunded", value: "refunded" },
             ]}
             value={filter}
             onChange={(val) => {

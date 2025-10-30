@@ -56,10 +56,10 @@ const TransactionTable = async ({
                     ? "Regular"
                     : transaction.type === "EMERGENCY"
                     ? "Pay Later"
-                    : ""}
+                    : "N/A"}
                 </TableCell>
                 <TableCell>{statusLabels[transaction.status]}</TableCell>
-                <TableCell>
+                <TableCell className="text-right w-[120px]">
                   <CashierAction transaction={transaction} />
                 </TableCell>
               </TableRow>

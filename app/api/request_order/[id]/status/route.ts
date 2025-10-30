@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { NotificationType, Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
-import { pusherServer } from "@/lib/pusher/server"; 
+import { pusherServer } from "@/lib/pusher/server";
 
 export async function PUT(
   req: NextRequest,
@@ -21,7 +21,7 @@ export async function PUT(
   }
 
   const { status } = await req.json();
-  if (!status || !["for_payment", "paid", "canceled"].includes(status)) {
+  if (!status || !["for_payment", "paid", "canceled", "refunded"].includes(status)) {
     return NextResponse.json(
       { message: "Invalid or missing status" },
       { status: 400 }
@@ -39,6 +39,10 @@ export async function PUT(
     if (status === "paid") {
       dataToUpdate.processedBy = { connect: { id: userId } };
       dataToUpdate.processedAt = new Date();
+    }
+
+    if (status === "refunded") {
+      dataToUpdate.refundedAt = new Date();
     }
 
     const updatedOrder = await db.orderRequest.update({
@@ -84,6 +88,50 @@ export async function PUT(
           console.warn(`Not enough stock for order item ${item.id}`);
         }
       }
+    }
+
+    // Handle refund - restore inventory
+    if (status === "refunded") {
+      for (const item of updatedOrder.items) {
+        let remainingQty = item.quantity;
+
+        // Get batches that were deducted (prioritize recently updated batches)
+        const batches = await db.productBatch.findMany({
+          where: {
+            productId: item.productId,
+            type: "ACTIVE",
+          },
+          orderBy: { updatedAt: "desc" },
+        });
+
+        for (const batch of batches) {
+          if (remainingQty <= 0) break;
+
+          const incrementQty = remainingQty;
+
+          await db.productBatch.update({
+            where: { id: batch.id },
+            data: { quantity: { increment: incrementQty } },
+          });
+
+          remainingQty -= incrementQty;
+        }
+
+        if (remainingQty > 0) {
+          // If no existing batches, create a new batch for returned items
+          await db.productBatch.create({
+            data: {
+              productId: item.productId,
+              batchNumber: `REFUND-${updatedOrder.id}-${item.id}`,
+              quantity: remainingQty,
+              releaseDate: new Date(),
+              expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+              type: "ACTIVE",
+            },
+          });
+        }
+      }
+
     }
 
     if (status === "paid") {
@@ -170,8 +218,7 @@ export async function PUT(
       }
     }
 
-    // Create and trigger Pusher notification
-    if (updatedOrder.userId && updatedOrder.userId !== userId) {
+    if (updatedOrder.userId && updatedOrder.userId !== userId && status !== "refunded") {
       let title = "";
       let notifType: NotificationType = NotificationType.ORDER_RECEIVED;
 
@@ -226,10 +273,10 @@ export async function PUT(
     await db.auditLog.create({
       data: {
         userId,
-        action: "Status Update",
+        action: status === "refunded" ? "Refund" : "Status Update",
         entityType: "OrderRequest",
         entityId: updatedOrder.id,
-        description: `Order ${updatedOrder.id} marked as ${status.toUpperCase()} by ${session.user.username}`,
+        description: `ORD-0${updatedOrder.id} marked as ${status.toUpperCase()} by ${session.user.username}`,
       },
     });
 

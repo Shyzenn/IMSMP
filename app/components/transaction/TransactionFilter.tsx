@@ -15,6 +15,7 @@ const TransactionFilter = () => {
         { label: "For Payment", value: "for_payment" },
         { label: "Paid", value: "paid" },
         { label: "Cancelled", value: "canceled" },
+        { label: "Refunded", value: "refunded" },
       ]}
     />
   );

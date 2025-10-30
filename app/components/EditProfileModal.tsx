@@ -51,6 +51,7 @@ const EditProfileModal = ({ close }: { close: () => void }) => {
         username: userData.username,
         email: userData.email,
         firstName: userData.firstName,
+        middleName: userData.middleName,
         lastName: userData.lastName,
         profileImage: userData.profileImage || "",
       });
@@ -145,25 +146,32 @@ const EditProfileModal = ({ close }: { close: () => void }) => {
             onSubmit={handleSubmit(onSubmit)}
           >
             <div className="flex flex-col gap-8 px-12">
-              <div className="flex gap-4">
-                <FormField label="First Name" error={errors.firstName?.message}>
-                  <Input
-                    {...register("firstName")}
-                    id="firstName"
-                    placeholder="enter first name"
-                    type="text"
-                  />
-                </FormField>
+              <FormField label="First Name" error={errors.firstName?.message}>
+                <Input
+                  {...register("firstName")}
+                  id="firstName"
+                  placeholder="enter first name"
+                  type="text"
+                />
+              </FormField>
 
-                <FormField label="Last Name" error={errors.lastName?.message}>
-                  <Input
-                    {...register("lastName")}
-                    id="lastName"
-                    placeholder="enter last name"
-                    type="text"
-                  />
-                </FormField>
-              </div>
+              <FormField label="Middle Name" error={errors.middleName?.message}>
+                <Input
+                  {...register("middleName")}
+                  id="middleName"
+                  placeholder="enter middle name (Optional)"
+                  type="text"
+                />
+              </FormField>
+
+              <FormField label="Last Name" error={errors.lastName?.message}>
+                <Input
+                  {...register("lastName")}
+                  id="lastName"
+                  placeholder="enter last name"
+                  type="text"
+                />
+              </FormField>
               <FormField label="Username" error={errors.username?.message}>
                 <Input
                   {...register("username")}

@@ -16,6 +16,7 @@ import { TableRowSkeleton } from "./Skeleton";
 const sortableHeaders = [
   { label: "Email", key: "email" },
   { label: "First Name", key: "firstName" },
+  { label: "Middle Name", key: "middleName" },
   { label: "Last Name", key: "lastName" },
   { label: "Username", key: "username" },
   { label: "User Type", key: "role" },
@@ -59,6 +60,7 @@ const UserTable = ({
               <TableRow key={i}>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.firstName}</TableCell>
+                <TableCell>{user.middleName}</TableCell>
                 <TableCell>{user.lastName}</TableCell>
                 <TableCell>{user.username}</TableCell>
                 <TableCell>{user.role}</TableCell>

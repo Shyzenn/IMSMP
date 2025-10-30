@@ -16,6 +16,7 @@ model User {
   
   firstName String @default("N/A")
   lastName  String @default("N/A")
+  middleName String? 
 
   profileImage String?
 
@@ -121,6 +122,7 @@ model OrderRequest {
   notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  refundedAt   DateTime?
 
   type OrderType @default(REGULAR)
 
@@ -168,6 +170,7 @@ model WalkInTransaction {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   status        Status
+  refundedAt    DateTime?
   items         WalkInItem[]
   totalAmount   Decimal        @default(0.00)
   userId        String // pharmacist who encoded the walk-in
@@ -191,6 +194,7 @@ enum Status {
   for_payment
   paid
   canceled
+  refunded
 }
 
 enum NotificationType {

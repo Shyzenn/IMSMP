@@ -7,7 +7,7 @@ import { Prisma } from "@prisma/client";
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const { id, role, username, email, firstName, lastName} = body;
+    const { id, role, username, email, firstName, lastName, middleName} = body;
 
     // Validate input with conditional schema
     const result = editUserSchema().safeParse(body);
@@ -33,6 +33,7 @@ export async function PATCH(req: Request) {
           username,
           email,
           firstName,
+          middleName,
           lastName
         };
 

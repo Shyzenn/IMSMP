@@ -17,6 +17,7 @@ export async function GET() {
             email: user.email,
             firstName: user.firstName,
             lastName: user.lastName,
+            middleName: user.middleName || "N/A",
             username:user.username,
             password: "*********",
             role: user.role ? user.role.replace("_", " ") : "N/A",

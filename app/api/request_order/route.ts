@@ -188,7 +188,7 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "5", 10);
     const filter = searchParams.get("filter") || "all";
-    const validStatuses: $Enums.Status[] = ["pending", "for_payment", "paid", "canceled"];
+    const validStatuses: $Enums.Status[] = ["pending", "for_payment", "paid", "canceled", "refunded"];
     const whereClause = {
         isArchived: false, 
         ...(validStatuses.includes(filter.toLowerCase() as $Enums.Status)

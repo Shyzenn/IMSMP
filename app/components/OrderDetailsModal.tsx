@@ -91,12 +91,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 
             {/* Order Info */}
             <div className="flex flex-col gap-5 pb-2">
-              {currentOrder.source === "Walk In" ? (
-                <div className="flex gap-2">
-                  <p>Customer Name:</p>
-                  <p className="font-semibold">{currentOrder.customer}</p>
-                </div>
-              ) : (
+              {currentOrder.source !== "Walk In" ? (
                 <div className="flex  justify-between">
                   <div>
                     <p className="mt-2 font-semibold">
@@ -129,9 +124,40 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 
                     <p className="mt-2 font-semibold">
                       Type:{" "}
+                      <span className="font-normal">
+                        {" "}
+                        {currentOrder.type === "EMERGENCY"
+                          ? "Pay Later"
+                          : currentOrder.type === "REGULAR"
+                          ? "Regular"
+                          : "Walk In"}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <p className="font-semibold">Customer Name:</p>
+                    <p>{currentOrder.customer}</p>
+                  </div>
+                  <div>
+                    <p className="mt-2 font-semibold">
+                      Type:{"  "}
                       <span className="font-normal"> {currentOrder.type}</span>
                     </p>
                   </div>
+                  <p className="mt-2 font-semibold">
+                    Created At:{" "}
+                    <span className="font-normal">
+                      {new Date(currentOrder.createdAt).toLocaleString(
+                        "en-PH",
+                        {
+                          timeZone: "Asia/Manila",
+                        }
+                      )}
+                    </span>
+                  </p>
                 </div>
               )}
             </div>
@@ -199,30 +225,35 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 <p>{currentOrder.notes}</p>
               </div>
             ) : null}
-
-            <div>
-              <p className="mt-2 font-semibold">
-                Requested By:{" "}
-                <span className="font-normal">{currentOrder.requestedBy}</span>
-              </p>
-
-              {(currentOrder.status === "paid" ||
-                currentOrder.status === "for_payment") && (
+            {currentOrder.source === "Walk In" ? null : (
+              <div>
                 <p className="mt-2 font-semibold">
-                  Received By:{" "}
-                  <span className="font-normal">{currentOrder.receivedBy}</span>
-                </p>
-              )}
-
-              {currentOrder.status === "paid" && (
-                <p className="mt-2 font-semibold">
-                  Payment Processed By:{" "}
+                  Requested By:{" "}
                   <span className="font-normal">
-                    {currentOrder.processedBy}
+                    {currentOrder.requestedBy}
                   </span>
                 </p>
-              )}
-            </div>
+
+                {(currentOrder.status === "paid" ||
+                  currentOrder.status === "for_payment") && (
+                  <p className="mt-2 font-semibold">
+                    Received By:{" "}
+                    <span className="font-normal">
+                      {currentOrder.receivedBy}
+                    </span>
+                  </p>
+                )}
+
+                {currentOrder.status === "paid" && (
+                  <p className="mt-2 font-semibold">
+                    Payment Processed By:{" "}
+                    <span className="font-normal">
+                      {currentOrder.processedBy}
+                    </span>
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Buttons */}
             {session?.user.role === "Pharmacist_Staff" &&

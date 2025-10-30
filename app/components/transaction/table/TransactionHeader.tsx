@@ -49,7 +49,9 @@ const TransactionTableHeader = ({ userRole }: { userRole: string }) => {
           </TableHead>
 
           <TableHead className="text-black font-semibold">Status</TableHead>
-          <TableHead className="text-black font-semibold">Actions</TableHead>
+          <TableHead className="text-black font-semibold text-right w-[120px]">
+            Actions
+          </TableHead>
         </>
       }
     />

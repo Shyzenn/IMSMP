@@ -70,14 +70,26 @@ export default function EmergencyOrderModal() {
           </div>
 
           <div className="flex justify-end mt-4 print:hidden gap-4">
-            <CancelButton setIsModalOpen={closeModal} />
-            <button
-              onClick={() => handleEmergencyPrint(orderData, closeModal)}
-              className="bg-buttonBgColor hover:bg-buttonHover text-white px-8 py-2 rounded-md flex items-center gap-2"
-            >
-              <LuPrinter />
-              Print
-            </button>
+            {order.status === "paid" ? (
+              <button
+                type="button"
+                className="border px-6 py-2 rounded-md hover:bg-gray-50"
+                onClick={closeModal}
+              >
+                Close
+              </button>
+            ) : (
+              <>
+                <CancelButton setIsModalOpen={closeModal} />
+                <button
+                  onClick={() => handleEmergencyPrint(orderData, closeModal)}
+                  className="bg-buttonBgColor hover:bg-buttonHover text-white px-8 py-2 rounded-md flex items-center gap-2"
+                >
+                  <LuPrinter />
+                  Print
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

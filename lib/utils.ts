@@ -71,6 +71,7 @@ export const statusLabels: Record<string, string> = {
   canceled: "Cancelled",
   paid: "Paid",
   pending: "Pending",
+  refunded: "Refunded"
 };
 
 // export const typeLabels = {
@@ -87,10 +88,11 @@ export type   TransactionFilter =
   | "paid"
   | "pending"
   | "for_payment"
-  | "canceled";
+  | "canceled"
+  | "refunded";
 
 export const isWalkInFilterEnabled = (filter: TransactionFilter) => {
-  return filter === "all" || filter === "paid" || filter === "walk_in";
+  return filter === "all" || filter === "paid" || filter === "walk_in" || filter === "refunded";
 };
 
 export const isRequestOrderFilterEnabled = (filter: TransactionFilter) => {
@@ -102,7 +104,8 @@ export const isRequestOrderFilterEnabled = (filter: TransactionFilter) => {
     filter === "pending" ||
     filter === "for_payment" ||
     filter === "request_order" ||
-    filter === "canceled"
+    filter === "canceled" ||
+    filter === "refunded"
   );
 };
 
@@ -120,6 +123,8 @@ export const mapStatus = (filter: TransactionFilter) => {
       return { field: "status", value: Status.for_payment };
     case "canceled":
       return { field: "status", value: Status.canceled };
+    case "refunded":
+      return { field: "status", value: Status.refunded };
     default:
       return undefined;
   }

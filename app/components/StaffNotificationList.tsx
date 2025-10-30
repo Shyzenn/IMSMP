@@ -110,7 +110,7 @@ const StaffNotificationList = ({
 
       const orderView: OrderView = {
         id: `ORD-${data.id}`,
-        type: data.type ?? "REGULAR",
+        type: data.type ?? "Regular",
         requestedBy: data.user?.username ?? "Unknown",
         receivedBy: data.receivedBy?.username ?? "Unknown",
         processedBy: data.processedBy?.username ?? "Unknown",

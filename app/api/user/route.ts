@@ -9,7 +9,7 @@ import { sendOTPEmail } from "@/lib/mailer";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { username, firstName, lastName, email, role, password, status } = body;
+    const { username, firstName, middleName, lastName, email, role, password, status } = body;
     const otp = String(randomInt(10000000, 99999999)); // 8-digit
     const hashedOtp = await bcrypt.hash(otp, 10);
 
@@ -17,6 +17,7 @@ export async function POST(req: Request) {
     const result = signUpSchema.safeParse({
       username,
       firstName,
+      middleName,
       lastName,
       email,
       role,
@@ -56,6 +57,7 @@ export async function POST(req: Request) {
         data: {
           username: normalizedUsername,
           firstName,
+          middleName,
           lastName,
           email,
           role,

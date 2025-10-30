@@ -6,6 +6,7 @@ export const signUpSchema = z
     username: z.string().min(4, "Username must contain at least 4 characters"),
     role: z.enum(["Pharmacist_Staff", "Nurse","Manager", "Cashier"], { message: "User Type is required." }),
     firstName: z.string().min(1, "First name is required"),
+    middleName: z.string().optional(),
     lastName: z.string().min(1, "Last name is Required"),
     email: z
     .string()
@@ -67,6 +68,7 @@ export const editUserSchema = () =>
       ),
       firstName: z.string().min(1, "First name is required"),
       lastName: z.string().min(1, "Last name is Required"),
+      middleName: z.string().optional(),
       role: z.string().min(1, "Role is required"),
   })
 
@@ -77,6 +79,7 @@ export const editUserProfileSchema = z.object({
     profileImage: z.string().optional(),
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is Required"),
+    middleName: z.string().optional(),
     username: z.string().min(1, "Username is required"),
     email: z
       .string()
