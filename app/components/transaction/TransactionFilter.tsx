@@ -10,7 +10,7 @@ const TransactionFilter = () => {
       staticOptions={[
         { label: "All", value: "all" },
         { label: "Regular", value: "regular" },
-        { label: "Emergency", value: "emergency" },
+        { label: "Pay Later", value: "emergency" },
         { label: "Pending", value: "pending" },
         { label: "For Payment", value: "for_payment" },
         { label: "Paid", value: "paid" },

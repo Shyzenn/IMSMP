@@ -272,9 +272,13 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
     logo.onload = () => {
       // Center the logo
       const pageWidth = doc.internal.pageSize.getWidth();
-      const logoWidth = 25;
+      const maxWidth = 60;
+      const aspectRatio = logo.height / logo.width;
+      const logoWidth = maxWidth;
+      const logoHeight = logoWidth * aspectRatio;
       const logoX = (pageWidth - logoWidth) / 2;
-      doc.addImage(logo, "PNG", logoX, 10, logoWidth, 40);
+
+      doc.addImage(logo, "PNG", logoX, 10, logoWidth, logoHeight);
 
       // Title
       doc.setFont("helvetica", "bold");
@@ -314,7 +318,15 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
         new Date(tx.createdAt).toLocaleDateString(),
         tx.quantity,
         tx.total.toFixed(2),
-        tx.status,
+        tx.status === "pending"
+          ? "Pending"
+          : tx.status === "for_payment"
+          ? "For Payment"
+          : tx.status === "paid"
+          ? "Paid"
+          : tx.status === "refunded"
+          ? "Refunded"
+          : tx.status,
       ]);
 
       autoTable(doc, {

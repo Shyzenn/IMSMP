@@ -13,6 +13,7 @@ import { CombinedTransaction } from "@/lib/action/get";
 import { EmergencyOrderModalData, OrderItem } from "@/lib/interfaces";
 import { useTransition } from "react";
 import toast from "react-hot-toast";
+import { useSession } from "next-auth/react";
 
 export type OrderView = {
   type: "REGULAR" | "EMERGENCY" | "Walk In";
@@ -43,6 +44,7 @@ const CashierAction = ({
   const { openModal: openEmergencyModal } = useEmergencyModal();
   const { open, isOpen, close } = useModal();
   const [isPending, startTransition] = useTransition();
+  const { data: session } = useSession();
 
   const handleViewClick = async (transaction: CombinedTransaction) => {
     if (!transaction?.id) return;
@@ -175,14 +177,15 @@ const CashierAction = ({
   return (
     <>
       <div className="flex gap-2">
-        {transaction.status === "paid" && (
-          <ActionButton
-            icon={RiRefund2Line}
-            onClick={open}
-            color="hover:bg-red-200 px-2"
-            label="Refund"
-          />
-        )}
+        {transaction.status === "paid" &&
+          session?.user.role === "Pharmacist_Staff" && (
+            <ActionButton
+              icon={RiRefund2Line}
+              onClick={open}
+              color="hover:bg-red-200 px-2"
+              label="Refund"
+            />
+          )}
         <ActionButton
           icon={IoMdEye}
           onClick={() => handleViewClick(transaction)}

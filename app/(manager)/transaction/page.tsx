@@ -51,6 +51,7 @@ async function Transaction(props: {
         title="History"
         transactionExport={true}
         hasDateFilter={true}
+        isTransactionFilter={true}
       />
       <div className="mt-4">
         <Suspense

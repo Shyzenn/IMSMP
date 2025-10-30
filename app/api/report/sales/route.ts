@@ -12,11 +12,23 @@ type SalesRow = {
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
+
+  // 🔹 Get parameters from frontend
+  const query = searchParams.get("query")?.toLowerCase().trim() || "";
   const filter = searchParams.get("filter") || "This Month";
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+  const userRole = searchParams.get("userRole") || "Admin";
 
+  // 🔹 Determine date range
   let fromDate = new Date();
+  let toDate = new Date();
 
-  if (filter === "Last 7 Days") {
+  if (from && to) {
+    // custom date range from frontend
+    fromDate = new Date(from);
+    toDate = new Date(to);
+  } else if (filter === "Last 7 Days") {
     fromDate = subDays(new Date(), 6);
   } else if (filter === "This Month") {
     fromDate = startOfMonth(new Date());
@@ -26,42 +38,45 @@ export async function GET(req: Request) {
 
   try {
     const [paidOrders, paidWalkIns] = await Promise.all([
+      // 🏥 Request Orders
       db.orderRequest.findMany({
         where: {
           status: "paid",
-          createdAt: { gte: fromDate },
+          createdAt: { gte: fromDate, lte: toDate },
+          ...(query && {
+            patient_name: { contains: query },
+          }),
         },
         include: {
-          items: {
-            include: {
-              product: { include: { category: true } },
-            },
-          },
+          items: { include: { product: { include: { category: true } } } },
         },
       }),
-      db.walkInTransaction.findMany({
-        where: {
-          status: "paid",
-          createdAt: { gte: fromDate },
-        },
-        include: {
-          items: {
-            include: {
-              product: { include: { category: true } },
+
+      // 🧾 Walk-in Transactions (only if userRole allows)
+      userRole !== "Nurse"
+        ? db.walkInTransaction.findMany({
+            where: {
+              status: "paid",
+              createdAt: { gte: fromDate, lte: toDate },
+              ...(query && {
+                customer_name: { contains: query },
+              }),
             },
-          },
-        },
-      }),
+            include: {
+              items: { include: { product: { include: { category: true } } } },
+            },
+          })
+        : Promise.resolve([]),
     ]);
 
-    // Flatten all sales
+    // 🔹 Flatten all sales
     const allSales = [...paidOrders, ...paidWalkIns].flatMap((order) =>
       order.items.map((item) => {
         const price = Number(item.product?.price) || 0;
         const quantity = Number(item.quantity) || 0;
         const createdAt = order.createdAt;
-
         let date = "";
+
         if (createdAt && !isNaN(new Date(createdAt).getTime())) {
           date = new Date(createdAt).toISOString().split("T")[0];
         }
@@ -76,7 +91,7 @@ export async function GET(req: Request) {
       })
     );
 
-    // Group sales by date
+    // 🔹 Group sales by date
     const groupedByDate: Record<string, typeof allSales> = {};
     for (const sale of allSales) {
       if (!sale.date) continue;
@@ -84,9 +99,8 @@ export async function GET(req: Request) {
       groupedByDate[sale.date].push(sale);
     }
 
-    // ✅ Format data: show all products per date + subtotal row
+    // 🔹 Format with subtotals
     const finalData: SalesRow[] = [];
-
     for (const [date, sales] of Object.entries(groupedByDate)) {
       const totalRevenue = sales.reduce((sum, s) => sum + s.revenue, 0);
 
@@ -100,7 +114,6 @@ export async function GET(req: Request) {
         });
       });
 
-      // Add subtotal row per day
       finalData.push({
         product_name: "",
         category: "",

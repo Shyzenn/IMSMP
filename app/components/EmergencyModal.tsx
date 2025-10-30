@@ -7,9 +7,13 @@ import { MdAddAlert } from "react-icons/md";
 import CancelButton from "./CancelButton";
 import { LuPrinter } from "react-icons/lu";
 import { handleEmergencyPrint } from "@/lib/printUtlis";
+import { useSession } from "next-auth/react";
 
 export default function EmergencyOrderModal() {
   const { isOpen, orderData, closeModal } = useEmergencyModal();
+
+  const { data: session } = useSession();
+  const userRole = session?.user.role;
 
   if (!isOpen || !orderData) return null;
 
@@ -81,13 +85,15 @@ export default function EmergencyOrderModal() {
             ) : (
               <>
                 <CancelButton setIsModalOpen={closeModal} />
-                <button
-                  onClick={() => handleEmergencyPrint(orderData, closeModal)}
-                  className="bg-buttonBgColor hover:bg-buttonHover text-white px-8 py-2 rounded-md flex items-center gap-2"
-                >
-                  <LuPrinter />
-                  Print
-                </button>
+                {userRole === "Pharmacist_Staff" && (
+                  <button
+                    onClick={() => handleEmergencyPrint(orderData, closeModal)}
+                    className="bg-buttonBgColor hover:bg-buttonHover text-white px-8 py-2 rounded-md flex items-center gap-2"
+                  >
+                    <LuPrinter />
+                    Print
+                  </button>
+                )}
               </>
             )}
           </div>
