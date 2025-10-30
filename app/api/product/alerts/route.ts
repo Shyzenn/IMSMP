@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const today = new Date();
     const threshold = new Date();
-    threshold.setDate(threshold.getDate() + 7); // expiring within 7 days
+    threshold.setDate(threshold.getDate() + 31); // expiring within 31 days
 
     // Fetch products with their batches
     const products = await db.product.findMany({

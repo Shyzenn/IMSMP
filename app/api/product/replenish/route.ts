@@ -37,10 +37,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const rd = new Date(releaseDate);
-    if (isNaN(rd.getTime())) {
+    if (isNaN(releaseDate.getTime()) || isNaN(expiryDate.getTime())) {
       return NextResponse.json(
-        { message: "Invalid releaseDate" },
+        { message: "Invalid date format" },
         { status: 400 }
       );
     }
@@ -51,7 +50,7 @@ export async function POST(req: Request) {
 
     const paddedCount = String(countForProduct + 1).padStart(2, "0");
 
-    const dateCode = format(rd, "ddMMyyyy");
+    const dateCode = format(releaseDate, "ddMMyyyy");
     const batchNumber = `${dateCode}B${paddedCount}`;
 
     const newBatch = await db.productBatch.create({
@@ -59,8 +58,8 @@ export async function POST(req: Request) {
         productId,
         batchNumber,
         quantity,
-        releaseDate: new Date(releaseDate),
-        expiryDate: new Date(expiryDate),
+        releaseDate,
+        expiryDate,
       },
     });
 

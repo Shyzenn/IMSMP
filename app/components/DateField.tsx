@@ -30,28 +30,33 @@ const DateField = <T extends FieldValues>({
       <Controller
         name={name}
         control={control}
-        render={({ field }) => (
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className={className}>
-                {field.value
-                  ? format(new Date(field.value), "PPP")
-                  : "Pick a date"}
-                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={field.value}
-                onSelect={field.onChange}
-                className="rounded-md border shadow-sm"
-                captionLayout="dropdown"
-                toYear={new Date().getFullYear() + 50}
-              />
-            </PopoverContent>
-          </Popover>
-        )}
+        render={({ field }) => {
+          // Safely handle the date value
+          const dateValue = field.value ? new Date(field.value) : undefined;
+          const isValidDate = dateValue && !isNaN(dateValue.getTime());
+
+          return (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className={className}>
+                  {isValidDate ? format(dateValue, "PPP") : "Pick a date"}
+                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={isValidDate ? dateValue : undefined}
+                  onSelect={field.onChange}
+                  className="rounded-md border shadow-sm"
+                  captionLayout="dropdown"
+                  fromYear={1900}
+                  toYear={new Date().getFullYear() + 50}
+                />
+              </PopoverContent>
+            </Popover>
+          );
+        }}
       />
       {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
     </div>

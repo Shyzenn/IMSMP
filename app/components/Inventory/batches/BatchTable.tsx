@@ -1,10 +1,11 @@
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { capitalLetter, formattedDate } from "@/lib/utils";
+import { capitalLetter } from "@/lib/utils";
 import EmptyTable from "../../EmptyTable";
 import { getBatches } from "@/lib/action/get";
 import BatchesTableHeader from "./BatchesTableHeader";
 import BatchAction from "./BatchAction";
 import { auth } from "@/auth";
+import { format } from "date-fns";
 
 export type BatchProps = {
   id: number;
@@ -14,6 +15,11 @@ export type BatchProps = {
   releaseDate: Date;
   expiryDate: Date;
   status: string;
+};
+
+// Format date without timezone conversion
+const formatDateLocal = (date: Date) => {
+  return format(new Date(date), "MM/dd/yyyy");
 };
 
 export default async function BatchTable({
@@ -69,8 +75,8 @@ export default async function BatchTable({
                   </TableCell>
                   <TableCell>{batch.batchNumber}</TableCell>
                   <TableCell>{batch.quantity}</TableCell>
-                  <TableCell>{formattedDate(batch.releaseDate)}</TableCell>
-                  <TableCell>{formattedDate(batch.expiryDate)}</TableCell>
+                  <TableCell>{formatDateLocal(batch.releaseDate)}</TableCell>
+                  <TableCell>{formatDateLocal(batch.expiryDate)}</TableCell>
                   <TableCell>{batch.status}</TableCell>
                   {(userRole === "Manager" ||
                     userRole === "Pharmacist_Staff") && (

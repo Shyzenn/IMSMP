@@ -258,7 +258,7 @@ export const getBatches = async (
     const daysToExpire =
       (new Date(batch.expiryDate).getTime() - now.getTime()) /
       (1000 * 60 * 60 * 24);
-    if (daysToExpire <= 7) status = "Expiring";
+    if (daysToExpire <= 31) status = "Expiring";
   }
 
     return { ...batch, status };
@@ -374,7 +374,7 @@ export const getProductList = async (
 
     const now = new Date();
     const threshold = new Date();
-    threshold.setDate(now.getDate() + 7);
+    threshold.setDate(now.getDate() + 31);
 
     const expiringSoonCount = validBatches.filter((b) => {
       const expiry = new Date(b.expiryDate);

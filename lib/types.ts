@@ -133,19 +133,51 @@ export const editProductSchema = z.object({
 
 export type TEditProductSchema = z.infer<typeof editProductSchema>;
 
+const parseLocalDate = (dateString: string): Date => {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day); 
+};
+
 // Edit Batch
 export const editBatchSchema = z.object({
   id: z.number(),
   quantity: z.preprocess(
     (val) => (val === "" || val === undefined ? undefined : Number(val)),
-    z.number({ required_error: "Quantity is required" }).min(0, "Quantity must be 0 or higher")
+    z.number({ required_error: "Quantity is required" })
+      .min(0, "Quantity must be 0 or higher")
   ),
   releaseDate: z.preprocess(
-    (val) => (typeof val === "string" ? new Date(val) : val),
+    (val) => {
+      if (!val) return undefined;
+      if (val instanceof Date) {
+        return isNaN(val.getTime()) ? undefined : val;
+      }
+      if (typeof val === "string") {
+        if (val.includes('T')) {
+          const date = new Date(val);
+          return isNaN(date.getTime()) ? undefined : date;
+        }
+        return parseLocalDate(val);
+      }
+      return undefined;
+    },
     z.date({ required_error: "Release Date is required" })
   ),
   expiryDate: z.preprocess(
-    (val) => (typeof val === "string" ? new Date(val) : val),
+    (val) => {
+      if (!val) return undefined;
+      if (val instanceof Date) {
+        return isNaN(val.getTime()) ? undefined : val;
+      }
+      if (typeof val === "string") {
+        if (val.includes('T')) {
+          const date = new Date(val);
+          return isNaN(date.getTime()) ? undefined : date;
+        }
+        return parseLocalDate(val);
+      }
+      return undefined;
+    },
     z.date({ required_error: "Expiry Date is required" })
   ),
 });
@@ -154,15 +186,48 @@ export const editBatchSchema = z.object({
 export type TEditBatchSchema = z.infer<typeof editBatchSchema>;
 
 // Replenish Product
+
 export const replenishProductSchema = z.object({
   productId: z.number(),
   quantity: z.preprocess(
     (val) => (val === "" || val === undefined ? undefined : Number(val)),
     z.number({ required_error: "Quantity is required" })
-    .min(0, "Quantity must be 0 or higher")
+      .min(0, "Quantity must be 0 or higher")
   ),
-  releaseDate: z.preprocess((val) => (typeof val === "string" ? new Date(val) : val), z.date({ required_error: "Release Date is required" })),
-  expiryDate: z.preprocess((val) => (typeof val === "string" ? new Date(val) : val), z.date({ required_error: "Expiry Date is required" })),
+  releaseDate: z.preprocess(
+    (val) => {
+      if (!val) return undefined;
+      if (val instanceof Date) {
+        return isNaN(val.getTime()) ? undefined : val;
+      }
+      if (typeof val === "string") {
+        if (val.includes('T')) {
+          const date = new Date(val);
+          return isNaN(date.getTime()) ? undefined : date;
+        }
+        return parseLocalDate(val);
+      }
+      return undefined;
+    },
+    z.date({ required_error: "Release Date is required" })
+  ),
+  expiryDate: z.preprocess(
+    (val) => {
+      if (!val) return undefined;
+      if (val instanceof Date) {
+        return isNaN(val.getTime()) ? undefined : val;
+      }
+      if (typeof val === "string") {
+        if (val.includes('T')) {
+          const date = new Date(val);
+          return isNaN(date.getTime()) ? undefined : date;
+        }
+        return parseLocalDate(val);
+      }
+      return undefined;
+    },
+    z.date({ required_error: "Expiry Date is required" })
+  ),
 });
 
 export type TReplenishProductSchema = z.infer<typeof replenishProductSchema>;

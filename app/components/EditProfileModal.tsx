@@ -108,10 +108,7 @@ const EditProfileModal = ({ close }: { close: () => void }) => {
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40">
-        <div
-          className="print:block bg-white w-full max-w-[500px] max-h-[95vh] rounded-md relative overflow-auto p-4"
-          id="print-section"
-        >
+        <div className="print:block bg-white w-full max-w-[500px] max-h-[95vh] rounded-md relative p-4">
           {/* PROFILE PICTURE */}
           <div className="flex items-center justify-center flex-col gap-4">
             <p className="text-xl font-semibold border-b w-full text-center pb-2">
@@ -141,63 +138,64 @@ const EditProfileModal = ({ close }: { close: () => void }) => {
           </div>
 
           {/* FORM */}
-          <form
-            className="pb-[70px] mt-12 overflow-y-auto max-h-[calc(95vh-150px)]"
-            onSubmit={handleSubmit(onSubmit)}
-          >
-            <div className="flex flex-col gap-8 px-12">
-              <FormField label="First Name" error={errors.firstName?.message}>
-                <Input
-                  {...register("firstName")}
-                  id="firstName"
-                  placeholder="enter first name"
-                  type="text"
-                />
-              </FormField>
+          <form className="pb-[70px] mt-6" onSubmit={handleSubmit(onSubmit)}>
+            <div className="overflow-y-auto max-h-[calc(95vh-300px)]">
+              <div className="flex flex-col gap-8 px-12">
+                <FormField label="First Name" error={errors.firstName?.message}>
+                  <Input
+                    {...register("firstName")}
+                    id="firstName"
+                    placeholder="enter first name"
+                    type="text"
+                  />
+                </FormField>
 
-              <FormField label="Middle Name" error={errors.middleName?.message}>
-                <Input
-                  {...register("middleName")}
-                  id="middleName"
-                  placeholder="enter middle name (Optional)"
-                  type="text"
-                />
-              </FormField>
+                <FormField
+                  label="Middle Name"
+                  error={errors.middleName?.message}
+                >
+                  <Input
+                    {...register("middleName")}
+                    id="middleName"
+                    placeholder="enter middle name (Optional)"
+                    type="text"
+                  />
+                </FormField>
 
-              <FormField label="Last Name" error={errors.lastName?.message}>
-                <Input
-                  {...register("lastName")}
-                  id="lastName"
-                  placeholder="enter last name"
-                  type="text"
-                />
-              </FormField>
-              <FormField label="Username" error={errors.username?.message}>
-                <Input
-                  {...register("username")}
-                  id="username"
-                  type="text"
-                  className="mt-1"
-                />
-              </FormField>
-              <FormField label="Email" error={errors.email?.message}>
-                <Input
-                  {...register("email")}
-                  id="email"
-                  type="email"
-                  className="mt-1"
-                />
-              </FormField>
+                <FormField label="Last Name" error={errors.lastName?.message}>
+                  <Input
+                    {...register("lastName")}
+                    id="lastName"
+                    placeholder="enter last name"
+                    type="text"
+                  />
+                </FormField>
+                <FormField label="Username" error={errors.username?.message}>
+                  <Input
+                    {...register("username")}
+                    id="username"
+                    type="text"
+                    className="mt-1"
+                  />
+                </FormField>
+                <FormField label="Email" error={errors.email?.message}>
+                  <Input
+                    {...register("email")}
+                    id="email"
+                    type="email"
+                    className="mt-1"
+                  />
+                </FormField>
+              </div>
+              <Link
+                className="px-12 text-sm mt-2 text-blue-400 cursor-pointer w-auto"
+                href="/change-password"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Change password?
+              </Link>
             </div>
-            <Link
-              className="px-12 text-sm mt-2 text-blue-400 cursor-pointer w-auto"
-              href="/change-password"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Change password?
-            </Link>
-
             <div className="flex gap-6 bg-white border-t-2 p-4 absolute bottom-0 left-0 w-full justify-end">
               <CancelButton setIsModalOpen={close} reset={reset} />
               <button

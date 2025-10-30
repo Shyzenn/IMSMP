@@ -6,8 +6,8 @@ export async function GET() {
     try {
 
         const now = new Date();
-        const in30Days = new Date();
-        in30Days.setDate(now.getDate() + 30)
+        const in31Days = new Date();
+        in31Days.setDate(now.getDate() + 31)
 
        const expiryProducts = await db.product.findMany({
         include: { batches: true, category: true },
@@ -17,7 +17,7 @@ export async function GET() {
         product.batches
             ?.filter(
             (batch) =>
-                batch.expiryDate > now && batch.expiryDate <= in30Days && batch.quantity > 0
+                batch.expiryDate > now && batch.expiryDate <= in31Days && batch.quantity > 0
             )
             .map((batch) => ({
             id: product.id,

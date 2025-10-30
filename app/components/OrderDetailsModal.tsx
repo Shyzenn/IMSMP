@@ -130,7 +130,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                           ? "Pay Later"
                           : currentOrder.type === "REGULAR"
                           ? "Regular"
-                          : "Walk In"}
+                          : "Regular"}
                       </span>
                     </p>
                   </div>
