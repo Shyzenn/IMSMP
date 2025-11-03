@@ -21,7 +21,7 @@ export default function EmergencyOrderModal() {
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40">
         <div
           id="print-section"
           className="bg-white max-w-lg w-full p-6 border-t-8 border-red-600 rounded-2xl shadow-2xl print:block"

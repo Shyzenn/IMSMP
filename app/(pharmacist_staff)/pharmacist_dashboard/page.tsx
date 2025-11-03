@@ -1,7 +1,7 @@
 import DashboardHeader from "@/app/components/DashboardHeader";
 import ExpiryProducts from "@/app/components/ExpiryProducts";
 import ManagerDashboardCards from "@/app/components/ManagerDashboardCards";
-import ManagerRecentReqTable from "@/app/components/PharmacistRecentReqTable";
+import RecentRequestTable from "@/app/components/RecentRequestTable";
 import SalesByCategory from "@/app/components/SalesByCategory";
 import TopSellingProducts from "@/app/components/TopSellingProductChart";
 import { auth } from "@/auth";
@@ -16,7 +16,7 @@ export default async function Dashboard() {
       <ManagerDashboardCards userRole={userRole} />
       <div className="h-auto lg:h-96 flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0 mb-12">
         <div className="w-full lg:w-[70%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-[27rem]">
-          <ManagerRecentReqTable userRole={userRole} />
+          <RecentRequestTable userRole={userRole} />
         </div>
         <div className="w-full lg:w-[30%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-[27rem]">
           <ExpiryProducts />

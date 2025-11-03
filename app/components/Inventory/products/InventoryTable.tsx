@@ -71,7 +71,10 @@ export default async function InventoryTable({
                   <TableCell>{`PRD-0${product.id}`}</TableCell>
                   <TableCell>{capitalLetter(product.product_name)}</TableCell>
                   <TableCell>{product.totalQuantity}</TableCell>
-                  <TableCell>{`₱${product.price}`}</TableCell>
+                  <TableCell>{`₱${Number(product.price).toFixed(
+                    2
+                  )}`}</TableCell>
+
                   <TableCell>{formattedDateTime(product.createdAt)}</TableCell>
                   <TableCell>
                     {product.expiringSoonCount > 0 &&

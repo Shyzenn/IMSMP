@@ -4,21 +4,23 @@ import React, { useMemo, useState } from "react";
 import TableComponent from "./TableComponent";
 import { formattedDateTime } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
-import OrderDetailsModal from "./OrderDetailsModal";
-import { Column, EmergencyOrderModalData } from "@/lib/interfaces";
+import { Column } from "@/lib/interfaces";
 import { CheckCircle, Clock } from "lucide-react";
 import axios from "axios";
 import { RecentRequestOrderSkeleton } from "./Skeleton";
 import LoadingButton from "@/components/loading-button";
-import { OrderView } from "./transaction/cashier/CashierAction";
 import { FcCancel } from "react-icons/fc";
 import Pagination from "./Pagination";
 import SelectField from "./SelectField";
 import { OrderRequest } from "@prisma/client";
 import ReqOrderAction from "./ReqOrderAction";
 import { useEmergencyModal } from "@/lib/store/emergency-modal";
-import EmergencyOrderModal from "./EmergencyModal";
 import { RiRefund2Line } from "react-icons/ri";
+import { useOrderModal } from "@/lib/store/useOrderModal";
+import {
+  convertToEmergencyOrder,
+  convertToOrderView,
+} from "@/lib/helpers/convertOrders";
 
 export const fetchOrderRequest = async (
   page = 1,
@@ -113,16 +115,15 @@ type FilterOption =
   | "Cancelled"
   | "Refunded";
 
-const ManagerRecentReqTable = ({ userRole }: { userRole?: string }) => {
+const RecentRequestTable = ({ userRole }: { userRole?: string }) => {
   const [filter, setFilter] = useState<
     "All" | "Pending" | "For Payment" | "Paid" | "Cancelled" | "Refunded"
   >("All");
   const [page, setPage] = useState(1);
   const itemsPerPage = 5;
 
-  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<OrderView | null>(null);
-  const { openModal } = useEmergencyModal();
+  const { openModal } = useOrderModal();
+  const { openModal: openEmergencyModal } = useEmergencyModal();
 
   const { data, isLoading } = useQuery({
     queryKey: ["request_order", page, filter],
@@ -138,6 +139,7 @@ const ManagerRecentReqTable = ({ userRole }: { userRole?: string }) => {
     return orderRequest.map((order: OrderRequest) => ({
       ...order,
       id: `ORD-0${order.id}`,
+      roomNumber: order.room_number,
       remarks:
         order.remarks === "dispensed"
           ? "Dispensed"
@@ -169,34 +171,15 @@ const ManagerRecentReqTable = ({ userRole }: { userRole?: string }) => {
                 userRole={userRole}
                 showCheckbox={true}
                 onView={() => {
-                  if (
-                    originalOrder.type === "Pay Later" &&
-                    originalOrder.status === "for_payment"
-                  ) {
-                    const payLaterData: EmergencyOrderModalData = {
-                      id: originalOrder.id,
-                      createdAt: new Date(originalOrder.createdAt),
-                      notes: originalOrder.notes ?? "",
-                      order: {
-                        id:
-                          typeof originalOrder.id === "string"
-                            ? Number(originalOrder.id.replace("ORD-0", ""))
-                            : originalOrder.id,
-                        patient_name: originalOrder.patient_name ?? "Unknown",
-                        products: originalOrder.itemDetails ?? [],
-                        room_number: originalOrder.roomNumber ?? "Unknown",
-                        status: originalOrder.status,
-                      },
-                      orderType: originalOrder.type,
-                      sender: {
-                        username: originalOrder.requestedBy ?? "Unknown",
-                      },
-                    };
+                  const order = orderRequest.find(
+                    (o: OrderRequest) => `ORD-0${o.id}` === row.id
+                  );
+                  if (!order) return;
 
-                    openModal(payLaterData);
+                  if (order.type === "EMERGENCY") {
+                    openEmergencyModal(convertToEmergencyOrder(order));
                   } else {
-                    setSelectedOrder(originalOrder);
-                    setIsOrderModalOpen(true);
+                    openModal(convertToOrderView(order));
                   }
                 }}
                 status={originalOrder.status}
@@ -208,7 +191,7 @@ const ManagerRecentReqTable = ({ userRole }: { userRole?: string }) => {
       ];
     }
     return baseColumns;
-  }, [userRole, formattedData, openModal]);
+  }, [userRole, formattedData, openModal, openEmergencyModal, orderRequest]);
 
   if (isLoading) return <RecentRequestOrderSkeleton />;
 
@@ -219,8 +202,18 @@ const ManagerRecentReqTable = ({ userRole }: { userRole?: string }) => {
         title="Recent Order Request"
         data={formattedData}
         columns={columns}
-        setIsOrderModalOpen={setIsOrderModalOpen}
-        onRowClick={(row) => setSelectedOrder(row as OrderView)}
+        onRowClick={(row) => {
+          const order = orderRequest.find(
+            (o: OrderRequest) => `ORD-0${o.id}` === row.id
+          );
+          if (!order) return;
+
+          if (order.type === "EMERGENCY") {
+            openEmergencyModal(convertToEmergencyOrder(order));
+          } else {
+            openModal(convertToOrderView(order));
+          }
+        }}
         interactiveRows={true}
         noDataMessage={
           orderRequest.length === 0 ? "No Recent Order" : undefined
@@ -260,17 +253,8 @@ const ManagerRecentReqTable = ({ userRole }: { userRole?: string }) => {
           />
         </div>
       </div>
-
-      <OrderDetailsModal
-        isOrderModalOpen={isOrderModalOpen}
-        setIsOrderModalOpen={setIsOrderModalOpen}
-        selectedOrder={selectedOrder}
-        hasPrint={true}
-      />
-
-      <EmergencyOrderModal />
     </div>
   );
 };
 
-export default ManagerRecentReqTable;
+export default RecentRequestTable;

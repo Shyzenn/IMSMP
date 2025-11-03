@@ -61,7 +61,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   return (
     <>
       {/* this covers both manual (table) + global (notification) opening */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40">
         <div
           className="print:block bg-white w-full max-w-[500px] max-h-[95vh] rounded-md relative overflow-auto p-4"
           id="print-section"

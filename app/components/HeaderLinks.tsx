@@ -54,7 +54,7 @@ const HeaderLinks = ({ userRole }: { userRole: string | null }) => {
             ) : (
               <>
                 <span
-                  className={`px-6 py-2 rounded-full text-sm cursor-pointer transition-colors duration-300 
+                  className={`px-6 py-2 rounded-full text-sm cursor-default transition-colors duration-300 
                     ${active ? "text-green-600 font-medium" : "text-gray-600"}`}
                 >
                   {link.name}

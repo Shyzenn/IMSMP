@@ -33,6 +33,7 @@ const ReqOrderAction = ({
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [showPreparedModal, setShowPreparedModal] = useState(false);
   const [showDispensedModal, setShowDispensedModal] = useState(false);
+  const [isNotPaid, setIsNotPaid] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -167,7 +168,13 @@ const ReqOrderAction = ({
           ) : remarks === "Prepared" ? (
             <button
               className="border flex items-center justify-center gap-2 rounded-md px-2 hover:bg-slate-100 py-2 w-[11rem]"
-              onClick={() => setShowDispensedModal(true)}
+              onClick={() => {
+                if (status === "paid") {
+                  setShowDispensedModal(true);
+                } else {
+                  setIsNotPaid(true);
+                }
+              }}
             >
               <GoPackageDependents className="text-orange-500 text-lg" />
               Mark as Dispensed
@@ -180,10 +187,10 @@ const ReqOrderAction = ({
           )}
           {showPreparedModal && (
             <ConfirmationModal
+              hasConfirmButton={true}
               defaultBtnColor={true}
-              title="Mark as Prepared"
-              description="Are you sure you want to
-                    mark this order as prepared"
+              title={`${"Mark as Prepared"}`}
+              description={`${"Are you sure you want to mark this order as prepared?"}`}
               onClick={() => updateRemarks("prepared")}
               isPending={isUpdatingRemarks}
               closeModal={() => setShowPreparedModal(false)}
@@ -191,13 +198,24 @@ const ReqOrderAction = ({
           )}
           {showDispensedModal && (
             <ConfirmationModal
+              hasConfirmButton={true}
               defaultBtnColor={true}
               title="Mark as Dispensed"
               description="Are you sure you want to
-                    mark this order as dispensed"
+                    mark this order as dispensed?"
               onClick={() => updateRemarks("dispensed")}
               isPending={isUpdatingRemarks}
               closeModal={() => setShowDispensedModal(false)}
+            />
+          )}
+
+          {isNotPaid && status !== "paid" && (
+            <ConfirmationModal
+              hasConfirmButton={false}
+              defaultBtnColor={true}
+              title={`${"Payment Required"}`}
+              description={`${"This order has not been paid yet. Please settle the payment before dispensing"}`}
+              closeModal={() => setIsNotPaid(false)}
             />
           )}
         </>
@@ -233,6 +251,7 @@ const ReqOrderAction = ({
               />
               {showArchiveModal && (
                 <ConfirmationModal
+                  hasConfirmButton={true}
                   defaultBtnColor={true}
                   title="Archive Order Request"
                   description="Are you sure you want to
@@ -256,6 +275,7 @@ const ReqOrderAction = ({
 
       {isOpen && userRole === "Cashier" && (
         <ConfirmationModal
+          hasConfirmButton={true}
           defaultBtnColor={true}
           title="Confirm Payment"
           description=" Are you sure you want to mark this order as Paid?
@@ -268,6 +288,7 @@ const ReqOrderAction = ({
 
       {isOpen && userRole === "Nurse" && orderData?.status === "pending" && (
         <ConfirmationModal
+          hasConfirmButton={true}
           defaultBtnColor={false}
           title="Cancel Request"
           description=" Are you sure you want to cancel this order? This action cannot be

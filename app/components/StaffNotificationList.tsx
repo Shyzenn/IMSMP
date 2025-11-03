@@ -4,9 +4,7 @@ import { formattedDateTime } from "@/lib/utils";
 import React, { useState } from "react";
 import { IoCheckmarkDone } from "react-icons/io5";
 import { OrderView } from "./transaction/cashier/CashierAction";
-import OrderDetailsModal from "./OrderDetailsModal";
 import { useEmergencyModal } from "@/lib/store/emergency-modal";
-import EmergencyOrderModal from "./EmergencyModal";
 import { OrderModalSkeleton } from "./Skeleton";
 
 export interface NotificationWithDetails extends Notification {
@@ -318,8 +316,6 @@ const StaffNotificationList = ({
         </div>
       )}
       {loading && <OrderModalSkeleton />}
-      <OrderDetailsModal hasPrint={true} />
-      <EmergencyOrderModal />
     </>
   );
 };

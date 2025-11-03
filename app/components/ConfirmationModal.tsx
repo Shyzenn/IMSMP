@@ -4,10 +4,11 @@ import React from "react";
 interface ConfirmationModalProps {
   title: string;
   description: string;
-  onClick: () => void;
-  isPending: boolean;
+  onClick?: () => void;
+  isPending?: boolean;
   closeModal: () => void;
   defaultBtnColor: boolean;
+  hasConfirmButton: boolean;
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -17,6 +18,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   isPending,
   closeModal,
   defaultBtnColor,
+  hasConfirmButton,
 }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 ">
@@ -29,25 +31,27 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             onClick={closeModal}
             className="text-gray-900"
           >
-            Cancel
+            {hasConfirmButton ? "Cancel" : "Close"}
           </Button>
-          <Button
-            onClick={onClick}
-            className={`text-white ${
-              defaultBtnColor
-                ? "bg-buttonBgColor hover:bg-buttonHover"
-                : "bg-red-600 hover:bg-red-500"
-            }`}
-            disabled={isPending}
-          >
-            {isPending ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : (
-              "Confirm"
-            )}
-          </Button>
+          {hasConfirmButton ? (
+            <Button
+              onClick={onClick}
+              className={`text-white ${
+                defaultBtnColor
+                  ? "bg-buttonBgColor hover:bg-buttonHover"
+                  : "bg-red-600 hover:bg-red-500"
+              }`}
+              disabled={isPending}
+            >
+              {isPending ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : (
+                "Confirm"
+              )}
+            </Button>
+          ) : null}
         </div>
       </div>
     </div>

@@ -2,11 +2,11 @@ import NurseCards from "@/app/components/NurseCards";
 import { auth } from "@/auth";
 import ExpiryProducts from "@/app/components/ExpiryProducts";
 import InventoryByCategoryChart from "@/app/components/InventoryByCategoryChart";
-import ManagerRecentReqTable from "@/app/components/PharmacistRecentReqTable";
 import OrderTypePieChart from "@/app/components/OrderTypeChart";
 import TopRequestedProducts from "@/app/components/TopRequestedProduct";
 import DashboardAuditLog from "@/app/components/DashboardActivities";
 import DashboardHeader from "@/app/components/DashboardHeader";
+import RecentRequestTable from "@/app/components/RecentRequestTable";
 
 export default async function Dashboard() {
   const session = await auth();
@@ -18,7 +18,7 @@ export default async function Dashboard() {
       <NurseCards />
       <div className="h-auto lg:h-96 flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
         <div className="w-full lg:w-[70%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-96">
-          <ManagerRecentReqTable userRole={userRole} />
+          <RecentRequestTable userRole={userRole} />
         </div>
         <div className="w-full lg:w-[30%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-96">
           <ExpiryProducts />

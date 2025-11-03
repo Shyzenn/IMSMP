@@ -181,7 +181,7 @@ export function ExpiryProductsSkeleton() {
 
 export const OrderModalSkeleton = () => {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40">
       <div className="bg-white w-full max-w-[500px] rounded-md relative overflow-auto p-4 flex flex-col gap-8 pb-16">
         <div className="flex gap-2 flex-col">
           <div className="h-6 w-24 rounded bg-gray-100 animate-pulse"></div>

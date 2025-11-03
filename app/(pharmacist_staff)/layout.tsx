@@ -5,6 +5,7 @@ import { SidebarProvider } from "../(manager)/SidebarContext";
 import Sidebar from "../components/Sidebar";
 import { pharmacistLinks } from "@/lib/links";
 import ReactQueryProvider from "../(manager)/QueryClientProvider";
+import ModalPortal from "../components/OrderModalPortal";
 
 export const metadata: Metadata = {
   title: "Macoleen's Pharmacy",
@@ -24,6 +25,7 @@ export default function AdminLayout({
           <Header />
           <div className="mx-auto w-full max-w-screen-3xl mt-24 px-4 md:px-6 lg:px-16">
             {children}
+            <ModalPortal />
           </div>
         </SidebarProvider>
       </div>

@@ -13,7 +13,6 @@ function TableComponent<T extends Record<string, unknown>>({
   largeContainer,
   columns,
   data,
-  setIsOrderModalOpen,
   onRowClick,
   title,
   interactiveRows,
@@ -78,11 +77,8 @@ function TableComponent<T extends Record<string, unknown>>({
                         : "cursor-pointer"
                     }`}
                     onClick={() => {
-                      if (userRole !== "Manager") {
+                      if (userRole === "Manager") {
                         onRowClick?.(row);
-                      } else {
-                        onRowClick?.(row);
-                        setIsOrderModalOpen?.(true);
                       }
                     }}
                   >

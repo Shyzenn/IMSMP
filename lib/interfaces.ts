@@ -79,7 +79,7 @@ export type WalkInOrder = {
 
 export interface EmergencyOrderModalData {
   id: number | string;
-  orderType: "REGULAR" | "EMERGENCY";
+  orderType:"EMERGENCY";
   sender: {
       username: string;
       role?: string;
@@ -88,7 +88,7 @@ export interface EmergencyOrderModalData {
       id?: number | string;
       patient_name: string;
       room_number: string;
-      status?: "pending" | "for_payment" | "paid" | "canceled"
+      status?: "pending" | "for_payment" | "paid" | "canceled" | "refunded"
       products: OrderItem[];
     };
   notes: string;

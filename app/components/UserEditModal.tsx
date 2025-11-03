@@ -38,6 +38,7 @@ const UserEditModal = ({
       id: user.id,
       email: user.email,
       firstName: user.firstName,
+      middleName: user.middleName,
       lastName: user.lastName,
       username: user.username,
       role: user.role,

@@ -37,7 +37,7 @@ const DashboardCards = ({ cards }: { cards: DashboardCardProps[] }) => {
                 </p>
               </div>
               <div
-                className={`${card.bgColor} ${card.textColor} p-4 rounded-md mr-2`}
+                className={`${card.bgColor} ${card.textColor} p-4 rounded-md mr-2 hidden sm:block`}
               >
                 <Icon className="text-2xl" />
               </div>

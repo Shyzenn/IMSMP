@@ -5,8 +5,6 @@ import { RiRefund2Line } from "react-icons/ri";
 import { useModal } from "@/app/hooks/useModal";
 import { useOrderModal } from "@/lib/store/useOrderModal";
 import { useEmergencyModal } from "@/lib/store/emergency-modal";
-import OrderDetailsModal from "../../OrderDetailsModal";
-import EmergencyOrderModal from "../../EmergencyModal";
 import ActionButton from "../../ActionButton";
 import ConfirmationModal from "../../ConfirmationModal";
 import { CombinedTransaction } from "@/lib/action/get";
@@ -204,9 +202,6 @@ const CashierAction = ({
           closeModal={close}
         />
       )}
-
-      {!openEmergencyModal && <OrderDetailsModal hasPrint={true} />}
-      {!openModal && <EmergencyOrderModal />}
     </>
   );
 };
