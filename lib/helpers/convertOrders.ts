@@ -9,7 +9,7 @@ export type RequestOrderWithItems = OrderRequest & {
   processedBy?: string;
 };
 
-type OrderWithBothRooms = RequestOrderWithItems & {
+export type OrderWithBothRooms = RequestOrderWithItems & {
   roomNumber?: string | number | null;
 };
 

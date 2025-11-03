@@ -169,6 +169,13 @@ const ReqOrderAction = ({
             <button
               className="border flex items-center justify-center gap-2 rounded-md px-2 hover:bg-slate-100 py-2 w-[11rem]"
               onClick={() => {
+                if (orderData?.type === "Pay Later") {
+                  setShowDispensedModal(true);
+
+                  setIsNotPaid(false);
+                  return;
+                }
+
                 if (status === "paid") {
                   setShowDispensedModal(true);
                 } else {

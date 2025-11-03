@@ -45,8 +45,8 @@ const RequestOrderEdit = ({
     resolver: zodResolver(editRequestOrderSchema),
     mode: "onChange",
     defaultValues: {
-      room_number: orderData?.roomNumber || "",
       patient_name: orderData?.patient_name || "",
+      room_number: orderData?.roomNumber || "",
       status: orderData?.status?.toLowerCase() as
         | "pending"
         | "for_payment"

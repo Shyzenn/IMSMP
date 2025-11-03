@@ -14,7 +14,7 @@ import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
 
 export type OrderView = {
-  type: "REGULAR" | "EMERGENCY" | "Walk In";
+  type: "REGULAR" | "EMERGENCY" | "Walk In" | "Pay Later";
   id: number | string;
   requestedBy: string;
   receivedBy: string;
@@ -194,7 +194,7 @@ const CashierAction = ({
 
       {isOpen && (
         <ConfirmationModal
-          hasConfirmButton={false}
+          hasConfirmButton={true}
           defaultBtnColor={false}
           title={getRefundTitle()}
           description={getRefundDescription()}
