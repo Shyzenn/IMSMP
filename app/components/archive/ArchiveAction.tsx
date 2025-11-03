@@ -54,6 +54,7 @@ const ArchiveAction = ({ item }: ArchiveActionProps) => {
       />
       {isOpen && (
         <ConfirmationModal
+          hasConfirmButton={false}
           title={`Restore ${item.type}`}
           description={`Are you sure you want to restore this ${item.type}?`}
           closeModal={close}

@@ -194,6 +194,7 @@ const CashierAction = ({
 
       {isOpen && (
         <ConfirmationModal
+          hasConfirmButton={false}
           defaultBtnColor={false}
           title={getRefundTitle()}
           description={getRefundDescription()}
