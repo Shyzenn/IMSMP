@@ -129,7 +129,7 @@ const RequestOrderModal = ({ close }: Props) => {
               <div>
                 <FormField label="Patient Name">
                   <Input
-                    placeholder="patient name"
+                    placeholder="Enter Patient Name"
                     {...register("patient_name")}
                     className={`w-full ${
                       errors.patient_name
@@ -150,7 +150,7 @@ const RequestOrderModal = ({ close }: Props) => {
                 <div>
                   <FormField label="Room#">
                     <Input
-                      placeholder="room number"
+                      placeholder="Enter Room Number"
                       {...register("room_number")}
                       className={`w-full ${
                         errors.room_number
@@ -226,7 +226,7 @@ const RequestOrderModal = ({ close }: Props) => {
                       {/* Product Input */}
                       <div className="relative w-[53%]">
                         <Input
-                          placeholder="enter product name"
+                          placeholder="Enter Product Name"
                           {...register(`products.${index}.productId` as const, {
                             required: true,
                           })}
@@ -330,7 +330,7 @@ const RequestOrderModal = ({ close }: Props) => {
                         <div className="">
                           <Input
                             type="number"
-                            placeholder="enter quantity"
+                            placeholder="Enter Quantity"
                             {...register(
                               `products.${index}.quantity` as const,
                               {

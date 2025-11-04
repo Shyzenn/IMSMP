@@ -39,6 +39,10 @@ model User {
 
   SentNotification     Notification[] @relation("SentNotification")
   ReceivedNotification Notification[] @relation("ReceivedNotification")
+
+  ArchivedProducts      Product[]       @relation("ArchivedProducts")
+  ArchivedBatches       ProductBatch[]  @relation("ArchivedBatches")
+  ArchivedOrderRequests OrderRequest[]  @relation("ArchivedOrderRequests")
 }
 
 enum Role {
@@ -75,6 +79,9 @@ model Product {
   status       String    @default("ACTIVE") // ACTIVE | ARCHIVED
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  archivedById String?
+  archivedByUser User? @relation("ArchivedProducts", fields: [archivedById], references: [id])
   archiveAt    DateTime?
 
   // Relationships
@@ -89,13 +96,17 @@ model Product {
   categoryId Int?
   category   ProductCategory? @relation(fields: [categoryId], references: [id])
 
+ 
 }
 
 model ProductBatch {
   id        Int       @id @default(autoincrement())
   productId Int
   product   Product   @relation(fields: [productId], references: [id])
+
   archiveAt DateTime?
+  archivedById String?
+  archivedByUser User? @relation("ArchivedBatches", fields: [archivedById], references: [id])
 
   batchNumber String
   quantity    Int      @default(0)
@@ -126,6 +137,9 @@ model OrderRequest {
 
   type OrderType @default(REGULAR)
 
+  // Archive tracking
+  archivedById String?
+  archivedByUser User? @relation("ArchivedOrderRequests", fields: [archivedById], references: [id])
   isArchived Boolean @default(false)
 
   user   User   @relation("RequestedBy", fields: [userId], references: [id])

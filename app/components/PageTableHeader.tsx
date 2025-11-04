@@ -43,6 +43,7 @@ interface PageTableHeaderProps {
   batchExport?: boolean;
   transactionExport?: boolean;
   hasDateFilter?: boolean;
+  searchPlaceholder: string;
 }
 
 type ProductRow = {
@@ -100,6 +101,7 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
   batchExport,
   transactionExport,
   hasDateFilter,
+  searchPlaceholder,
 }) => {
   const { data: session } = useSession();
   const [showModal, setShowModal] = useState(false);
@@ -469,7 +471,7 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
           <p className="text-2xl font-semibold">{title}</p>
         </div>
         <div className="w-auto md:w-[10rem] lg:w-[30rem] border px-6 rounded-full flex items-center gap-2 bg-gray-50">
-          <Search placeholder="Search..." />
+          <Search placeholder={searchPlaceholder} />
         </div>
         <div className="flex gap-4 flex-col md:flex-row md:items-center md:justify-end">
           <div className="flex gap-4">

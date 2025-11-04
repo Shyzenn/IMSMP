@@ -138,7 +138,7 @@ const ForgotPasswordModal = ({
           <form onSubmit={formStep1.handleSubmit(handleRequestOTP)}>
             <h2 className="text-lg font-semibold mb-4">Forgot Password</h2>
             <Input
-              placeholder="Enter email"
+              placeholder="Enter Email"
               type="email"
               {...formStep1.register("email")}
             />
@@ -234,7 +234,7 @@ const ForgotPasswordModal = ({
             <div className="flex flex-col gap-4">
               <div className="relative">
                 <Input
-                  placeholder="Enter new password"
+                  placeholder="Enter New Password"
                   {...formStep3.register("newPassword")}
                   type={showPassword ? "text" : "password"}
                 />
@@ -253,7 +253,7 @@ const ForgotPasswordModal = ({
               </div>
               <div className="relative">
                 <Input
-                  placeholder="Confirm password"
+                  placeholder="Confirm Password"
                   {...formStep3.register("confirmPassword")}
                   type={showConfirmPassword ? "text" : "password"}
                 />

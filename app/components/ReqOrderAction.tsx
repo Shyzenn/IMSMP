@@ -8,10 +8,10 @@ import { useModal } from "../hooks/useModal";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useTransition } from "react";
 import RequestOrderEdit from "./RequestOrderEdit";
-import { OrderView } from "./transaction/cashier/CashierAction";
 import { IoArchiveOutline } from "react-icons/io5";
 import toast from "react-hot-toast";
 import ConfirmationModal from "./ConfirmationModal";
+import { OrderView } from "./transaction/table/TransactionAction";
 
 const ReqOrderAction = ({
   onView,

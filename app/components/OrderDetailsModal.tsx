@@ -9,7 +9,6 @@ import { useSession } from "next-auth/react";
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { OrderView } from "./transaction/cashier/CashierAction";
 import { useOrderModal } from "@/lib/store/useOrderModal";
 import {
   Table,
@@ -21,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { handlePrint } from "@/lib/printUtlis";
+import { OrderView } from "./transaction/table/TransactionAction";
 
 interface OrderDetailsModalProps {
   isOrderModalOpen?: boolean;

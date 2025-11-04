@@ -48,6 +48,7 @@ async function Transaction(props: {
       style={{ height: "calc(94vh - 70px)" }}
     >
       <PageTableHeader
+        searchPlaceholder="Search customer name..."
         title="History"
         transactionExport={true}
         hasDateFilter={true}

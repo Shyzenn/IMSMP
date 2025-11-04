@@ -1,42 +1,71 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import React from "react";
-import SelectField from "./SelectField";
+import React, { useState, useEffect, useTransition } from "react";
+import { MultiSelect } from "./multi-select";
 
 interface FilterSelectProps {
-  label: string;
   staticOptions?: { label: string; value: string }[];
   dynamicOptions?: { label: string; value: string }[];
 }
 
 const TableFilterSelect: React.FC<FilterSelectProps> = ({
-  label,
   staticOptions,
   dynamicOptions,
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const selectedFilter = searchParams.get("filter") || "all";
+  const [isPending, startTransition] = useTransition();
 
-  const handleCategoryChange = (value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("filter", value);
-    params.set("page", "1");
-    router.push(`?${params.toString()}`);
+  const getInitialValues = () => {
+    const urlFilter = searchParams.get("filter");
+    if (!urlFilter || urlFilter === "all") return [];
+    return urlFilter.split(",").filter(Boolean);
   };
 
-  const options =
-    dynamicOptions && dynamicOptions.length > 0
-      ? [{ label: "All", value: "all" }, ...dynamicOptions]
-      : staticOptions || [{ label: "All", value: "all" }];
+  const [selectedValues, setSelectedValues] =
+    useState<string[]>(getInitialValues);
+
+  const options = dynamicOptions?.length ? dynamicOptions : staticOptions || [];
+
+  const handleChange = (values: string[]) => {
+    const filtered = values.filter((v) => v !== "all");
+    setSelectedValues(filtered);
+
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (filtered.length === 0) {
+      params.delete("filter");
+    } else {
+      params.set("filter", filtered.join(","));
+    }
+
+    params.set("page", "1");
+
+    startTransition(() => {
+      router.push(`?${params.toString()}`, { scroll: false });
+    });
+  };
+
+  // Sync with URL changes
+  useEffect(() => {
+    const urlFilter = searchParams.get("filter");
+    const urlValues =
+      !urlFilter || urlFilter === "all"
+        ? []
+        : urlFilter.split(",").filter(Boolean);
+
+    setSelectedValues(urlValues);
+  }, [searchParams]);
 
   return (
-    <SelectField
-      label={label}
-      value={selectedFilter}
-      onChange={handleCategoryChange}
-      option={options}
+    <MultiSelect
+      options={options}
+      onValueChange={handleChange}
+      value={selectedValues}
+      placeholder="Select categories..."
+      disabled={isPending}
+      hideSelectAll
     />
   );
 };

@@ -69,7 +69,7 @@ const Login = () => {
                 <Input
                   {...register("email")}
                   id="email"
-                  placeholder="example@email.com"
+                  placeholder="Example@email.com"
                   type="email"
                 />
                 {errors.email && (
@@ -83,7 +83,7 @@ const Login = () => {
                 <Input
                   {...register("password")}
                   id="password"
-                  placeholder="password"
+                  placeholder="Enter Password"
                   type={showPassword ? "text" : "password"}
                   autoComplete="off"
                 />

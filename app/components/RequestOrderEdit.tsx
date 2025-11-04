@@ -16,9 +16,9 @@ import { useProductDropdown } from "../hooks/useProductDropDown";
 import { useProductForm } from "../hooks/useProductForm";
 import FormField from "./FormField";
 import CancelButton from "./CancelButton";
-import { OrderView } from "./transaction/cashier/CashierAction";
 import { OrderItem } from "@/lib/interfaces";
 import { IoAddOutline } from "react-icons/io5";
+import { OrderView } from "./transaction/table/TransactionAction";
 
 const RequestOrderEdit = ({
   setShowRequestEditModal,

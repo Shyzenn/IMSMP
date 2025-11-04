@@ -68,7 +68,7 @@ const ReplenishFormModal = ({
                   id="quantity"
                   type="number"
                   className="mt-1"
-                  placeholder="Enter quantity"
+                  placeholder="Enter Quantity"
                 />
               </FormField>
 

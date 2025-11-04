@@ -1,5 +1,5 @@
+import { OrderView } from "@/app/components/transaction/table/TransactionAction";
 import { OrderItem, EmergencyOrderModalData } from "@/lib/interfaces";
-import { OrderView } from "@/app/components/transaction/cashier/CashierAction";
 import { OrderRequest } from "@prisma/client";
 
 export type RequestOrderWithItems = OrderRequest & {

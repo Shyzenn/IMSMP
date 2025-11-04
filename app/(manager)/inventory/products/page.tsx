@@ -42,6 +42,7 @@ async function Inventory(props: {
         hasAddProduct={true}
         isProductFilter={true}
         productExport={true}
+        searchPlaceholder="Search product name..."
       />
 
       <div className="overflow-x-auto">

@@ -48,13 +48,14 @@ const ArchiveAction = ({ item }: ArchiveActionProps) => {
   return (
     <>
       <ActionButton
+        label="Restore"
         icon={LuArchiveRestore}
         onClick={open}
         color="hover:bg-slate-200 border-gray-300"
       />
       {isOpen && (
         <ConfirmationModal
-          hasConfirmButton={false}
+          hasConfirmButton={true}
           title={`Restore ${item.type}`}
           description={`Are you sure you want to restore this ${item.type}?`}
           closeModal={close}

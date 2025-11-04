@@ -54,7 +54,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
                 <Input
                   {...register("firstName")}
                   id="firstName"
-                  placeholder="enter first name"
+                  placeholder="Enter firstname"
                   type="text"
                 />
               </FormField>
@@ -62,7 +62,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
                 <Input
                   {...register("middleName")}
                   id="MiddleName"
-                  placeholder="enter middle name (Optional)"
+                  placeholder="Enter middlename (Optional)"
                   type="text"
                 />
               </FormField>
@@ -70,7 +70,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
                 <Input
                   {...register("lastName")}
                   id="lastName"
-                  placeholder="enter last name"
+                  placeholder="Enter lastname"
                   type="text"
                 />
               </FormField>
@@ -79,7 +79,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
                 <Input
                   {...register("username")}
                   id="username"
-                  placeholder="username"
+                  placeholder="Username"
                   type="text"
                 />
               </FormField>
@@ -88,7 +88,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
                 <Input
                   {...register("email")}
                   id="email"
-                  placeholder="example@email.com"
+                  placeholder="Example@email.com"
                   type="email"
                 />
               </FormField>
@@ -122,7 +122,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
               </div>
             </div>
             <Button
-              className="w-full py-5 mt-8 text-center bg-buttonBgColor text-white hover:bg-buttonHover"
+              className="w-full py-5 mt-8 text-cE bg-buttonBgColor text-white hover:bg-buttonHover"
               type="submit"
               disabled={isSubmitting}
             >

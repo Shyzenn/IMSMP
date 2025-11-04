@@ -35,7 +35,11 @@ const page = async (props: {
       className="p-6 bg-white overflow-auto rounded-md"
       style={{ height: "calc(94vh - 70px)" }}
     >
-      <PageTableHeader title="Archive" isArchiveFilter={true} />
+      <PageTableHeader
+        title="Archive"
+        isArchiveFilter={true}
+        searchPlaceholder="Search product name..."
+      />
       <div className="mt-4">
         <Suspense
           key={`${query}-${filter}-${currentPage}`}

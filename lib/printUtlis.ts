@@ -1,4 +1,4 @@
-import { OrderView } from "@/app/components/transaction/cashier/CashierAction";
+import { OrderView } from "@/app/components/transaction/table/TransactionAction";
 import { EmergencyOrderModalData, WalkInOrder } from "./interfaces";
 
 const RECEIPT_WIDTH = 32;

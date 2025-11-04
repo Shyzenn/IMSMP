@@ -75,3 +75,18 @@ export const cashierLinks = [
   },
   { name: "Transaction", href: "/cashier_transaction", icon: GrTransaction }
 ]
+
+export function getLogoLink(role?: string) {
+  switch (role) {
+    case "Pharmacist_Staff":
+      return "/pharmacist_dashboard";
+    case "Manager":
+      return "/dashboard";
+    case "Nurse":
+      return "/nurse_dashboard";
+    case "Cashier":
+      return "/cashier_dashboard";
+    default:
+      return "/"; 
+  }
+}

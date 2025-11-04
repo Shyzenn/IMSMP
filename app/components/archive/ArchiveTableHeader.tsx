@@ -22,6 +22,7 @@ const ArchiveTableHeader = () => {
     { key: "release_date", label: "Release Date", sortable: false },
     { key: "expiry_date", label: "Expiry Date", sortable: false },
     { key: "archived_at", label: "Archived At", sortable: false },
+    { key: "archived_by", label: "Archived By", sortable: false },
   ];
 
   const showActions =

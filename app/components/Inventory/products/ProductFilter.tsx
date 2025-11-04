@@ -16,7 +16,6 @@ const ProductFilter = () => {
 
   return (
     <TableFilterSelect
-      label="Select a category"
       dynamicOptions={
         categories?.map((cat) => ({ label: cat.name, value: cat.name })) || []
       }

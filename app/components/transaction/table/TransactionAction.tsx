@@ -5,13 +5,13 @@ import { RiRefund2Line } from "react-icons/ri";
 import { useModal } from "@/app/hooks/useModal";
 import { useOrderModal } from "@/lib/store/useOrderModal";
 import { useEmergencyModal } from "@/lib/store/emergency-modal";
-import ActionButton from "../../ActionButton";
-import ConfirmationModal from "../../ConfirmationModal";
 import { CombinedTransaction } from "@/lib/action/get";
 import { EmergencyOrderModalData, OrderItem } from "@/lib/interfaces";
 import { useTransition } from "react";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
+import ConfirmationModal from "../../ConfirmationModal";
+import ActionButton from "../../ActionButton";
 
 export type OrderView = {
   type: "REGULAR" | "EMERGENCY" | "Walk In" | "Pay Later";
@@ -33,7 +33,7 @@ export type OrderView = {
   itemDetails: OrderItem[];
 };
 
-const CashierAction = ({
+const TransactionAction = ({
   transaction,
 }: {
   transaction: CombinedTransaction;
@@ -172,18 +172,24 @@ const CashierAction = ({
     } ? This action cannot be undone and will restore the inventory.`;
   };
 
+  const refundDisabled =
+    session?.user.role !== "Pharmacist_Staff" || transaction.status !== "paid";
+
   return (
     <>
       <div className="flex gap-2">
-        {transaction.status === "paid" &&
-          session?.user.role === "Pharmacist_Staff" && (
-            <ActionButton
-              icon={RiRefund2Line}
-              onClick={open}
-              color="hover:bg-red-200 px-2"
-              label="Refund"
-            />
-          )}
+        <ActionButton
+          icon={RiRefund2Line}
+          onClick={open}
+          disabled={refundDisabled}
+          color={
+            refundDisabled
+              ? "px-2 shadow-inner bg-gray-50 hover:cursor-not-allowed text-gray-400"
+              : "hover:bg-slate-200 px-2"
+          }
+          label="Refund"
+        />
+
         <ActionButton
           icon={IoMdEye}
           onClick={() => handleViewClick(transaction)}
@@ -207,4 +213,4 @@ const CashierAction = ({
   );
 };
 
-export default CashierAction;
+export default TransactionAction;

@@ -145,7 +145,7 @@ const EditProfileModal = ({ close }: { close: () => void }) => {
                   <Input
                     {...register("firstName")}
                     id="firstName"
-                    placeholder="enter first name"
+                    placeholder="Enter first name"
                     type="text"
                   />
                 </FormField>
@@ -157,7 +157,7 @@ const EditProfileModal = ({ close }: { close: () => void }) => {
                   <Input
                     {...register("middleName")}
                     id="middleName"
-                    placeholder="enter middle name (Optional)"
+                    placeholder="Enter middle name (Optional)"
                     type="text"
                   />
                 </FormField>
@@ -166,7 +166,7 @@ const EditProfileModal = ({ close }: { close: () => void }) => {
                   <Input
                     {...register("lastName")}
                     id="lastName"
-                    placeholder="enter last name"
+                    placeholder="Enter last name"
                     type="text"
                   />
                 </FormField>
@@ -176,6 +176,7 @@ const EditProfileModal = ({ close }: { close: () => void }) => {
                     id="username"
                     type="text"
                     className="mt-1"
+                    placeholder="Username"
                   />
                 </FormField>
                 <FormField label="Email" error={errors.email?.message}>
@@ -184,6 +185,7 @@ const EditProfileModal = ({ close }: { close: () => void }) => {
                     id="email"
                     type="email"
                     className="mt-1"
+                    placeholder="Example@email.com"
                   />
                 </FormField>
               </div>

@@ -1,4 +1,4 @@
-import { OrderView } from "@/app/components/transaction/cashier/CashierAction";
+import { OrderView } from "@/app/components/transaction/table/TransactionAction";
 import { create } from "zustand";
 
 interface OrderModalState {

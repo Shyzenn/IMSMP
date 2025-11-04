@@ -7,20 +7,23 @@ const ActionButton = ({
   color,
   type,
   label,
+  disabled,
 }: {
   icon: IconType;
   onClick?: () => void;
   color: string;
   type?: "submit" | "button";
   label?: string;
+  disabled?: boolean;
 }) => {
   return (
     <button
-      className={`border p-1 rounded-md ${color} flex gap-2 items-center`}
+      disabled={disabled}
+      className={`border p-1 rounded-md ${color} flex gap-2 items-center text-black text-[13px]`}
       onClick={onClick}
       type={type}
     >
-      <Icon className="text-black" />
+      <Icon className="text-base" />
       {label}
     </button>
   );

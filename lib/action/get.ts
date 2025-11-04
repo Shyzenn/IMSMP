@@ -1,7 +1,7 @@
 'use server'
 
 import { Decimal } from "@prisma/client/runtime/library";
-import { Prisma } from "@prisma/client";
+import { OrderType, Prisma, Status } from "@prisma/client";
 import { db } from "../db";
 import { OrderItem } from "../interfaces";
 import { dateFilter, isRequestOrderFilterEnabled, isWalkInFilterEnabled, ITEMS_PER_PAGE, mapStatus, TransactionFilter } from "../utils";
@@ -14,6 +14,7 @@ type ArchiveItem =
       category: string;
       quantity: number;
       archivedAt: Date | null;
+      archivedBy: string;
     }
   | {
       id: number;
@@ -25,6 +26,7 @@ type ArchiveItem =
       releaseDate: Date;
       expiryDate: Date;
       archivedAt: Date | null;
+      archivedBy: string;
     }
   | {
       id: number;
@@ -33,6 +35,7 @@ type ArchiveItem =
       category: string; 
       quantity: number;
       archivedAt: Date | null;
+      archivedBy: string;
     };
 
 export const getArchive = async (
@@ -45,15 +48,26 @@ export const getArchive = async (
     const safeQuery = (query || "").toLowerCase().trim();
 
     let archivedProducts: Prisma.ProductGetPayload<{
-      include: { category: true; batches: { select: { quantity: true } } };
+      include: { 
+        category: true; 
+        batches: { select: { quantity: true } };
+        archivedByUser: { select: { username: true; firstName: true; lastName: true } };
+      };
     }>[] = [];
 
     let archivedBatches: Prisma.ProductBatchGetPayload<{
-      include: { product: { include: { category: true } } };
+      include: { 
+        product: { include: { category: true } };
+        archivedByUser: { select: { username: true; firstName: true; lastName: true } };
+      };
     }>[] = [];
 
     let archivedOrders: Prisma.OrderRequestGetPayload<{
-      include: { user: true; items: true };
+      include: { 
+        user: true; 
+        items: true;
+        archivedByUser: { select: { username: true; firstName: true; lastName: true } };
+      };
     }>[] = [];
 
     if (filter === "all" || filter === "Product") {
@@ -67,6 +81,13 @@ export const getArchive = async (
         include: {
           category: true,
           batches: { select: { quantity: true } },
+          archivedByUser: { 
+            select: { 
+              username: true,
+              firstName: true,
+              lastName: true,
+            } 
+          },
         },
         orderBy: { archiveAt: "desc" },
       });
@@ -80,7 +101,16 @@ export const getArchive = async (
             product: { product_name: { contains: safeQuery } },
           }),
         },
-        include: { product: { include: { category: true } } },
+        include: { 
+          product: { include: { category: true } },
+          archivedByUser: { 
+            select: { 
+              username: true,
+              firstName: true,
+              lastName: true,
+            } 
+          },
+        },
         orderBy: { archiveAt: "desc" },
       });
     }
@@ -93,10 +123,30 @@ export const getArchive = async (
             patient_name: { contains: safeQuery },
           }),
         },
-        include: { user: true, items: true },
+        include: { 
+          user: true, 
+          items: true,
+          archivedByUser: { 
+            select: { 
+              username: true,
+              firstName: true,
+              lastName: true,
+            } 
+          },
+        },
         orderBy: { updatedAt: "desc" },
       });
     }
+
+    const formatUserName = (user: { username: string; firstName: string | null; lastName: string | null } | null) => {
+      if (!user) return "Unknown";
+      
+      if (user.firstName && user.lastName) {
+        return `${user.firstName} ${user.lastName}`;
+      }
+      
+      return user.username;
+    };
 
     const merged: ArchiveItem[] = [
       ...archivedProducts.map((p) => ({
@@ -107,6 +157,7 @@ export const getArchive = async (
         quantity:
           p.batches?.reduce((sum, b) => sum + (b.quantity || 0), 0) || 0,
         archivedAt: p.archiveAt,
+        archivedBy: formatUserName(p.archivedByUser),
       })),
       ...archivedBatches.map((b) => ({
         id: b.id,
@@ -118,6 +169,7 @@ export const getArchive = async (
         releaseDate: b.releaseDate,
         expiryDate: b.expiryDate,
         archivedAt: b.archiveAt,
+        archivedBy: formatUserName(b.archivedByUser),
       })),
       ...archivedOrders.map((o) => ({
         id: o.id,
@@ -126,6 +178,7 @@ export const getArchive = async (
         category: `Room ${o.room_number || "N/A"}`,
         quantity: o.items?.length || 0,
         archivedAt: o.updatedAt,
+        archivedBy: formatUserName(o.archivedByUser),
       })),
     ];
 
@@ -193,7 +246,6 @@ export const fetchArchivePages = async (
   }
 };
 
-
 // Batches
 export const getBatches = async (
   query: string,
@@ -210,13 +262,11 @@ export const getBatches = async (
       product_name: {
         contains: safeQuery,
       },
+      status: "ACTIVE",
     },
   };
 
-  const validSortFields: Record<
-    string,
-    keyof Prisma.ProductBatchOrderByWithRelationInput
-  > = {
+  const validSortFields: Record<string, keyof Prisma.ProductBatchOrderByWithRelationInput> = {
     product_name: "product",
     batchNumber: "batchNumber",
     quantity: "quantity",
@@ -235,8 +285,6 @@ export const getBatches = async (
   const batches = await db.productBatch.findMany({
     where,
     orderBy,
-    take: ITEMS_PER_PAGE,
-    skip: offset,
     include: {
       product: { select: { product_name: true } },
     },
@@ -244,32 +292,41 @@ export const getBatches = async (
 
   const now = new Date();
   const enriched = batches.map((batch) => {
-  if (batch.type === "ARCHIVED") {
-    return { ...batch, status: "ARCHIVED" };
-  }
+    if (batch.type === "ARCHIVED") {
+      return { ...batch, status: "ARCHIVED" as const };
+    }
 
-  let status: "Active" | "Expiring" | "Expired" | "Consumed" = "Active";
+    let status: "Active" | "Expiring" | "Expired" | "Consumed" = "Active";
 
-  if (batch.quantity === 0) {
-    status = "Consumed";
-  } else if (new Date(batch.expiryDate) < now) {
-    status = "Expired";
-  } else {
-    const daysToExpire =
-      (new Date(batch.expiryDate).getTime() - now.getTime()) /
-      (1000 * 60 * 60 * 24);
-    if (daysToExpire <= 31) status = "Expiring";
-  }
+    if (batch.quantity === 0) {
+      status = "Consumed";
+    } else if (new Date(batch.expiryDate) < now) {
+      status = "Expired";
+    } else {
+      const daysToExpire =
+        (new Date(batch.expiryDate).getTime() - now.getTime()) /
+        (1000 * 60 * 60 * 24);
+      if (daysToExpire <= 31) status = "Expiring";
+    }
 
     return { ...batch, status };
   });
 
-  const filtered =
-    filter && ["Active", "Expiring", "Expired", "Consumed"].includes(filter)
-      ? enriched.filter((batch) => batch.status === filter)
-      : enriched;
+  // Filter by status (support multiple statuses)
+  const selectedStatusesParam = filter;
+  const selectedStatuses = selectedStatusesParam?.split(",") || [];
 
-  return filtered;
+  let filtered = enriched;
+  if (selectedStatuses.length > 0 && selectedStatuses[0] !== "all") {
+    filtered = enriched.filter((batch) => 
+      selectedStatuses.includes(batch.status)
+    );
+  }
+
+  // Apply pagination after filtering
+  const paginatedBatches = filtered.slice(offset, offset + ITEMS_PER_PAGE);
+
+  return paginatedBatches;
 };
 
 export async function fetchBatchPages(query: string, filter: string) {
@@ -290,6 +347,10 @@ export async function fetchBatchPages(query: string, filter: string) {
 
     const now = new Date();
     const enriched = batches.map((batch) => {
+      if (batch.type === "ARCHIVED") {
+        return { ...batch, status: "ARCHIVED" as const };
+      }
+
       let status: "Active" | "Expiring" | "Expired" | "Consumed" = "Active";
 
       if (batch.quantity === 0) {
@@ -300,16 +361,22 @@ export async function fetchBatchPages(query: string, filter: string) {
         const daysToExpire =
           (new Date(batch.expiryDate).getTime() - now.getTime()) /
           (1000 * 60 * 60 * 24);
-        if (daysToExpire <= 7) status = "Expiring";
+        if (daysToExpire <= 31) status = "Expiring";
       }
 
       return { ...batch, status };
     });
 
-    const filtered =
-      filter && ["Active", "Expiring", "Expired", "Consumed"].includes(filter)
-        ? enriched.filter((batch) => batch.status === filter)
-        : enriched;
+    // Filter by status (support multiple statuses)
+    const selectedStatusesParam = filter;
+    const selectedStatuses = selectedStatusesParam?.split(",") || [];
+
+    let filtered = enriched;
+    if (selectedStatuses.length > 0 && selectedStatuses[0] !== "all") {
+      filtered = enriched.filter((batch) => 
+        selectedStatuses.includes(batch.status)
+      );
+    }
 
     const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
     return totalPages;
@@ -336,9 +403,14 @@ export const getProductList = async (
     status: "ACTIVE",
   };
 
-  if (filter && filter !== "latest" && filter !== "oldest" && filter !== "all") {
+  const selectedCategoriesParam = filter; 
+  const selectedCategories = selectedCategoriesParam?.split(",") || [];
+
+  if (selectedCategories.length > 0 && selectedCategories[0] !== "all") {
     where.category = {
-      name: filter,
+      name: {
+        in: selectedCategories,
+      },
     };
   }
 
@@ -433,9 +505,14 @@ export async function fetchProductsPages(query: string, filter: string) {
       status: "ACTIVE", 
     };
 
-    if (filter && filter !== "latest" && filter !== "oldest" && filter !== "all") {
+    const selectedCategoriesParam = filter;
+    const selectedCategories = selectedCategoriesParam?.split(",") || [];
+
+    if (selectedCategories.length > 0 && selectedCategories[0] !== "all") {
       where.category = {
-        name: filter,
+        name: {
+          in: selectedCategories,
+        },
       };
     }
 
@@ -453,31 +530,60 @@ export const getAuditLogList = async (
   query: string = "",
   filter: string = "all",
   currentPage: number = 1,
-  dateRange: {to: string, from: string}
+  dateRange: { to: string; from: string }
 ) => {
   const page = Number.isFinite(Number(currentPage)) ? Number(currentPage) : 1;
   const offset = (page - 1) * ITEMS_PER_PAGE;
 
   const safeQuery = query.toLowerCase().trim();
 
-  const where: Prisma.AuditLogWhereInput = {
-      AND: [
-        safeQuery && {
-          OR: [
-            { action: { contains: safeQuery} },
-            { description: { contains: safeQuery} },
-            { entityType: { contains: safeQuery} },
-            { user: { username: { contains: safeQuery} } },
-          ],
-        },
-        filter && filter !== "all" ? { entityType: { equals: filter } } : undefined,
-        dateFilter(dateRange),
-      ].filter(Boolean) as Prisma.AuditLogWhereInput[],
-    };
+  // Parse multiple filters
+  const selectedFiltersParam = filter;
+  const selectedFilters = selectedFiltersParam
+    ?.split(",")
+    .filter(Boolean)
+    .map(f => f.trim()) || [];
 
-  if (filter && filter !== "all") {
-    where.entityType = { equals: filter };
-  }
+  const buildWhere = (): Prisma.AuditLogWhereInput => {
+    const conditions: Prisma.AuditLogWhereInput[] = [];
+
+    // Search query
+    if (safeQuery) {
+      conditions.push({
+        OR: [
+          { action: { contains: safeQuery } },
+          { description: { contains: safeQuery } },
+          { entityType: { contains: safeQuery } },
+          { user: { username: { contains: safeQuery } } },
+        ],
+      });
+    }
+
+    // Entity type filters (support multiple)
+    if (selectedFilters.length > 0 && !selectedFilters.includes("all")) {
+      conditions.push({
+        entityType: { in: selectedFilters },
+      });
+    }
+
+    // Date filter
+    const dateCondition = dateFilter(dateRange);
+    if (dateCondition) {
+      conditions.push(dateCondition);
+    }
+
+    if (conditions.length === 0) {
+      return {};
+    }
+
+    if (conditions.length === 1) {
+      return conditions[0];
+    }
+
+    return { AND: conditions };
+  };
+
+  const where = buildWhere();
 
   return db.auditLog.findMany({
     where,
@@ -488,24 +594,60 @@ export const getAuditLogList = async (
   });
 };
 
-export async function fetchAuditPages(query: string, filter: string = "all", dateRange: {to: string, from: string}) {
-
+export async function fetchAuditPages(
+  query: string,
+  filter: string = "all",
+  dateRange: { to: string; from: string }
+) {
   const safeQuery = query.toLowerCase().trim();
 
-  const where: Prisma.AuditLogWhereInput = {
-      AND: [
-        safeQuery && {
-          OR: [
-            { action: { contains: safeQuery} },
-            { description: { contains: safeQuery} },
-            { entityType: { contains: safeQuery} },
-            { user: { username: { contains: safeQuery} } },
-          ],
-        },
-        filter && filter !== "all" ? { entityType: { equals: filter } } : undefined,
-        dateFilter(dateRange),
-      ].filter(Boolean) as Prisma.AuditLogWhereInput[],
-    };
+  // Parse multiple filters
+  const selectedFiltersParam = filter;
+  const selectedFilters = selectedFiltersParam
+    ?.split(",")
+    .filter(Boolean)
+    .map(f => f.trim()) || [];
+
+  const buildWhere = (): Prisma.AuditLogWhereInput => {
+    const conditions: Prisma.AuditLogWhereInput[] = [];
+
+    // Search query
+    if (safeQuery) {
+      conditions.push({
+        OR: [
+          { action: { contains: safeQuery } },
+          { description: { contains: safeQuery } },
+          { entityType: { contains: safeQuery } },
+          { user: { username: { contains: safeQuery } } },
+        ],
+      });
+    }
+
+    // Entity type filters (support multiple)
+    if (selectedFilters.length > 0 && !selectedFilters.includes("all")) {
+      conditions.push({
+        entityType: { in: selectedFilters },
+      });
+    }
+
+    // Date filter
+    const dateCondition = dateFilter(dateRange);
+    if (dateCondition) {
+      conditions.push(dateCondition);
+    }
+
+    if (conditions.length === 0) {
+      return {};
+    }
+
+    if (conditions.length === 1) {
+      return conditions[0];
+    }
+
+    return { AND: conditions };
+  };
+
+  const where = buildWhere();
 
   const totalAudit = await db.auditLog.count({ where });
   return Math.ceil(totalAudit / ITEMS_PER_PAGE);
@@ -536,7 +678,7 @@ export const getTransactionList = async (
   query: string,
   currentPage: number,
   filter: string,
-  sortBy: string = "createdAt", 
+  sortBy: string = "createdAt",
   sortOrder: "asc" | "desc" = "desc",
   userRole: string,
   dateRange: { from: string; to: string }
@@ -544,30 +686,97 @@ export const getTransactionList = async (
   const skip = (currentPage - 1) * ITEMS_PER_PAGE;
   const safeQuery = typeof query === "string" ? query.toLowerCase().trim() : "";
 
-  const statusFilter = mapStatus(filter as TransactionFilter);
+  // Parse multiple filters
+  const selectedFiltersParam = filter;
+  const selectedFilters = selectedFiltersParam
+    ?.split(",")
+    .filter(Boolean)
+    .map(f => f.trim() as TransactionFilter) || ["all"];
 
-  const whereRequestOrder: Prisma.OrderRequestWhereInput = {
-    AND: [
-      safeQuery && { patient_name: { contains: safeQuery} },
-      statusFilter ? { [statusFilter.field]: statusFilter.value } : {},
-      dateFilter(dateRange)
-    ].filter(Boolean) as Prisma.OrderRequestWhereInput[],
-  };
+  // Build filters for each selected filter
+  const statusFilters = selectedFilters
+    .map(f => mapStatus(f))
+    .filter(Boolean);
 
-  const whereWalkIn: Prisma.WalkInTransactionWhereInput = {
-    AND: [
-      safeQuery && {
-        customer_name: { contains: safeQuery},
-      },
-      statusFilter ? { [statusFilter.field]: statusFilter.value } : {},
-      dateFilter(dateRange)
-      ].filter(Boolean) as Prisma.WalkInTransactionWhereInput[],
-  };
+  // Build where clauses
+  const buildRequestWhere = (): Prisma.OrderRequestWhereInput => {
+  const conditions: Prisma.OrderRequestWhereInput[] = [];
 
+  if (safeQuery) {
+    conditions.push({ patient_name: { contains: safeQuery } });
+  }
 
+  if (statusFilters.length > 0) {
+    const typeFilters = statusFilters.filter(sf => sf!.field === "type");
+    const statusOnlyFilters = statusFilters.filter(sf => sf!.field === "status");
 
-  const includeWalkIn = isWalkInFilterEnabled(filter as TransactionFilter);
-  const includeRequest = isRequestOrderFilterEnabled(filter as TransactionFilter);
+    if (typeFilters.length > 0) {
+      conditions.push({
+        type: { in: typeFilters.map(tf => tf!.value as OrderType) }
+      });
+    }
+
+    if (statusOnlyFilters.length > 0) {
+      conditions.push({
+        status: { in: statusOnlyFilters.map(sf => sf!.value as Status) }
+      });
+    }
+  }
+
+  const dateCondition = dateFilter(dateRange);
+  if (dateCondition) {
+    conditions.push(dateCondition);
+  }
+
+  if (conditions.length === 0) {
+    return {};
+  }
+
+  if (conditions.length === 1) {
+    return conditions[0];
+  }
+
+  return { AND: conditions };
+};
+
+const buildWalkInWhere = (): Prisma.WalkInTransactionWhereInput => {
+  const conditions: Prisma.WalkInTransactionWhereInput[] = [];
+
+  if (safeQuery) {
+    conditions.push({ customer_name: { contains: safeQuery } });
+  }
+
+  if (statusFilters.length > 0) {
+    const statusOnlyFilters = statusFilters.filter(sf => sf!.field === "status");
+    
+    if (statusOnlyFilters.length > 0) {
+      conditions.push({
+        status: { in: statusOnlyFilters.map(sf => sf!.value as Status) }
+      });
+    }
+  }
+
+  const dateCondition = dateFilter(dateRange);
+  if (dateCondition) {
+    conditions.push(dateCondition);
+  }
+
+  if (conditions.length === 0) {
+    return {};
+  }
+
+  if (conditions.length === 1) {
+    return conditions[0];
+  }
+
+  return { AND: conditions };
+};
+
+  const whereRequestOrder = buildRequestWhere();
+  const whereWalkIn = buildWalkInWhere();
+
+  const includeWalkIn = isWalkInFilterEnabled(selectedFilters);
+  const includeRequest = isRequestOrderFilterEnabled(selectedFilters);
 
   const validSortFields = ["customer", "createdAt", "quantity", "total"];
   const safeSortBy = validSortFields.includes(sortBy) ? sortBy : "createdAt";
@@ -584,7 +793,7 @@ export const getTransactionList = async (
             user: true,
             receivedBy: true,
             processedBy: true,
-            items: { include: { product: true} },
+            items: { include: { product: true } },
           },
           orderBy: isDbSortable ? { [safeSortByRequest]: sortOrder } : { createdAt: "desc" },
         })
@@ -600,72 +809,71 @@ export const getTransactionList = async (
       : Promise.resolve([]),
   ]);
 
-   const formattedWalkIn: CombinedTransaction[] = walkinOrders.map((tx) => {
-      const items = tx.items ?? [];
+  const formattedWalkIn: CombinedTransaction[] = walkinOrders.map((tx) => {
+    const items = tx.items ?? [];
 
-      return {
-        id: tx.id,
-        customer: tx.customer_name?.trim() || "Unknown",
-        type: "Walk In",
-        patient_name: undefined, 
-        roomNumber: undefined,   
-        requestedBy: "Unknown",
-        createdAt: tx.createdAt,
-        status: tx.status,
-        source: "Walk In",
-        quantity: items.reduce((sum, item) => sum + item.quantity, 0),
-        price: items.reduce((sum, item) => sum + item.price.toNumber(), 0),
-        total: tx.totalAmount?.toNumber?.() ?? 0,
-        itemDetails: items.map((item) => ({
-          productName: item.product?.product_name ?? "Unknown",
-          quantity: item.quantity,
-          price: item.product?.price?.toNumber?.() ?? 0,
-        })),
-      };
-    });
+    return {
+      id: tx.id,
+      customer: tx.customer_name?.trim() || "Unknown",
+      type: "Walk In",
+      patient_name: undefined,
+      roomNumber: undefined,
+      requestedBy: "Unknown",
+      createdAt: tx.createdAt,
+      status: tx.status,
+      source: "Walk In",
+      quantity: items.reduce((sum, item) => sum + item.quantity, 0),
+      price: items.reduce((sum, item) => sum + item.price.toNumber(), 0),
+      total: tx.totalAmount?.toNumber?.() ?? 0,
+      itemDetails: items.map((item) => ({
+        productName: item.product?.product_name ?? "Unknown",
+        quantity: item.quantity,
+        price: item.product?.price?.toNumber?.() ?? 0,
+      })),
+    };
+  });
 
-    const formattedRequest: CombinedTransaction[] = requestOrders.map((tx) => {
-      const items = tx.items ?? [];
+  const formattedRequest: CombinedTransaction[] = requestOrders.map((tx) => {
+    const items = tx.items ?? [];
 
-      return {
-        id: tx.id,
-        requestedBy: tx.user?.username
+    return {
+      id: tx.id,
+      requestedBy: tx.user?.username
         ? tx.user.username.charAt(0).toUpperCase() + tx.user.username.slice(1)
         : "Unknown",
-        receivedBy: tx.receivedBy?.username
+      receivedBy: tx.receivedBy?.username
         ? tx.receivedBy.username.charAt(0).toUpperCase() + tx.receivedBy.username.slice(1)
         : "Unknown",
-        processedBy: tx.processedBy?.username
+      processedBy: tx.processedBy?.username
         ? tx.processedBy.username.charAt(0).toUpperCase() + tx.processedBy.username.slice(1)
         : "Unknown",
-        customer: tx.patient_name || "Unknown",
-        patient_name: tx.patient_name ?? "N/A",
-        roomNumber: tx.room_number ? Number(tx.room_number) : undefined,
-        type: tx.type,
-        createdAt: tx.createdAt,
-        status: tx.status,
-        source: "Request Order",
-        quantity: items.reduce((sum, item) => sum + item.quantity, 0),
-        price: items.reduce(
-          (sum, item) => sum + (item.product?.price?.toNumber?.() ?? 0),
-          0
-        ),
-        total: items.reduce(
-          (sum, item) =>
-            sum + item.quantity * (item.product?.price?.toNumber?.() ?? 0),
-          0
-        ),
-        itemDetails: items.map((item) => ({
-          productName: item.product?.product_name ?? "Unknown",
-          quantity: item.quantity,
-          price: item.product?.price?.toNumber?.() ?? 0,
-        })),
-      };
-    });
+      customer: tx.patient_name || "Unknown",
+      patient_name: tx.patient_name ?? "N/A",
+      roomNumber: tx.room_number ? Number(tx.room_number) : undefined,
+      type: tx.type,
+      createdAt: tx.createdAt,
+      status: tx.status,
+      source: "Request Order",
+      quantity: items.reduce((sum, item) => sum + item.quantity, 0),
+      price: items.reduce(
+        (sum, item) => sum + (item.product?.price?.toNumber?.() ?? 0),
+        0
+      ),
+      total: items.reduce(
+        (sum, item) =>
+          sum + item.quantity * (item.product?.price?.toNumber?.() ?? 0),
+        0
+      ),
+      itemDetails: items.map((item) => ({
+        productName: item.product?.product_name ?? "Unknown",
+        quantity: item.quantity,
+        price: item.product?.price?.toNumber?.() ?? 0,
+      })),
+    };
+  });
 
   // Merge into unified list
   const combined: CombinedTransaction[] = [...formattedWalkIn, ...formattedRequest];
-
 
   const sorted = combined.sort((a, b) => {
     let fieldA: string | number | Date;
@@ -705,52 +913,115 @@ export async function fetchTransactionPages(
   query: string,
   filter: string,
   userRole: string,
-  dateRange: { from: string; to: string } 
+  dateRange: { from: string; to: string }
 ) {
   const safeQuery = query.toLowerCase().trim();
-  const statusFilter = mapStatus(filter as TransactionFilter);
 
-  const whereRequestOrder: Prisma.OrderRequestWhereInput = {
-    AND: [
-      safeQuery && { patient_name: { contains: safeQuery} },
-      statusFilter ? { [statusFilter.field]: statusFilter.value } : {},
-      dateFilter(dateRange)
-    ].filter(Boolean) as Prisma.OrderRequestWhereInput[],
-  };
+  // Parse multiple filters
+  const selectedFiltersParam = filter;
+  const selectedFilters = selectedFiltersParam
+    ?.split(",")
+    .filter(Boolean)
+    .map(f => f.trim() as TransactionFilter) || ["all"];
 
-  const whereWalkIn: Prisma.WalkInTransactionWhereInput = {
-    AND: [
-      safeQuery && {
-        customer_name: { contains: safeQuery},
-      },
-      statusFilter ? { [statusFilter.field]: statusFilter.value } : {},
-      dateFilter(dateRange)
-      ].filter(Boolean) as Prisma.WalkInTransactionWhereInput[],
-  };
-  let total: number;
+  const statusFilters = selectedFilters
+    .map(f => mapStatus(f))
+    .filter(Boolean);
 
-  if (filter === "walk_in") {
-    total =
-      userRole === "Nurse"
-        ? 0
-        : await db.walkInTransaction.count({ where: whereWalkIn });
-  } else if (filter === "request_order") {
-    total = await db.orderRequest.count({ where: whereRequestOrder });
-  } else {
-    const [walkinCount, requestCount] = await Promise.all([
-      isWalkInFilterEnabled(filter as TransactionFilter) && userRole !== "Nurse"
-        ? db.walkInTransaction.count({ where: whereWalkIn })
-        : Promise.resolve(0),
-      isRequestOrderFilterEnabled(filter as TransactionFilter)
-        ? db.orderRequest.count({ where: whereRequestOrder })
-        : Promise.resolve(0),
-    ]);
-    total = walkinCount + requestCount;
+  // Build where clauses (same logic as above)
+const buildRequestWhere = (): Prisma.OrderRequestWhereInput => {
+  const conditions: Prisma.OrderRequestWhereInput[] = [];
+
+  if (safeQuery) {
+    conditions.push({ patient_name: { contains: safeQuery } });
   }
 
+  if (statusFilters.length > 0) {
+    const typeFilters = statusFilters.filter(sf => sf!.field === "type");
+    const statusOnlyFilters = statusFilters.filter(sf => sf!.field === "status");
+
+    if (typeFilters.length > 0) {
+      conditions.push({
+        type: { in: typeFilters.map(tf => tf!.value as OrderType) }
+      });
+    }
+
+    if (statusOnlyFilters.length > 0) {
+      conditions.push({
+        status: { in: statusOnlyFilters.map(sf => sf!.value as Status) }
+      });
+    }
+  }
+
+  const dateCondition = dateFilter(dateRange);
+  if (dateCondition) {
+    conditions.push(dateCondition);
+  }
+
+  // Return empty object if no conditions
+  if (conditions.length === 0) {
+    return {};
+  }
+
+  // Return single condition without AND if only one condition
+  if (conditions.length === 1) {
+    return conditions[0];
+  }
+
+  return { AND: conditions };
+};
+
+const buildWalkInWhere = (): Prisma.WalkInTransactionWhereInput => {
+  const conditions: Prisma.WalkInTransactionWhereInput[] = [];
+
+  if (safeQuery) {
+    conditions.push({ customer_name: { contains: safeQuery } });
+  }
+
+  if (statusFilters.length > 0) {
+    const statusOnlyFilters = statusFilters.filter(sf => sf!.field === "status");
+    
+    if (statusOnlyFilters.length > 0) {
+      conditions.push({
+        status: { in: statusOnlyFilters.map(sf => sf!.value as Status) }
+      });
+    }
+  }
+
+  const dateCondition = dateFilter(dateRange);
+  if (dateCondition) {
+    conditions.push(dateCondition);
+  }
+
+  if (conditions.length === 0) {
+    return {};
+  }
+
+  if (conditions.length === 1) {
+    return conditions[0];
+  }
+
+  return { AND: conditions };
+};
+
+  const whereRequestOrder = buildRequestWhere();
+  const whereWalkIn = buildWalkInWhere();
+
+  const includeWalkIn = isWalkInFilterEnabled(selectedFilters);
+  const includeRequest = isRequestOrderFilterEnabled(selectedFilters);
+
+  const [walkinCount, requestCount] = await Promise.all([
+    includeWalkIn && userRole !== "Nurse"
+      ? db.walkInTransaction.count({ where: whereWalkIn })
+      : Promise.resolve(0),
+    includeRequest
+      ? db.orderRequest.count({ where: whereRequestOrder })
+      : Promise.resolve(0),
+  ]);
+
+  const total = walkinCount + requestCount;
   return Math.ceil(total / ITEMS_PER_PAGE);
 }
-
 
 export async function getProductById(id:number) {
     try{

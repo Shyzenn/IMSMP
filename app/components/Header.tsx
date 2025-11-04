@@ -20,6 +20,8 @@ import { useEmergencyModal } from "@/lib/store/emergency-modal";
 import EmergencyOrderModal from "./EmergencyModal";
 import { Notification } from "@/lib/interfaces";
 import { HeaderLinksSkeleton } from "./Skeleton";
+import Link from "next/link";
+import { getLogoLink } from "@/lib/links";
 
 const Header = () => {
   const { data: session, status } = useSession();
@@ -61,13 +63,16 @@ const Header = () => {
   return (
     <div className="fixed top-0 w-full bg-white mb-5 shadow-md z-20">
       <div className="flex justify-between items-center px-4 lg:px-10 2xl:max-w-screen-3xl mx-auto">
-        <Image
-          src={PharmacyIcon}
-          alt="Macoleen's Pharmacy Icon"
-          width={150}
-          height={150}
-          className="hidden lg:block"
-        />
+        <Link href={getLogoLink(userRole)}>
+          <Image
+            src={PharmacyIcon}
+            alt="Macoleen's Pharmacy Icon"
+            width={150}
+            height={150}
+            className="hidden lg:block"
+          />
+        </Link>
+
         <MemoMobileMenu />
 
         {status === "loading" ? (

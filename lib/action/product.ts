@@ -35,6 +35,7 @@ export async function archiveProduct(productId: number) {
       data: {
         status: "ARCHIVED",
         archiveAt: new Date(),
+        archivedById: session.user.id
       },
     });
 
@@ -73,6 +74,7 @@ export async function archiveBatch(id: number) {
       data: {
         type: "ARCHIVED",
         archiveAt: new Date(),
+        archivedById: session.user.id
       },
     });
 

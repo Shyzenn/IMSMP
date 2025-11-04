@@ -3,9 +3,9 @@ import { useOrderModal } from "@/lib/store/useOrderModal";
 import { formattedDateTime } from "@/lib/utils";
 import React, { useState } from "react";
 import { IoCheckmarkDone } from "react-icons/io5";
-import { OrderView } from "./transaction/cashier/CashierAction";
 import { useEmergencyModal } from "@/lib/store/emergency-modal";
 import { OrderModalSkeleton } from "./Skeleton";
+import { OrderView } from "./transaction/table/TransactionAction";
 
 export interface NotificationWithDetails extends Notification {
   patientName?: string;

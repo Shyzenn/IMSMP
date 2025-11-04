@@ -4,7 +4,7 @@ import { getTransactionList } from "@/lib/action/get";
 import { formattedDateTime, statusLabels } from "@/lib/utils";
 import TransactionTableHeader from "./TransactionHeader";
 import EmptyTable from "../../EmptyTable";
-import CashierAction from "../cashier/CashierAction";
+import TransactionAction from "./TransactionAction";
 
 const TransactionTable = async ({
   query,
@@ -59,8 +59,8 @@ const TransactionTable = async ({
                     : "N/A"}
                 </TableCell>
                 <TableCell>{statusLabels[transaction.status]}</TableCell>
-                <TableCell className="w-[120px]">
-                  <CashierAction transaction={transaction} />
+                <TableCell className="w-[120px]" align="right">
+                  <TransactionAction transaction={transaction} />
                 </TableCell>
               </TableRow>
             ))}

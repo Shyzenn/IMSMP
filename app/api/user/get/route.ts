@@ -1,41 +1,68 @@
 import { db } from "@/lib/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { Prisma, Role } from "@prisma/client";
 
-export async function GET() {
-    try {
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams;
+    const query = searchParams.get("query") || "";
+    const safeQuery = query.toLowerCase().trim();
 
-        const users = await db.user.findMany({
-            orderBy:{
-                createdAt: 'desc'
-            },
-        })
+    let where: Prisma.UserWhereInput;
 
-        const removeSuperAdmin = users.filter((user) => user.role !== "SuperAdmin")
-
-        const formattedProducts = removeSuperAdmin.map((user) => ({
-            id: user.id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            middleName: user.middleName || "N/A",
-            username:user.username,
-            password: "*********",
-            role: user.role ? user.role.replace("_", " ") : "N/A",
-            action:"Edit",
-            status: user.status,
-            isOnline: user.isOnline
-        }))
-
-        return NextResponse.json(formattedProducts, {status:200})
-
-    } catch (error) {
-        console.error("Error fetching users:", error);
-        return NextResponse.json(
-            {
-                message: "Failed to fetch users",
-                error: error instanceof Error ? error.message : "Unknown error",
-            },
-            { status: 500 }
-        )
+    if (safeQuery) {
+      where = {
+        AND: [
+          {
+            OR: [
+              { firstName: { contains: safeQuery } },
+              { lastName: { contains: safeQuery } },
+              { middleName: { contains: safeQuery } },
+              { username: { contains: safeQuery } },
+              { email: { contains: safeQuery } },
+            ],
+          },
+          {
+            role: { not: Role.SuperAdmin },
+          },
+        ],
+      };
+    } else {
+      where = {
+        role: { not: Role.SuperAdmin },
+      };
     }
+
+    const users = await db.user.findMany({
+      where,
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    const formattedProducts = users.map((user) => ({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      middleName: user.middleName || "N/A",
+      username: user.username,
+      password: "*********",
+      role: user.role ? user.role.replace("_", " ") : "N/A",
+      action: "Edit",
+      status: user.status,
+      isOnline: user.isOnline,
+    }));
+
+    return NextResponse.json(formattedProducts, { status: 200 });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return NextResponse.json(
+      {
+        message: "Failed to fetch users",
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
+  }
 }

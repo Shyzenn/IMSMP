@@ -79,7 +79,7 @@ export const statusLabels: Record<string, string> = {
 //   EMERGENCY: "Pay Later",
 // };
 
-export type   TransactionFilter =
+export type TransactionFilter =
   | "all"
   | "regular"
   | "emergency"
@@ -91,21 +91,23 @@ export type   TransactionFilter =
   | "canceled"
   | "refunded";
 
-export const isWalkInFilterEnabled = (filter: TransactionFilter) => {
-  return filter === "all" || filter === "paid" || filter === "walk_in" || filter === "refunded";
+export const isWalkInFilterEnabled = (filters: TransactionFilter[]) => {
+  return filters.some(f => 
+    f === "all" || f === "paid" || f === "walk_in" || f === "refunded"
+  );
 };
 
-export const isRequestOrderFilterEnabled = (filter: TransactionFilter) => {
-  return (
-    filter === "all" ||
-    filter === "regular" ||
-    filter === "emergency" ||
-    filter === "paid" ||
-    filter === "pending" ||
-    filter === "for_payment" ||
-    filter === "request_order" ||
-    filter === "canceled" ||
-    filter === "refunded"
+export const isRequestOrderFilterEnabled = (filters: TransactionFilter[]) => {
+  return filters.some(f =>
+    f === "all" ||
+    f === "regular" ||
+    f === "emergency" ||
+    f === "paid" ||
+    f === "pending" ||
+    f === "for_payment" ||
+    f === "request_order" ||
+    f === "canceled" ||
+    f === "refunded"
   );
 };
 
@@ -129,7 +131,6 @@ export const mapStatus = (filter: TransactionFilter) => {
       return undefined;
   }
 };
-
 
 export const pageTitles: Record<string, string> = {
     "/dashboard": "Dashboard",

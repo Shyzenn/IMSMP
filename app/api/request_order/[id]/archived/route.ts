@@ -36,7 +36,7 @@ export async function PUT(
 
     await db.orderRequest.update({
       where: { id },
-      data: { isArchived: true },
+      data: { isArchived: true, archivedById: session.user.id },
     });
 
     await createAuditLog(

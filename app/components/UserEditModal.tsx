@@ -100,7 +100,7 @@ const UserEditModal = ({
               <Input
                 {...register("firstName")}
                 id="firstName"
-                placeholder="enter first name"
+                placeholder="Enter Firstname"
                 type="text"
               />
             </FormField>
@@ -109,7 +109,7 @@ const UserEditModal = ({
               <Input
                 {...register("middleName")}
                 id="middleName"
-                placeholder="enter middle name (Optional)"
+                placeholder="Enter Middlename (Optional)"
                 type="text"
               />
             </FormField>
@@ -118,7 +118,7 @@ const UserEditModal = ({
               <Input
                 {...register("lastName")}
                 id="lastName"
-                placeholder="enter last name"
+                placeholder="Enter Lastname"
                 type="text"
               />
             </FormField>
@@ -127,7 +127,7 @@ const UserEditModal = ({
               <Input
                 {...register("username")}
                 id="username"
-                placeholder="username"
+                placeholder="Username"
                 type="text"
               />
             </FormField>
@@ -136,7 +136,7 @@ const UserEditModal = ({
               <Input
                 {...register("email")}
                 id="email"
-                placeholder="example@email.com"
+                placeholder="Example@email.com"
                 type="email"
               />
             </FormField>
