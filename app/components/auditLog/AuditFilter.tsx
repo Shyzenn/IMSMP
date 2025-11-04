@@ -4,7 +4,6 @@ import TableFilterSelect from "../TableFilterSelect";
 const AuditFilter = () => {
   return (
     <TableFilterSelect
-      label="select a category"
       staticOptions={[
         { label: "All", value: "all" },
         { label: "Change Password", value: "ChangePassword" },

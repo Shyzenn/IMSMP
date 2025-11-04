@@ -38,6 +38,7 @@ async function Inventory(props: {
       style={{ height: "calc(94vh - 70px)" }}
     >
       <PageTableHeader
+        searchPlaceholder="Search product name..."
         title="Products"
         hasAddProduct={true}
         isProductFilter={true}

@@ -6,7 +6,6 @@ import TableFilterSelect from "../TableFilterSelect";
 const TransactionFilter = () => {
   return (
     <TableFilterSelect
-      label="Select a category"
       staticOptions={[
         { label: "All", value: "all" },
         { label: "Regular", value: "regular" },

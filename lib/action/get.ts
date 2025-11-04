@@ -6,7 +6,7 @@ import { db } from "../db";
 import { OrderItem } from "../interfaces";
 import { dateFilter, isRequestOrderFilterEnabled, isWalkInFilterEnabled, ITEMS_PER_PAGE, mapStatus, TransactionFilter } from "../utils";
 
-type ArchiveItem =
+export type ArchiveItem =
   | {
       id: number;
       type: "Product";

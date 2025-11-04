@@ -107,7 +107,7 @@ const Login = () => {
                     type="button"
                     onClick={() => setShowModal((prev) => !prev)}
                   >
-                    forgot password?
+                    Forgot password?
                   </button>
                 </div>
               </div>

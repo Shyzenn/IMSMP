@@ -3,17 +3,8 @@ import PageTableHeader from "@/app/components/PageTableHeader";
 import Pagination from "@/app/components/Pagination";
 import { TableRowSkeleton } from "@/app/components/Skeleton";
 import { fetchArchivePages } from "@/lib/action/get";
+import { archiveSkeletonHeaders } from "@/lib/utils";
 import React, { Suspense } from "react";
-
-const skeletonHeaders = [
-  { key: "id", label: "Log ID" },
-  { key: "action", label: "Event" },
-  { key: "description", label: "Description" },
-  { key: "createdAt", label: "Timestamp" },
-  { key: "user", label: "Performed By" },
-  { key: "entityType", label: "Target Type" },
-  { key: "entityId", label: "Target ID" },
-];
 
 const page = async (props: {
   searchParams?: Promise<{
@@ -43,7 +34,7 @@ const page = async (props: {
       <div className="mt-4">
         <Suspense
           key={`${query}-${filter}-${currentPage}`}
-          fallback={<TableRowSkeleton headerLabel={skeletonHeaders} />}
+          fallback={<TableRowSkeleton headerLabel={archiveSkeletonHeaders} />}
         >
           <ArchiveTable
             query={query}

@@ -57,7 +57,7 @@ const EditBatchForm = ({
           onSubmit={handleSubmit(onSubmit)}
         >
           <div className="flex flex-col gap-8 mb-4 px-12">
-            <FormField label="Quantity`" error={errors.quantity?.message}>
+            <FormField label="Quantity" error={errors.quantity?.message}>
               <Input
                 {...register("quantity")}
                 id="quantity"

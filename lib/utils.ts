@@ -179,6 +179,17 @@ export const isActive = (pathname: string, href: string) => {
   return pathname === href || pathname.startsWith(href);
 };
 
+export const archiveSkeletonHeaders = [
+  { key: "no.", label: "No." },
+  { key: "product", label: "Product" },
+  { key: "Category/Batch/Room", label: "Category / Batch / Room" },
+  { key: "quantity", label: "Quantity"},
+  { key: "releaseDate", label: "Release Date" },
+  { key: "expiryDate", label: "Expiry Date" },
+  { key: "archiveAt", label: "Archived At" },
+  { key: "action", label: "Actions	" },
+];
+
 export const inventorySkeletonHeaders = [
   { key: "product_name", label: "Product" },
   { key: "quantity", label: "Quantity" },

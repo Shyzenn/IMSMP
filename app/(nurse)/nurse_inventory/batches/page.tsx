@@ -38,6 +38,7 @@ const ProductBatch = async (props: {
       style={{ height: "calc(94vh - 70px)" }}
     >
       <PageTableHeader
+        searchPlaceholder="Search product name..."
         title={"Product Batches"}
         hasAddProduct={false}
         isBatchFilter={true}

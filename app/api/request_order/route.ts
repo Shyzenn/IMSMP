@@ -229,9 +229,7 @@ export async function GET(req: NextRequest) {
         patient_name: order.patient_name
           ? capitalLetter(order.patient_name)
           : "Unknown",
-        roomNumber: order.room_number
-          ? capitalLetter(order.room_number)
-          : "Unknown",
+        room_number: order.room_number,
         createdAt: order.createdAt,
         status: order.status,
         remarks: order.remarks,
