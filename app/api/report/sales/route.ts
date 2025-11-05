@@ -1,121 +1,182 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { startOfMonth, startOfYear, subDays } from "date-fns";
+import { startOfDay, endOfDay } from "date-fns";
+import { Prisma } from "@prisma/client";
 
-type SalesRow = {
-  product_name: string;
+export type Body = { from?: string | null; to?: string | null; type?: string };
+
+export interface ReportItem {
+  productId: number;
+  productName: string;
   category: string;
-  price: string;
-  date: string;
-  revenue: string;
-};
+  quantity: number;
+  price: number;
+  total: number;
+}
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const filter = searchParams.get("filter") || "This Month";
+export interface ReportSale {
+  id: number;
+  type: "Order Request" | "Walk-In";
+  createdAt: Date;
+  user: {
+    id: string | number;
+    name: string;
+  } | null;
+  items: ReportItem[];
+}
 
-  let fromDate = new Date();
+export interface SalesFilterMeta {
+  from?: string | null;
+  to?: string | null;
+  type?: string;
+}
 
-  if (filter === "Last 7 Days") {
-    fromDate = subDays(new Date(), 6);
-  } else if (filter === "This Month") {
-    fromDate = startOfMonth(new Date());
-  } else if (filter === "This Year") {
-    fromDate = startOfYear(new Date());
-  }
 
+export async function POST(req: Request) {
   try {
-    const [paidOrders, paidWalkIns] = await Promise.all([
-      db.orderRequest.findMany({
-        where: {
-          status: "paid",
-          createdAt: { gte: fromDate },
-        },
-        include: {
-          items: {
-            include: {
-              product: { include: { category: true } },
-            },
-          },
-        },
-      }),
-      db.walkInTransaction.findMany({
-        where: {
-          status: "paid",
-          createdAt: { gte: fromDate },
-        },
-        include: {
-          items: {
-            include: {
-              product: { include: { category: true } },
-            },
-          },
-        },
-      }),
-    ]);
+    const body: Body = await req.json();
 
-    // Flatten all sales
-    const allSales = [...paidOrders, ...paidWalkIns].flatMap((order) =>
-      order.items.map((item) => {
-        const price = Number(item.product?.price) || 0;
-        const quantity = Number(item.quantity) || 0;
-        const createdAt = order.createdAt;
+    const type = (body.type || "all").toLowerCase();
+    
+    // Parse dates as local dates (don't convert to UTC)
+    let from: Date | null = null;
+    let to: Date | null = null;
 
-        let date = "";
-        if (createdAt && !isNaN(new Date(createdAt).getTime())) {
-          date = new Date(createdAt).toISOString().split("T")[0];
-        }
-
-        return {
-          product_name: item.product?.product_name || "Unknown",
-          category: item.product?.category?.name || "Uncategorized",
-          price,
-          date,
-          revenue: price * quantity,
-        };
-      })
-    );
-
-    // Group sales by date
-    const groupedByDate: Record<string, typeof allSales> = {};
-    for (const sale of allSales) {
-      if (!sale.date) continue;
-      if (!groupedByDate[sale.date]) groupedByDate[sale.date] = [];
-      groupedByDate[sale.date].push(sale);
+    if (body.from) {
+      // Parse YYYY-MM-DD as local date
+      const [year, month, day] = body.from.split('-').map(Number);
+      from = new Date(year, month - 1, day);
     }
 
-    // Format data: show all products per date + subtotal row
-    const finalData: SalesRow[] = [];
+    if (body.to) {
+      // Parse YYYY-MM-DD as local date
+      const [year, month, day] = body.to.split('-').map(Number);
+      to = new Date(year, month - 1, day);
+    }
 
-    for (const [date, sales] of Object.entries(groupedByDate)) {
-      const totalRevenue = sales.reduce((sum, s) => sum + s.revenue, 0);
+    // Build date filter
+    let createdAtFilter: { gte?: Date; lte?: Date } | undefined = undefined;
 
-      sales.forEach((s) => {
-        finalData.push({
-          product_name: s.product_name,
-          category: s.category,
-          price: s.price.toFixed(2),
-          date,
-          revenue: s.revenue.toFixed(2),
+    if (from && to) {
+      createdAtFilter = { gte: startOfDay(from), lte: endOfDay(to) };
+    } else if (from) {
+      createdAtFilter = { gte: startOfDay(from) };
+    } else if (to) {
+      createdAtFilter = { lte: endOfDay(to) };
+    }
+
+    const results: ReportSale[] = [];
+
+    // === ORDER REQUEST SALES ===
+    if (type === "all" || type === "orderrequest") {
+      const whereReq: Prisma.OrderRequestWhereInput = {
+        status: "paid",
+      };
+      if (createdAtFilter) whereReq.createdAt = createdAtFilter;
+
+      const orders = await db.orderRequest.findMany({
+        where: whereReq,
+        include: {
+          items: { include: { product: { include: { category: true } } } },
+          user: true,
+        },
+        orderBy: { createdAt: "asc" },
+      });
+
+      orders.forEach((order) => {
+        results.push({
+          id: order.id,
+          type: "Order Request",
+          createdAt: order.createdAt,
+          user: order.user
+            ? { id: order.user.id, name: order.user.username || order.user.email }
+            : null,
+          items: order.items.map((item) => {
+            const productName = item.product?.product_name ?? "Unknown";
+            const categoryName = item.product?.category?.name ?? "Uncategorized";
+
+            // Convert Prisma Decimal to number safely
+            const productPrice = item.product?.price
+              ? Number(item.product.price)
+              : 0;
+
+            const total = productPrice * item.quantity;
+
+            return {
+              productId: item.productId,
+              productName,
+              category: categoryName,
+              quantity: item.quantity,
+              price: productPrice,
+              total,
+            };
+          })
         });
       });
+    }
 
-      // Add subtotal row per day
-      finalData.push({
-        product_name: "",
-        category: "",
-        price: "",
-        date: "Subtotal",
-        revenue: totalRevenue.toFixed(2),
+    // === WALK-IN SALES ===
+    if (type === "all" || type === "walkin") {
+      const whereWalkin: Prisma.WalkInTransactionWhereInput = {
+        status: "paid",
+      };
+      if (createdAtFilter) whereWalkin.createdAt = createdAtFilter;
+
+      const walkins = await db.walkInTransaction.findMany({
+        where: whereWalkin,
+        include: {
+          items: { include: { product: { include: { category: true } } } },
+          user: true,
+        },
+        orderBy: { createdAt: "asc" },
+      });
+
+      walkins.forEach((txn) => {
+        results.push({
+          id: txn.id,
+          type: "Walk-In",
+          createdAt: txn.createdAt,
+          user: txn.user
+            ? { id: txn.user.id, name: txn.user.username || txn.user.email }
+            : null,
+         items: txn.items.map((item) => {
+            const productName = item.product?.product_name ?? "Unknown";
+            const categoryName = item.product?.category?.name ?? "Uncategorized";
+
+            const productPrice = item.product?.price
+              ? Number(item.product.price)
+              : 0;
+
+            const total = productPrice * item.quantity;
+
+            return {
+              productId: item.productId,
+              productName,
+              category: categoryName,
+              quantity: item.quantity,
+              price: productPrice,
+              total,
+            };
+          })
+        });
       });
     }
 
-    // Sort by date
-    finalData.sort((a, b) => (a.date > b.date ? 1 : -1));
+    if (results.length === 0) {
+      return NextResponse.json({ message: "No data found" }, { status: 404 });
+    }
 
-    return NextResponse.json(finalData);
+    return NextResponse.json({
+      sales: results,
+      meta: {
+        from: body.from ?? null,
+        to: body.to ?? null,
+        type,
+        generatedAt: new Date().toISOString(),
+      },
+    });
   } catch (error) {
     console.error("Sales report error:", error);
-    return NextResponse.json({ message: "Server error" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch sales report" }, { status: 500 });
   }
 }

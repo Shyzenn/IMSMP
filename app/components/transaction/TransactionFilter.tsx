@@ -7,7 +7,6 @@ const TransactionFilter = () => {
   return (
     <TableFilterSelect
       staticOptions={[
-        { label: "All", value: "all" },
         { label: "Regular", value: "regular" },
         { label: "Pay Later", value: "emergency" },
         { label: "Pending", value: "pending" },

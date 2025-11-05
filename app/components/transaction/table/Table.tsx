@@ -49,7 +49,7 @@ const TransactionTable = async ({
                   {formattedDateTime(transaction.createdAt)}
                 </TableCell>
                 <TableCell>{transaction.quantity}</TableCell>
-                <TableCell>{`₱${transaction.total}`}</TableCell>
+                <TableCell>{`₱${transaction.total.toFixed(2)}`}</TableCell>
                 <TableCell>{transaction.source}</TableCell>
                 <TableCell>
                   {transaction.type === "REGULAR"
