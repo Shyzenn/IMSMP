@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Search from "./Search";
 import BatchFilter from "./Inventory/batches/BatchFilter";
@@ -43,6 +43,7 @@ import {
 import { Body } from "../api/report/sales/route";
 import { CiSearch } from "react-icons/ci";
 import { generateTransactionPDF } from "@/lib/reportUtils/transactionReport";
+import { MultiSelect } from "./multi-select";
 
 interface PageTableHeaderProps {
   title: string;
@@ -88,20 +89,105 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
   }>({});
   const [salesType, setSalesType] = useState<string>("all");
 
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
   // Transaction report state
+  const [transactionStatuses, setTransactionStatuses] = useState<string[]>([]);
+  const [transactionSources, setTransactionSources] = useState<string[]>([]);
   const [transactionDateRange, setTransactionDateRange] = useState<{
     from?: Date;
     to?: Date;
   }>({});
   const [transactionSearchQuery, setTransactionSearchQuery] =
     useState<string>("");
+  const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showNoResult, setShowNoResult] = useState(false);
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentFilter = searchParams.get("filter") || "all";
   const currentQuery = searchParams.get("query") || "";
   const currentStockFilter = searchParams.get("stockFilter") || "all";
+
+  // Handle search input with debounce
+  const handleSearchInput = async (value: string) => {
+    setTransactionSearchQuery(value);
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (value.length < 2) {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const response = await fetch(
+          `/api/report/search/name?q=${encodeURIComponent(value)}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setSearchSuggestions(data.results || []);
+          setShowSuggestions(data.results.length > 0);
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+  };
+
+  // Delay showing "No results found" by 300ms after search completes
+  useEffect(() => {
+    let timeout: NodeJS.Timeout | null = null;
+
+    if (
+      transactionSearchQuery.length >= 2 &&
+      !isSearching &&
+      searchSuggestions.length === 0
+    ) {
+      timeout = setTimeout(() => {
+        setShowNoResult(true);
+      }, 300);
+    } else {
+      setShowNoResult(false);
+    }
+
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [transactionSearchQuery, isSearching, searchSuggestions]);
+
+  const handleSelectSuggestion = (name: string) => {
+    setTransactionSearchQuery(name);
+    setShowSuggestions(false);
+  };
+
+  // Click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest(".search-container")) {
+        setShowSuggestions(false);
+      }
+    };
+
+    if (showSuggestions) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+
+    return;
+  }, [showSuggestions]);
 
   const handleProductExport = async (type: "all" | "lowStock") => {
     setIsExporting(true);
@@ -218,7 +304,6 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
       generateSalesPDF(data.sales, data.meta, username);
 
       setShowSalesReportModal(false);
-      // Reset filters
       setSalesDateRange({});
       setSalesType("all");
     } catch (error) {
@@ -241,6 +326,8 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
         from?: string;
         to?: string;
         query?: string;
+        statuses?: string[];
+        sources?: string[];
       } = {};
 
       if (transactionDateRange.from) {
@@ -251,6 +338,12 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
       }
       if (transactionSearchQuery.trim()) {
         payload.query = transactionSearchQuery.trim();
+      }
+      if (transactionStatuses.length > 0) {
+        payload.statuses = transactionStatuses;
+      }
+      if (transactionSources.length > 0) {
+        payload.sources = transactionSources;
       }
 
       const response = await fetch("/api/report/transaction", {
@@ -280,9 +373,12 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
       generateTransactionPDF(data.transactions, data.meta, username);
 
       setShowTransactionModal(false);
-      // Reset filters
       setTransactionDateRange({});
       setTransactionSearchQuery("");
+      setTransactionStatuses([]);
+      setTransactionSources([]);
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
     } catch (error) {
       console.error("Export error:", error);
       setModalMessage({
@@ -562,6 +658,10 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
               setShowTransactionModal(false);
               setTransactionDateRange({});
               setTransactionSearchQuery("");
+              setTransactionStatuses([]);
+              setTransactionSources([]);
+              setSearchSuggestions([]);
+              setShowSuggestions(false);
             }
           }}
         >
@@ -578,18 +678,74 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
             </p>
 
             <div className="flex gap-4 mt-2 flex-col">
+              <div className="flex gap-4">
+                <MultiSelect
+                  options={[
+                    { label: "Order Request", value: "order_request" },
+                    { label: "Walk In", value: "walk_in" },
+                  ]}
+                  onValueChange={(selected) => setTransactionSources(selected)}
+                  value={transactionSources}
+                  placeholder="Select transaction types..."
+                  hideSelectAll
+                />
+                <MultiSelect
+                  options={[
+                    { label: "Pending", value: "pending" },
+                    { label: "For Payment", value: "for_payment" },
+                    { label: "Paid", value: "paid" },
+                    { label: "Canceled", value: "canceled" },
+                    { label: "Refunded", value: "refunded" },
+                  ]}
+                  onValueChange={(selected) => setTransactionStatuses(selected)}
+                  value={transactionStatuses}
+                  placeholder="Select status filters..."
+                  hideSelectAll
+                />
+              </div>
+
               <DateRangeFilter
                 onChange={(range) => setTransactionDateRange(range)}
               />
+              <div className="relative search-container">
+                <div className="w-auto border px-4 rounded-md flex items-center gap-2">
+                  <CiSearch className="text-xl text-gray-800 font-bold" />
+                  <input
+                    placeholder="Search customer/patient name..."
+                    className="w-full py-2 outline-none text-sm pl-1"
+                    value={transactionSearchQuery}
+                    onChange={(e) => handleSearchInput(e.target.value)}
+                    onFocus={() => {
+                      if (searchSuggestions.length > 0) {
+                        setShowSuggestions(true);
+                      }
+                    }}
+                  />
+                  {isSearching && (
+                    <div className="animate-spin h-4 w-4 border-2 border-gray-300 border-t-gray-600 rounded-full" />
+                  )}
+                </div>
 
-              <div className="w-auto border px-4 rounded-md flex items-center gap-2">
-                <CiSearch className="text-xl text-gray-800 font-bold" />
-                <input
-                  placeholder="Search customer/patient name..."
-                  className="w-full py-2 outline-none text-sm pl-1"
-                  value={transactionSearchQuery}
-                  onChange={(e) => setTransactionSearchQuery(e.target.value)}
-                />
+                {/* Dropdown suggestions */}
+                {showSuggestions && searchSuggestions.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                    {searchSuggestions.map((name, index) => (
+                      <button
+                        key={index}
+                        className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm transition-colors"
+                        onClick={() => handleSelectSuggestion(name)}
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {showNoResult && (
+                  <p className="text-sm text-gray-500 mt-1 italic">
+                    No results found for{" "}
+                    <span className="font-semibold">{`"${transactionSearchQuery}"`}</span>
+                  </p>
+                )}
               </div>
             </div>
 
@@ -600,6 +756,10 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
                   setShowTransactionModal(false);
                   setTransactionDateRange({});
                   setTransactionSearchQuery("");
+                  setTransactionStatuses([]);
+                  setTransactionSources([]);
+                  setSearchSuggestions([]);
+                  setShowSuggestions(false);
                 }}
                 disabled={isExporting}
               >

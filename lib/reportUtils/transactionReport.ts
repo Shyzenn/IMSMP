@@ -33,6 +33,8 @@ interface ReportMeta {
     to: string | null;
   };
   searchQuery: string | null;
+  statusFilters: string[] | null;
+  sourceFilters: string[] | null;
   totalTransactions: number;
   totalAmount: number;
   generatedAt: string;
@@ -64,7 +66,7 @@ export const generateTransactionPDF = (
     doc.text(label, 14, yPos);
     const labelWidth = doc.getTextWidth(label);
     doc.setFont("helvetica", "normal");
-    doc.text(value, 14 + labelWidth + 2, yPos); // add small gap (2px)
+    doc.text(value, 14 + labelWidth + 2, yPos);
     yPos += 5;
   }
 
@@ -80,6 +82,20 @@ export const generateTransactionPDF = (
 
   if (meta.searchQuery) {
     addLabelValue("Search:", meta.searchQuery);
+  }
+
+  if (meta.statusFilters && meta.statusFilters.length > 0) {
+    const statusLabelsText = meta.statusFilters
+      .map((s) => statusLabels[s] || capitalLetter(s))
+      .join(", ");
+    addLabelValue("Status Filters:", statusLabelsText);
+  }
+
+  if (meta.sourceFilters && meta.sourceFilters.length > 0) {
+    const sourceLabelsText = meta.sourceFilters
+      .map((s) => s === "order_request" ? "Order Request" : "Walk In")
+      .join(", ");
+    addLabelValue("Source Filters:", sourceLabelsText);
   }
 
   addLabelValue("Total Transactions:", `${meta.totalTransactions}`);

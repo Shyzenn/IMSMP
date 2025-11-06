@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
+import { Prisma, Status } from "@prisma/client";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 
@@ -7,6 +7,8 @@ export type TransactionReportBody = {
   from?: string;
   to?: string;
   query?: string;
+  statuses?: string[];
+  sources?: string[];
 };
 
 export async function POST(req: NextRequest) {
@@ -17,9 +19,13 @@ export async function POST(req: NextRequest) {
     }
 
     const body: TransactionReportBody = await req.json();
-    const { from, to, query } = body;
+    const { from, to, query, statuses, sources } = body;
 
     const safeQuery = query?.toLowerCase().trim() || "";
+
+    // Determine which sources to fetch
+    const fetchOrderRequests = !sources || sources.length === 0 || sources.includes("order_request");
+    const fetchWalkIns = !sources || sources.length === 0 || sources.includes("walk_in");
 
     // --- Separate date conditions to avoid type conflicts ---
     const orderRequestDateCondition: Prisma.OrderRequestWhereInput = {};
@@ -38,20 +44,38 @@ export async function POST(req: NextRequest) {
       walkInDateCondition.createdAt = createdAt;
     }
 
+    // --- Status filters ---
+    const orderRequestStatusCondition: Prisma.OrderRequestWhereInput = {};
+    const walkInStatusCondition: Prisma.WalkInTransactionWhereInput = {};
+
+    if (statuses && statuses.length > 0) {
+      // Cast string array to Status enum array
+      const validStatuses = statuses.filter((s): s is Status => 
+        Object.values(Status).includes(s as Status)
+      );
+      
+      if (validStatuses.length > 0) {
+        orderRequestStatusCondition.status = { in: validStatuses };
+        walkInStatusCondition.status = { in: validStatuses };
+      }
+    }
+
     // --- WHERE filters ---
     const requestWhere: Prisma.OrderRequestWhereInput = {
       ...(safeQuery && { patient_name: { contains: safeQuery } }),
       ...orderRequestDateCondition,
+      ...orderRequestStatusCondition,
     };
 
     const walkInWhere: Prisma.WalkInTransactionWhereInput = {
       ...(safeQuery && { customer_name: { contains: safeQuery } }),
       ...walkInDateCondition,
+      ...walkInStatusCondition,
     };
 
     // --- Fetch data ---
     const [requestOrders, walkInOrders] = await Promise.all([
-      db.orderRequest.findMany({
+      fetchOrderRequests ? db.orderRequest.findMany({
         where: requestWhere,
         include: {
           user: true,
@@ -60,15 +84,15 @@ export async function POST(req: NextRequest) {
           items: { include: { product: true } },
         },
         orderBy: { createdAt: "desc" },
-      }),
-      db.walkInTransaction.findMany({
+      }) : Promise.resolve([]),
+      fetchWalkIns ? db.walkInTransaction.findMany({
         where: walkInWhere,
         include: {
           items: { include: { product: true } },
           user: true,
         },
         orderBy: { createdAt: "desc" },
-      }),
+      }) : Promise.resolve([]),
     ]);
 
     // --- Format data ---
@@ -122,6 +146,8 @@ export async function POST(req: NextRequest) {
     const meta = {
       dateRange: { from: from || null, to: to || null },
       searchQuery: query || null,
+      statusFilters: statuses || null,
+      sourceFilters: sources || null,
       totalTransactions: combined.length,
       totalAmount: combined.reduce((sum, tx) => sum + tx.total, 0),
       generatedAt: new Date().toISOString(),
