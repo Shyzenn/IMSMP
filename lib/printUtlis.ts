@@ -160,6 +160,8 @@ const buildReceipt = (data: ReceiptData): string => {
 // Print Function
 // ============================================
 
+// Replace the printReceipt function in printUtlis.ts
+
 const printReceipt = (receipt: string): boolean => {
   try {
     const printWindow = window.open("", "printReceipt", "width=400,height=600");
@@ -196,16 +198,24 @@ const printReceipt = (receipt: string): boolean => {
     
     printWindow.document.close();
     printWindow.focus();
-    printWindow.print();
-    printWindow.close();
+    
+    // Wait for content to load before printing
+    setTimeout(() => {
+      printWindow.print();
+      
+      // Close window after print dialog is handled
+      // This will close after user clicks Print or Cancel
+      setTimeout(() => {
+        printWindow.close();
+      }, 100);
+    }, 250);
     
     return true;
   } catch (error) {
     console.error("Print error:", error);
     return false;
   }
-};
-
+}
 
 export const handlePrint = async (
   selectedOrder: OrderView | null,
