@@ -12,7 +12,7 @@ const TransactionFilter = () => {
         { label: "Pending", value: "pending" },
         { label: "For Payment", value: "for_payment" },
         { label: "Paid", value: "paid" },
-        { label: "Cancelled", value: "canceled" },
+        { label: "Canceled", value: "canceled" },
         { label: "Refunded", value: "refunded" },
       ]}
     />

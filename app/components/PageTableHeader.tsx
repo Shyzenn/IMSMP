@@ -40,6 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Body } from "../api/report/sales/route";
+import { generateTransactionPDF } from "@/lib/reportUtils/transactionReport";
 
 interface PageTableHeaderProps {
   title: string;
@@ -222,6 +223,48 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
     }
   };
 
+  const handleTransactionExport = async () => {
+    setIsExporting(true);
+    try {
+      const params = new URLSearchParams({
+        type: "all", // Export both order requests and walk-ins
+        filter: currentFilter, // Pass current filter from URL
+        query: currentQuery, // Pass current search query
+      });
+
+      const response = await fetch(
+        `/api/report/transaction?${params.toString()}`
+      );
+
+      if (response.status === 404) {
+        setModalMessage({
+          title: "No Data Found",
+          description:
+            "There are no transactions matching the current filters.",
+        });
+        setShowModal(true);
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error("Export failed");
+      }
+
+      const data = await response.json();
+      const username = session?.user?.username || "Unknown User";
+      generateTransactionPDF(data, username);
+    } catch (error) {
+      console.error("Export error:", error);
+      setModalMessage({
+        title: "Export Failed",
+        description: "There was an error generating the PDF. Please try again.",
+      });
+      setShowModal(true);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const handleDateChange = (range: { from?: Date; to?: Date }) => {
     const params = new URLSearchParams(searchParams.toString());
     if (range.from) params.set("from", format(range.from, "yyyy-MM-dd"));
@@ -319,21 +362,29 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
             {hasDateFilter && <DateRangeFilter onChange={handleDateChange} />}
 
             {transactionExport && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" disabled={isExporting}>
-                    {isExporting ? "Exporting..." : "PDF Export"}
-                  </Button>
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={() => setShowSalesReportModal(true)}
-                  >
-                    Sales Report
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowSalesReportModal(true)}
+                >
+                  Sales Report
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleTransactionExport}
+                  disabled={isExporting}
+                >
+                  {isExporting ? "Exporting..." : "Transaction Export"}
+                  <MdOutlineFileDownload
+                    className={isExporting ? "animate-bounce" : ""}
+                  />
+                  {(currentFilter !== "all" || currentQuery) && (
+                    <span className="text-xs text-gray-500 ml-2">
+                      (filtered)
+                    </span>
+                  )}
+                </Button>
+              </>
             )}
 
             {hasAddProduct && (

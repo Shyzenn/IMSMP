@@ -263,8 +263,8 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                   <CancelButton setIsModalOpen={handleClose} />
                   <button
                     onClick={() => {
-                      if (!selectedOrder) return;
-                      handlePrint(selectedOrder, setIsConfirmOpen);
+                      if (!currentOrder) return;
+                      handlePrint(currentOrder, setIsConfirmOpen);
                     }}
                     className="bg-buttonBgColor hover:bg-buttonHover text-white px-8 py-2 rounded-md flex items-center gap-2"
                   >
