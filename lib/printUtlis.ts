@@ -159,10 +159,7 @@ const buildReceipt = (data: ReceiptData): string => {
 // ============================================
 // Print Function
 // ============================================
-
-// Replace the printReceipt function in printUtlis.ts
-
-const printReceipt = (receipt: string): boolean => {
+const printReceipt = (receipt: string, onPrintComplete?: () => void): boolean => {
   try {
     const printWindow = window.open("", "printReceipt", "width=400,height=600");
     if (!printWindow) {
@@ -197,17 +194,34 @@ const printReceipt = (receipt: string): boolean => {
     `);
     
     printWindow.document.close();
+    
+    // Set up the afterprint event BEFORE calling print()
+    printWindow.onafterprint = () => {
+      // Close the print window
+      printWindow.close();
+      
+      // Trigger callback after a short delay to ensure window is closed
+      setTimeout(() => {
+        if (onPrintComplete) {
+          onPrintComplete();
+        }
+      }, 300);
+    };
+    
+    // Also handle if user closes window without printing
+    printWindow.onbeforeunload = () => {
+      setTimeout(() => {
+        if (onPrintComplete) {
+          onPrintComplete();
+        }
+      }, 300);
+    };
+    
     printWindow.focus();
     
     // Wait for content to load before printing
     setTimeout(() => {
       printWindow.print();
-      
-      // Close window after print dialog is handled
-      // This will close after user clicks Print or Cancel
-      setTimeout(() => {
-        printWindow.close();
-      }, 100);
     }, 250);
     
     return true;
@@ -215,7 +229,8 @@ const printReceipt = (receipt: string): boolean => {
     console.error("Print error:", error);
     return false;
   }
-}
+};
+
 
 export const handlePrint = async (
   selectedOrder: OrderView | null,
@@ -238,11 +253,11 @@ export const handlePrint = async (
     };
     
     const receipt = buildReceipt(receiptData);
-    const success = printReceipt(receipt);
     
-    if (success) {
+    // Pass callback to show confirmation AFTER print completes
+    printReceipt(receipt, () => {
       setIsConfirmOpen(true);
-    }
+    });
   } catch (error) {
     console.error("Error in handlePrint:", error);
   }

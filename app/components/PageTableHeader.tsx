@@ -10,6 +10,7 @@ import TransactionFilter from "./transaction/TransactionFilter";
 import AuditFilter from "./auditLog/AuditFilter";
 import ArchiveFilter from "./archive/ArchiveFilter";
 import { MdOutlineFileDownload } from "react-icons/md";
+import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +41,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Body } from "../api/report/sales/route";
+import { CiSearch } from "react-icons/ci";
 import { generateTransactionPDF } from "@/lib/reportUtils/transactionReport";
 
 interface PageTableHeaderProps {
@@ -77,6 +79,7 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
     description: "There are no products available for this report.",
   });
   const [showSalesReportModal, setShowSalesReportModal] = useState(false);
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
 
   // Sales report state
   const [salesDateRange, setSalesDateRange] = useState<{
@@ -87,6 +90,14 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
 
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Transaction report state
+  const [transactionDateRange, setTransactionDateRange] = useState<{
+    from?: Date;
+    to?: Date;
+  }>({});
+  const [transactionSearchQuery, setTransactionSearchQuery] =
+    useState<string>("");
 
   const currentFilter = searchParams.get("filter") || "all";
   const currentQuery = searchParams.get("query") || "";
@@ -226,23 +237,37 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
   const handleTransactionExport = async () => {
     setIsExporting(true);
     try {
-      const params = new URLSearchParams({
-        type: "all", // Export both order requests and walk-ins
-        filter: currentFilter, // Pass current filter from URL
-        query: currentQuery, // Pass current search query
-      });
+      const payload: {
+        from?: string;
+        to?: string;
+        query?: string;
+      } = {};
 
-      const response = await fetch(
-        `/api/report/transaction?${params.toString()}`
-      );
+      if (transactionDateRange.from) {
+        payload.from = format(transactionDateRange.from, "yyyy-MM-dd");
+      }
+      if (transactionDateRange.to) {
+        payload.to = format(transactionDateRange.to, "yyyy-MM-dd");
+      }
+      if (transactionSearchQuery.trim()) {
+        payload.query = transactionSearchQuery.trim();
+      }
+
+      const response = await fetch("/api/report/transaction", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
       if (response.status === 404) {
         setModalMessage({
           title: "No Data Found",
-          description:
-            "There are no transactions matching the current filters.",
+          description: "There are no transactions for the selected criteria.",
         });
         setShowModal(true);
+        setShowTransactionModal(false);
         return;
       }
 
@@ -252,7 +277,12 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
 
       const data = await response.json();
       const username = session?.user?.username || "Unknown User";
-      generateTransactionPDF(data, username);
+      generateTransactionPDF(data.transactions, data.meta, username);
+
+      setShowTransactionModal(false);
+      // Reset filters
+      setTransactionDateRange({});
+      setTransactionSearchQuery("");
     } catch (error) {
       console.error("Export error:", error);
       setModalMessage({
@@ -260,6 +290,7 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
         description: "There was an error generating the PDF. Please try again.",
       });
       setShowModal(true);
+      setShowTransactionModal(false);
     } finally {
       setIsExporting(false);
     }
@@ -363,27 +394,26 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
 
             {transactionExport && (
               <>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowSalesReportModal(true)}
-                >
-                  Sales Report
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleTransactionExport}
-                  disabled={isExporting}
-                >
-                  {isExporting ? "Exporting..." : "Transaction Export"}
-                  <MdOutlineFileDownload
-                    className={isExporting ? "animate-bounce" : ""}
-                  />
-                  {(currentFilter !== "all" || currentQuery) && (
-                    <span className="text-xs text-gray-500 ml-2">
-                      (filtered)
-                    </span>
-                  )}
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button className="bg-white border hover:bg-gray-100 text-gray-500 hover:text-black flex justify-between">
+                      PDF Export <MdOutlineKeyboardArrowDown />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem
+                      onClick={() => setShowSalesReportModal(true)}
+                    >
+                      Sales Report
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                      onClick={() => setShowTransactionModal(true)}
+                    >
+                      Transaction Report
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             )}
 
@@ -511,6 +541,72 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
               </Button>
               <Button
                 onClick={handleSalesExport}
+                disabled={isExporting}
+                className="flex items-center gap-2 bg-buttonBgColor hover:bg-buttonHover"
+              >
+                {isExporting ? "Generating..." : "Generate Report"}
+                <MdOutlineFileDownload
+                  className={isExporting ? "animate-bounce" : ""}
+                />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showTransactionModal && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+          onClick={() => {
+            if (!isExporting) {
+              setShowTransactionModal(false);
+              setTransactionDateRange({});
+              setTransactionSearchQuery("");
+            }
+          }}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-semibold">
+              Generate Transaction Report
+            </h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Select a date range or search customer/patient name to include in
+              the report.
+            </p>
+
+            <div className="flex gap-4 mt-2 flex-col">
+              <DateRangeFilter
+                onChange={(range) => setTransactionDateRange(range)}
+              />
+
+              <div className="w-auto border px-4 rounded-md flex items-center gap-2">
+                <CiSearch className="text-xl text-gray-800 font-bold" />
+                <input
+                  placeholder="Search customer/patient name..."
+                  className="w-full py-2 outline-none text-sm pl-1"
+                  value={transactionSearchQuery}
+                  onChange={(e) => setTransactionSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowTransactionModal(false);
+                  setTransactionDateRange({});
+                  setTransactionSearchQuery("");
+                }}
+                disabled={isExporting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleTransactionExport}
                 disabled={isExporting}
                 className="flex items-center gap-2 bg-buttonBgColor hover:bg-buttonHover"
               >
