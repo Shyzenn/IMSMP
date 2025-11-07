@@ -12,6 +12,8 @@ import { IoArchiveOutline } from "react-icons/io5";
 import toast from "react-hot-toast";
 import ConfirmationModal from "./ConfirmationModal";
 import { OrderView } from "./transaction/table/TransactionAction";
+import { RiRefund2Line } from "react-icons/ri";
+import { FcCancel } from "react-icons/fc";
 
 const ReqOrderAction = ({
   onView,
@@ -67,6 +69,7 @@ const ReqOrderAction = ({
         if (result.success) {
           toast.success(result.message + " ✅");
           queryClient.invalidateQueries({ queryKey: ["request_order"] });
+          setShowArchiveModal(false);
         } else {
           toast.error(result.message + " ❌");
         }
@@ -94,7 +97,8 @@ const ReqOrderAction = ({
       if (!res.ok) throw new Error("Failed to update status");
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      toast.success(result.message + " ✅");
       queryClient.invalidateQueries({ queryKey: ["request_order"] });
       queryClient.invalidateQueries({ queryKey: ["request_order/sales"] });
       close();
@@ -128,7 +132,10 @@ const ReqOrderAction = ({
 
   return (
     <div className="flex gap-2 justify-end">
-      {status === "paid" || status === "pending" ? (
+      {status === "paid" ||
+      status === "pending" ||
+      status === "canceled" ||
+      status === "refunded" ? (
         <ActionButton
           icon={IoMdEye}
           onClick={onView}
@@ -157,13 +164,23 @@ const ReqOrderAction = ({
 
       {userRole === "Pharmacist_Staff" && (
         <>
-          {remarks === "Preparing" ? (
+          {status === "refunded" ? (
+            <div className="border flex items-center justify-center gap-2 rounded-md px-2 py-2 bg-gray-50 w-[11rem]">
+              <RiRefund2Line className="text-orange-500 text-lg" />
+              Refunded
+            </div>
+          ) : status === "canceled" ? (
+            <div className="border flex items-center justify-center gap-2 rounded-md px-2 py-2 bg-gray-50 w-[11rem]">
+              Canceled
+              <FcCancel className="text-red-500 text-lg" />
+            </div>
+          ) : remarks === "Preparing" ? (
             <button
               className="border flex items-center justify-center gap-2 rounded-md px-2 hover:bg-slate-100 py-2 w-[11rem]"
               onClick={() => setShowPreparedModal(true)}
             >
-              <CiPill className="text-blue-500 text-lg" />
               Mark as Prepared
+              <CiPill className="text-blue-500 text-lg" />
             </button>
           ) : remarks === "Prepared" ? (
             <button
@@ -171,7 +188,6 @@ const ReqOrderAction = ({
               onClick={() => {
                 if (orderData?.type === "Pay Later") {
                   setShowDispensedModal(true);
-
                   setIsNotPaid(false);
                   return;
                 }
@@ -183,15 +199,16 @@ const ReqOrderAction = ({
                 }
               }}
             >
-              <GoPackageDependents className="text-orange-500 text-lg" />
               Mark as Dispensed
+              <GoPackageDependents className="text-orange-500 text-lg" />
             </button>
           ) : (
             <div className="border flex items-center justify-center gap-2 rounded-md px-2 py-2 bg-gray-50 w-[11rem]">
-              <IoMdCheckmarkCircleOutline className="text-green-500 text-lg" />
               Dispensed
+              <IoMdCheckmarkCircleOutline className="text-green-500 text-lg" />
             </div>
           )}
+
           {showPreparedModal && (
             <ConfirmationModal
               hasConfirmButton={true}
@@ -265,7 +282,7 @@ const ReqOrderAction = ({
                 archive this order?"
                   onClick={() => handleArchive()}
                   isPending={isLoading}
-                  closeModal={close}
+                  closeModal={() => setShowArchiveModal(false)}
                 />
               )}
             </>

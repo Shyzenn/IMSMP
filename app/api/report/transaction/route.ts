@@ -49,7 +49,6 @@ export async function POST(req: NextRequest) {
     const walkInStatusCondition: Prisma.WalkInTransactionWhereInput = {};
 
     if (statuses && statuses.length > 0) {
-      // Cast string array to Status enum array
       const validStatuses = statuses.filter((s): s is Status => 
         Object.values(Status).includes(s as Status)
       );

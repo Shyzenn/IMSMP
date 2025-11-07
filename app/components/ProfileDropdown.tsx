@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { capitalLetter } from "@/lib/utils";
+import { capitalLetter, toTitleCase } from "@/lib/utils";
 import DefaultUserImage from "@/public/defaultUserImg.jpg";
 import Image from "next/image";
 import { Session } from "next-auth";
@@ -47,7 +47,7 @@ const ProfileDropdown = ({ session }: { session: Session | null }) => {
               ) : (
                 <>
                   <p className="font-medium text-[15px]">
-                    {session?.user.username}
+                    {toTitleCase(session?.user.username)}
                   </p>
                   <p className="text-[12px] text-slate-500 font-medium">
                     {session?.user.role}

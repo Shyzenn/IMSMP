@@ -1,7 +1,7 @@
 import { Table } from "@/components/ui/table";
 import { TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { getTransactionList } from "@/lib/action/get";
-import { formattedDateTime, statusLabels } from "@/lib/utils";
+import { formattedDateTime, statusLabels, toTitleCase } from "@/lib/utils";
 import TransactionTableHeader from "./TransactionHeader";
 import EmptyTable from "../../EmptyTable";
 import TransactionAction from "./TransactionAction";
@@ -44,7 +44,7 @@ const TransactionTable = async ({
             {transactions.map((transaction) => (
               <TableRow key={`${transaction.source}-${transaction.id}`}>
                 <TableCell>{`ORD-0${transaction.id}`}</TableCell>
-                <TableCell>{transaction.customer}</TableCell>
+                <TableCell>{toTitleCase(transaction.customer)}</TableCell>
                 <TableCell>
                   {formattedDateTime(transaction.createdAt)}
                 </TableCell>

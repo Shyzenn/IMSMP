@@ -1,5 +1,5 @@
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { capitalLetter } from "@/lib/utils";
+import { toTitleCase } from "@/lib/utils";
 import EmptyTable from "../../EmptyTable";
 import { getBatches } from "@/lib/action/get";
 import BatchesTableHeader from "./BatchesTableHeader";
@@ -71,7 +71,7 @@ export default async function BatchTable({
                 >
                   <TableCell>{batch.id}</TableCell>
                   <TableCell>
-                    {capitalLetter(batch.product.product_name)}
+                    {toTitleCase(batch.product.product_name)}
                   </TableCell>
                   <TableCell>{batch.batchNumber}</TableCell>
                   <TableCell>{batch.quantity}</TableCell>

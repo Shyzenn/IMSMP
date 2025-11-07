@@ -5,6 +5,7 @@ import { signUpSchema } from "@/lib/types";
 import { Prisma, UserStatus } from "@prisma/client";
 import { randomInt } from "crypto";
 import { sendOTPEmail } from "@/lib/mailer";
+import { toTitleCase } from "@/lib/utils";
 
 export async function POST(req: Request) {
   try {
@@ -52,10 +53,12 @@ export async function POST(req: Request) {
     // Hash the password using bcrypt
     // const hashedPassword = await bcrypt.hash(password, 10);
 
+    const formattedUsername = toTitleCase(username)
+
     try {
       await db.user.create({
         data: {
-          username: normalizedUsername,
+          username: formattedUsername,
           firstName,
           middleName,
           lastName,

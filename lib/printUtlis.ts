@@ -244,7 +244,7 @@ export const handlePrint = async (
         Patient: selectedOrder.patient_name,
         Room: selectedOrder.roomNumber,
         Date: new Date(selectedOrder.createdAt).toLocaleString("en-PH"),
-        Type: selectedOrder.type,
+        Type: selectedOrder.type === "REGULAR" ? "Regular" : selectedOrder.type,
       },
       items: selectedOrder.itemDetails,
       footer: {
@@ -344,8 +344,13 @@ export const handleWalkInPrint = async (
     `);
     printWindow.document.close();
     printWindow.focus();
-    printWindow.print();
-    printWindow.close();
+    
+    // Wait for content to load before printing
+    setTimeout(() => {
+      printWindow.print();
+      // Note: Don't close here - let the calling code handle cleanup via onafterprint
+    }, 250);
+    
   } catch (error) {
     console.error("Error in handleWalkInPrint:", error);
   }

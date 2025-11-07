@@ -280,7 +280,11 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      message: `Order marked as ${status}`,
+      data: updatedOrder,
+    });
   } catch (error) {
     console.error("Error updating status:", error);
     return NextResponse.json(

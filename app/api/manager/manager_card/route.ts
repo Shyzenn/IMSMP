@@ -62,13 +62,13 @@ export async function GET() {
     }
 
     const now = new Date();
-    const in7Days = addDays(now, 7);
+    const in31Days = addDays(now, 31);
 
     const expiring = await db.productBatch.count({
       where: {
         expiryDate: {
           gte: now,
-          lte: in7Days,
+          lte: in31Days,
         },
       },
     });

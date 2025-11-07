@@ -9,7 +9,6 @@ import { Path, useFieldArray, useForm } from "react-hook-form";
 import { TWalkInOrderSchema, WalkInOrderSchema } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
-import LoadingButton from "@/components/loading-button";
 import { capitalLetter } from "@/lib/utils";
 import FormField from "./FormField";
 import { walkInOrder } from "@/lib/action/add";
@@ -26,6 +25,8 @@ import { handleWalkInPrint } from "@/lib/printUtlis";
 
 const WalkInOrder = () => {
   const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { data: session } = useSession();
 
   const { isOpen, open, close } = useModal();
@@ -84,16 +85,10 @@ const WalkInOrder = () => {
     name: "products",
   });
 
-  const notify = () =>
-    toast.success("Walk In Order Submitted successfully! 🎉", {
-      icon: "✅",
-    });
-
   const { handleSubmitWrapper } = useProductForm<TWalkInOrderSchema>(
     setError,
     () => {
       reset();
-      notify();
       close();
       fetchProducts();
     }
@@ -123,8 +118,12 @@ const WalkInOrder = () => {
 
     if (!printWindow) {
       toast.error("Please allow popups for printing receipts");
+      setIsSaving(false);
+      setIsPrinting(false);
       return;
     }
+
+    setIsPrinting(true);
 
     // Show loading message in print window
     printWindow.document.write(`
@@ -167,16 +166,29 @@ const WalkInOrder = () => {
       handledBy: String(session?.user?.username ?? "Unknown"),
     };
 
-    await handleSubmitWrapper(async () => {
-      await walkInOrder(data);
+    // Populate print window with receipt (but don't save to DB yet)
+    await handleWalkInPrint(selectedOrder, printWindow);
 
-      // populate the already-open print window with the actual receipt
-      handleWalkInPrint(selectedOrder, printWindow);
+    // Set up event to save order and close modal ONLY after print is done
+    printWindow.onafterprint = async () => {
+      printWindow.close();
+      setIsPrinting(false);
+      setIsSaving(true);
 
-      return { success: true };
-    });
+      // NOW save the order to database FIRST
+      await handleSubmitWrapper(async () => {
+        await walkInOrder(data);
+        return { success: true };
+      });
+
+      // THEN close modal and show success message
+      reset();
+      close();
+      fetchProducts();
+      setIsSaving(false);
+      toast.success("Walk In Order Submitted successfully! 🎉");
+    };
   };
-
   return (
     <>
       <AddButton
@@ -396,14 +408,24 @@ const WalkInOrder = () => {
                   <button
                     type="submit"
                     className={`px-8 py-2 rounded-md text-white ${
-                      isQuantityExceeded || isSubmitting
+                      isQuantityExceeded ||
+                      isSubmitting ||
+                      isSaving ||
+                      isPrinting
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-[#2b9e78] hover:bg-[#41b08d] transition-all duration-300 ease-in-out"
                     }`}
-                    disabled={isQuantityExceeded || isSubmitting}
+                    disabled={
+                      isQuantityExceeded ||
+                      isSubmitting ||
+                      isSaving ||
+                      isPrinting
+                    }
                   >
-                    {isSubmitting ? (
-                      <LoadingButton color="text-white" />
+                    {isPrinting ? (
+                      <div className="flex items-center gap-2">Printing...</div>
+                    ) : isSaving ? (
+                      <div className="flex items-center gap-2">Saving...</div>
                     ) : (
                       <div className="flex items-center gap-2">
                         <LuPrinter /> <p>Print</p>

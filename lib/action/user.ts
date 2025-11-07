@@ -13,7 +13,7 @@ export async function updateUserStatus({userId, status}: {userId: string ,status
         revalidatePath("/user_management")
         return { 
       success: true, 
-      message: `User has been ${status === "ACTIVE" ? "activated" : "disabled"} successfully` 
+      message: `has been ${status === "ACTIVE" ? "activated" : "disabled"} successfully` 
     };
     } catch(error) {
          return { 

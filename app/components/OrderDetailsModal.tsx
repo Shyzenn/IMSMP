@@ -1,7 +1,7 @@
 "use client";
 
 import { OrderItem } from "@/lib/interfaces";
-import { capitalLetter } from "@/lib/utils";
+import { capitalLetter, toTitleCase } from "@/lib/utils";
 import React, { Dispatch, SetStateAction, useState } from "react";
 import { LuPrinter } from "react-icons/lu";
 import CancelButton from "./CancelButton";
@@ -98,7 +98,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       Patient Name:{" "}
                       <span className="font-normal">
                         {" "}
-                        {currentOrder.patient_name}
+                        {toTitleCase(currentOrder.patient_name)}
                       </span>
                     </p>
 
@@ -106,7 +106,9 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       Room Number:
                       <span className="font-normal">
                         {" "}
-                        {currentOrder.roomNumber}
+                        {currentOrder.roomNumber
+                          ? currentOrder.roomNumber
+                          : "Unknown"}
                       </span>
                     </p>
 

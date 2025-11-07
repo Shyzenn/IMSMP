@@ -1,7 +1,7 @@
 import { addRequestOrderSchema } from "@/lib/types";
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
-import  { capitalLetter } from "@/lib/utils";
+import  {  toTitleCase } from "@/lib/utils";
 import { auth } from "@/auth";
 import { $Enums, NotificationType } from "@prisma/client";
 import { pusherServer } from "@/lib/pusher/server";
@@ -29,10 +29,12 @@ export async function POST(req: Request) {
 
     const { room_number, patient_name, status, products, type, notes, remarks } = result.data;
 
+    const formattedName = toTitleCase(patient_name)
+
     const newOrder = await db.orderRequest.create({
       data: {
         room_number,
-        patient_name,
+        patient_name: formattedName,
         status,
         userId,
         type,
@@ -218,16 +220,16 @@ export async function GET(req: NextRequest) {
       return {
         id: order.id,
         requestedBy: order.user?.username
-          ? capitalLetter(order.user.username)
+          ? toTitleCase(order.user.username)
           : "Unknown",
         receivedBy: order.receivedBy?.username
-          ? capitalLetter(order.receivedBy.username)
+          ? toTitleCase(order.receivedBy.username)
           : "Unknown",
         processedBy: order.processedBy?.username
-          ? capitalLetter(order.processedBy.username)
+          ? toTitleCase(order.processedBy.username)
           : "Unknown",
         patient_name: order.patient_name
-          ? capitalLetter(order.patient_name)
+          ? toTitleCase(order.patient_name)
           : "Unknown",
         room_number: order.room_number,
         createdAt: order.createdAt,
@@ -261,4 +263,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-

@@ -1,6 +1,6 @@
 "use client";
 
-import { formattedDateTime } from "@/lib/utils";
+import { formattedDateTime, toTitleCase } from "@/lib/utils";
 import { OrderItem } from "@/lib/interfaces";
 import { useEmergencyModal } from "@/lib/store/emergency-modal";
 import { MdAddAlert } from "react-icons/md";
@@ -37,7 +37,7 @@ export default function EmergencyOrderModal() {
               <p className="font-semibold text-lg mb-2">{`ORD-0${order.id}`}</p>
               <p>
                 <span className="font-semibold">Patient:</span>{" "}
-                {order.patient_name}
+                {toTitleCase(order.patient_name)}
               </p>
               <p>
                 <span className="font-semibold">Room:</span> {order.room_number}

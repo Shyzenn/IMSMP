@@ -1,5 +1,5 @@
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { capitalLetter, formattedDate, formattedDateTime } from "@/lib/utils";
+import { formattedDate, formattedDateTime, toTitleCase } from "@/lib/utils";
 import { getArchive } from "@/lib/action/get";
 import ArchiveTableHeader from "./ArchiveTableHeader";
 import { auth } from "@/auth";
@@ -44,7 +44,7 @@ export default async function ArchiveTable({
                     {item.type}
                   </span>
                 </TableCell>
-                <TableCell>{capitalLetter(item.product_name)}</TableCell>
+                <TableCell>{toTitleCase(item.product_name)}</TableCell>
 
                 <TableCell>
                   {item.type === "Product"
@@ -70,7 +70,7 @@ export default async function ArchiveTable({
 
                 <TableCell>{formattedDateTime(item.archivedAt)}</TableCell>
 
-                <TableCell>{item.archivedBy}</TableCell>
+                <TableCell>{toTitleCase(item.archivedBy)}</TableCell>
 
                 <TableCell>
                   {userRole === "Manager" ||

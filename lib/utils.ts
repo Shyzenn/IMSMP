@@ -7,6 +7,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function toTitleCase(name: string) {
+  return name
+    .toLowerCase()
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 export function capitalLetter(str: string | null) {
   if (!str) return "";
  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()

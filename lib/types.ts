@@ -233,7 +233,7 @@ export const replenishProductSchema = z.object({
 export type TReplenishProductSchema = z.infer<typeof replenishProductSchema>;
 
 export const addRequestOrderSchema = z.object({
-  room_number: z.string().min(1, "Room number is required"),
+ room_number: z.string().optional(),
   patient_name: z.string().min(1, "Patient name is required"),
   status: z.enum(["pending", "for_payment", "paid"]),
   type: z.enum(["REGULAR", "EMERGENCY"]),
@@ -250,7 +250,7 @@ export const addRequestOrderSchema = z.object({
 export type TAddRequestOrderSchema = z.infer<typeof addRequestOrderSchema>;
 
 export const editRequestOrderSchema = z.object({
-  room_number: z.string().min(1, "Room number is required"),
+  room_number: z.string().optional(),
   patient_name: z.string().min(1, "Patient name is required"),
   status: z.enum(["pending", "for_payment", "paid"]).optional(),
   notes: z.string().optional(),

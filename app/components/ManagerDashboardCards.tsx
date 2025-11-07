@@ -44,7 +44,9 @@ const ManagerDashboardCards = ({ userRole }: { userRole?: string }) => {
       bgColor: "bg-blue-50",
       textColor: "text-blue-500",
 
-      link: `/transaction?page=1&filter=all&sort=createdAt&order=desc`,
+      link: `/${
+        userRole === "Manager" ? "transaction" : "pharmacist_transaction"
+      }?page=1&filter=all&sort=createdAt&order=desc`,
     },
     {
       title: "Low Stock",
@@ -68,7 +70,11 @@ const ManagerDashboardCards = ({ userRole }: { userRole?: string }) => {
       icon: TbShoppingCartX,
       bgColor: "bg-red-50",
       textColor: "text-red-500",
-      link: `/inventory/batches?query=&page=1&filter=Expiring&sort=expiry_date&order=asc`,
+      link: `/${
+        userRole === "Manager"
+          ? "inventory/batches"
+          : "pharmacist_inventory/batches"
+      }?query=&page=1&filter=Expiring&sort=expiry_date&order=asc`,
     },
   ];
 

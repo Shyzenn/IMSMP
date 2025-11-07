@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, Path, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
@@ -28,6 +28,11 @@ const RequestOrderModal = ({ close }: Props) => {
   const { products } = useProducts();
   const queryClient = useQueryClient();
   const [highlightedIndex, setHighlightedIndex] = useState<number>(0);
+  const [patientSearchQuery, setPatientSearchQuery] = useState<string>("");
+  const [searchSuggestions, setSearchSuggestions] = useState<
+    { patient_name: string; room_number: number | null }[]
+  >([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const {
     register,
@@ -43,7 +48,7 @@ const RequestOrderModal = ({ close }: Props) => {
     resolver: zodResolver(addRequestOrderSchema),
     mode: "onChange",
     defaultValues: {
-      room_number: "",
+      room_number: undefined,
       patient_name: "",
       status: "pending",
       products: [{ productId: "", quantity: 0 }],
@@ -88,6 +93,67 @@ const RequestOrderModal = ({ close }: Props) => {
     name: "products",
   });
 
+  const handleSearchInput = async (value: string) => {
+    setPatientSearchQuery(value);
+
+    if (value.length < 2) {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/request_order/patient_name?q=${encodeURIComponent(value)}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setSearchSuggestions(data.results || []);
+        setShowSuggestions((data.results || []).length > 0);
+      }
+    } catch (error) {
+      console.error("Search error:", error);
+    }
+  };
+
+  const handleSelectSuggestion = (patient: {
+    patient_name: string;
+    room_number: number | null;
+  }) => {
+    setPatientSearchQuery(patient.patient_name);
+    setValue("patient_name", patient.patient_name);
+    setValue(
+      "room_number",
+      patient.room_number ? String(patient.room_number) : ""
+    );
+    setShowSuggestions(false);
+  };
+
+  // Click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest(".search-container")) {
+        setShowSuggestions(false);
+      }
+
+      if (patientSearchQuery.trim() === "") {
+        setSearchSuggestions([]);
+        setValue("patient_name", "");
+      }
+    };
+
+    if (showSuggestions) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+
+    return;
+  }, [showSuggestions, patientSearchQuery, setValue]);
+
   const onSubmit = async (data: TAddRequestOrderSchema) => {
     const hasInvalidProduct = data.products.some((product, index) => {
       const exists = products.some(
@@ -126,11 +192,22 @@ const RequestOrderModal = ({ close }: Props) => {
         <form className="pb-[70px] mt-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="overflow-y-auto max-h-[calc(95vh-150px)]">
             <div className="px-8 flex flex-col gap-4 border-b pb-4">
-              <div>
+              <div className="search-container">
                 <FormField label="Patient Name">
                   <Input
+                    value={patientSearchQuery}
+                    onFocus={() => {
+                      if (searchSuggestions.length > 0) {
+                        setShowSuggestions(true);
+                      }
+                    }}
                     placeholder="Enter Patient Name"
-                    {...register("patient_name")}
+                    autoComplete="off"
+                    {...register("patient_name", {
+                      onChange: (e) => {
+                        handleSearchInput(e.target.value);
+                      },
+                    })}
                     className={`w-full ${
                       errors.patient_name
                         ? "border-red-500 focus:ring-red-500"
@@ -138,6 +215,22 @@ const RequestOrderModal = ({ close }: Props) => {
                     }`}
                   />
                 </FormField>
+                {showSuggestions && searchSuggestions.length > 0 && (
+                  <ul className="absolute z-10 w-[27.4rem] bg-white border rounded-md shadow-md mt-1 max-h-60 overflow-y-auto">
+                    {searchSuggestions.map((patient) => (
+                      <li
+                        key={patient.patient_name}
+                        onClick={() => handleSelectSuggestion(patient)}
+                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex justify-between"
+                      >
+                        <span>{patient.patient_name}</span>
+                        <span className="text-gray-500 text-sm">
+                          Room {patient.room_number ?? "—"}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 {errors.patient_name && (
                   <p className="text-sm text-red-500 mt-1 ">
                     {" "}
@@ -146,28 +239,20 @@ const RequestOrderModal = ({ close }: Props) => {
                 )}{" "}
               </div>
 
-              <div className="flex items-center gap-8">
-                <div>
+              <div className="flex items-center justify-between gap-6">
+                <div className="w-full">
                   <FormField label="Room#">
                     <Input
-                      placeholder="Enter Room Number"
+                      type="number"
+                      autoComplete="off"
+                      placeholder="Enter Room Number (Optional)"
                       {...register("room_number")}
-                      className={`w-full ${
-                        errors.room_number
-                          ? "border-red-500 focus:ring-red-500"
-                          : ""
-                      }`}
                     />
                   </FormField>
-                  {errors.room_number && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {errors.room_number.message}
-                    </p>
-                  )}
                 </div>
 
                 <div className="flex flex-col">
-                  <label className="text-sm font-medium">Type</label>
+                  <label className="text-sm font-medium mb-[3px]">Type</label>
                   <div>
                     <Controller
                       name="type"
@@ -226,6 +311,7 @@ const RequestOrderModal = ({ close }: Props) => {
                       {/* Product Input */}
                       <div className="relative w-[53%]">
                         <Input
+                          autoComplete="off"
                           placeholder="Enter Product Name"
                           {...register(`products.${index}.productId` as const, {
                             required: true,
@@ -291,7 +377,7 @@ const RequestOrderModal = ({ close }: Props) => {
                         {/* Dropdown */}
                         {dropdownIndex === index &&
                           filteredProducts.length > 0 && (
-                            <ul className="absolute bottom-full mb-2 z-20 w-full bg-white border border-gray-300 shadow-md rounded-md max-h-60 overflow-y-auto">
+                            <ul className="absolute bottom-full mb-2 z-20 w-[26.5rem] bg-white border border-gray-300 shadow-md rounded-md max-h-60 overflow-y-auto">
                               {filteredProducts.map((product, i) => (
                                 <li
                                   key={product.id}

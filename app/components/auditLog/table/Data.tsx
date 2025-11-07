@@ -1,7 +1,7 @@
 import { Table } from "@/components/ui/table";
 import { TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { getAuditLogList } from "@/lib/action/get";
-import { formattedDateTime } from "@/lib/utils";
+import { formattedDateTime, toTitleCase } from "@/lib/utils";
 
 import EmptyTable from "../../EmptyTable";
 import AuditLogTableHeader from "./Header";
@@ -38,7 +38,9 @@ export default async function AuditLogTable({
                 <TableCell>{auditLog.action}</TableCell>
                 <TableCell>{auditLog.description}</TableCell>
                 <TableCell>{formattedDateTime(auditLog.createdAt)}</TableCell>
-                <TableCell>{auditLog.user?.username ?? "-"}</TableCell>
+                <TableCell>
+                  {toTitleCase(auditLog.user?.username) ?? "-"}
+                </TableCell>
                 <TableCell>{auditLog.entityType}</TableCell>
                 <TableCell>
                   {auditLog.entityId === null ? "-" : auditLog.entityId}

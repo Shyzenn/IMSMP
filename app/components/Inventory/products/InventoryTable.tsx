@@ -1,5 +1,5 @@
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { capitalLetter, formattedDateTime } from "@/lib/utils";
+import { formattedDateTime, toTitleCase } from "@/lib/utils";
 import { IconType } from "react-icons/lib";
 import EmptyTable from "../../EmptyTable";
 import { getProductList } from "@/lib/action/get";
@@ -69,7 +69,7 @@ export default async function InventoryTable({
                   }`}
                 >
                   <TableCell>{`PRD-0${product.id}`}</TableCell>
-                  <TableCell>{capitalLetter(product.product_name)}</TableCell>
+                  <TableCell>{toTitleCase(product.product_name)}</TableCell>
                   <TableCell>{product.totalQuantity}</TableCell>
                   <TableCell>{`₱${Number(product.price).toFixed(
                     2
@@ -91,7 +91,7 @@ export default async function InventoryTable({
                     )}
                   </TableCell>
                   <TableCell>{product.totalBatches}</TableCell>
-                  <TableCell>{capitalLetter(product.category)}</TableCell>
+                  <TableCell>{toTitleCase(product.category)}</TableCell>
                   {hasAction && (
                     <TableCell>
                       <Action product={product} />
