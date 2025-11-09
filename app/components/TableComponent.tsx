@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/table";
 import { TableComponentProps } from "@/lib/interfaces";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 function TableComponent<T extends Record<string, unknown>>({
   largeContainer,
@@ -19,9 +20,19 @@ function TableComponent<T extends Record<string, unknown>>({
   noDataMessage,
   colorCodeExpiry = false,
   filter,
+  linkCell,
 }: TableComponentProps<T>) {
   const { data: session } = useSession();
   const userRole = session?.user.role;
+
+  const batchBasePath =
+    userRole === "Manager"
+      ? "/inventory/"
+      : userRole === "Pharmacist_Staff"
+      ? "/pharmacist_inventory/"
+      : userRole === "Nurse"
+      ? "/nurse_inventory/"
+      : "/cashier_inventory";
 
   const reusableTalbe = () => (
     <Table>
@@ -82,9 +93,23 @@ function TableComponent<T extends Record<string, unknown>>({
                       }
                     }}
                   >
-                    {column.render
-                      ? column.render(row)
-                      : String(row[column.accessor])}
+                    {linkCell ? (
+                      <Link
+                        href={`${batchBasePath}batches?query=${
+                          row[column.accessor]
+                        }&page=1&filter=all&sort=expiry_date&order=asc`}
+                      >
+                        {column.render
+                          ? column.render(row)
+                          : String(row[column.accessor])}
+                      </Link>
+                    ) : (
+                      <>
+                        {column.render
+                          ? column.render(row)
+                          : String(row[column.accessor])}
+                      </>
+                    )}
                   </TableCell>
                 ))}
               </TableRow>

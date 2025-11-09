@@ -211,7 +211,7 @@ const WalkInOrder = () => {
                   <FormField label="Customer Name">
                     <Input
                       id="name"
-                      placeholder="customer name (Optional)"
+                      placeholder="Customer Name (Optional)"
                       {...register("customer_name")}
                     />
                   </FormField>
@@ -254,7 +254,7 @@ const WalkInOrder = () => {
                                   ? "border-red-500 focus:ring-red-500"
                                   : ""
                               }`}
-                              placeholder="enter product name"
+                              placeholder="Enter Product Name"
                               {...register(
                                 `products.${index}.productId` as const,
                                 { required: true }
@@ -354,7 +354,7 @@ const WalkInOrder = () => {
                                   : ""
                               }`}
                               type="number"
-                              placeholder="enter quantity"
+                              placeholder="Enter Quantity"
                               {...register(
                                 `products.${index}.quantity` as const,
                                 {

@@ -45,7 +45,6 @@ const AddProductForm = () => {
   const { handleSubmitWrapper } = useProductForm(setError, () => {
     reset();
     notify();
-    close();
   });
 
   const onSubmit = async (data: TAddProductSchema) =>

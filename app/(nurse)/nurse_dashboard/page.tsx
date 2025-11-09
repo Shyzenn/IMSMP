@@ -25,7 +25,7 @@ export default async function Dashboard() {
         </div>
       </div>
 
-      <div className="h-auto lg:h-[27rem] flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
+      <div className="h-auto lg:h-[30rem] flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
         <div className="bg-white lg:w-[40%] rounded-md shadow-md w-full">
           <DashboardAuditLog role="nurse" />
         </div>

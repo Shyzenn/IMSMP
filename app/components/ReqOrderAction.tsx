@@ -14,6 +14,12 @@ import ConfirmationModal from "./ConfirmationModal";
 import { OrderView } from "./transaction/table/TransactionAction";
 import { RiRefund2Line } from "react-icons/ri";
 import { FcCancel } from "react-icons/fc";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const ReqOrderAction = ({
   onView,
@@ -132,164 +138,211 @@ const ReqOrderAction = ({
 
   return (
     <div className="flex gap-2 justify-end">
-      {status === "paid" ||
-      status === "pending" ||
-      status === "canceled" ||
-      status === "refunded" ? (
-        <ActionButton
-          icon={IoMdEye}
-          onClick={onView}
-          color={`hover:bg-slate-200 ${
-            userRole === "Pharmacist_Staff" ? "text-[16px] px-2" : ""
-          }`}
-        />
-      ) : (
-        <>
-          <ActionButton
-            icon={IoMdEye}
-            onClick={onView}
-            color={`hover:bg-slate-200 ${
-              userRole === "Pharmacist_Staff" ? "text-[16px] px-2" : ""
-            }`}
-          />
-          {showCheckbox && userRole === "Cashier" && (
-            <ActionButton
-              icon={IoMdCheckmark}
-              color="hover:bg-green-200"
-              onClick={open}
-            />
-          )}
-        </>
-      )}
-
-      {userRole === "Pharmacist_Staff" && (
-        <>
-          {status === "refunded" ? (
-            <div className="border flex items-center justify-center gap-2 rounded-md px-2 py-2 bg-gray-50 w-[11rem]">
-              <RiRefund2Line className="text-orange-500 text-lg" />
-              Refunded
-            </div>
-          ) : status === "canceled" ? (
-            <div className="border flex items-center justify-center gap-2 rounded-md px-2 py-2 bg-gray-50 w-[11rem]">
-              Canceled
-              <FcCancel className="text-red-500 text-lg" />
-            </div>
-          ) : remarks === "Preparing" ? (
-            <button
-              className="border flex items-center justify-center gap-2 rounded-md px-2 hover:bg-slate-100 py-2 w-[11rem]"
-              onClick={() => setShowPreparedModal(true)}
-            >
-              Mark as Prepared
-              <CiPill className="text-blue-500 text-lg" />
-            </button>
-          ) : remarks === "Prepared" ? (
-            <button
-              className="border flex items-center justify-center gap-2 rounded-md px-2 hover:bg-slate-100 py-2 w-[11rem]"
-              onClick={() => {
-                if (orderData?.type === "Pay Later") {
-                  setShowDispensedModal(true);
-                  setIsNotPaid(false);
-                  return;
-                }
-
-                if (status === "paid") {
-                  setShowDispensedModal(true);
-                } else {
-                  setIsNotPaid(true);
-                }
-              }}
-            >
-              Mark as Dispensed
-              <GoPackageDependents className="text-orange-500 text-lg" />
-            </button>
-          ) : (
-            <div className="border flex items-center justify-center gap-2 rounded-md px-2 py-2 bg-gray-50 w-[11rem]">
-              Dispensed
-              <IoMdCheckmarkCircleOutline className="text-green-500 text-lg" />
-            </div>
-          )}
-
-          {showPreparedModal && (
-            <ConfirmationModal
-              hasConfirmButton={true}
-              defaultBtnColor={true}
-              title={`${"Mark as Prepared"}`}
-              description={`${"Are you sure you want to mark this order as prepared?"}`}
-              onClick={() => updateRemarks("prepared")}
-              isPending={isUpdatingRemarks}
-              closeModal={() => setShowPreparedModal(false)}
-            />
-          )}
-          {showDispensedModal && (
-            <ConfirmationModal
-              hasConfirmButton={true}
-              defaultBtnColor={true}
-              title="Mark as Dispensed"
-              description="Are you sure you want to
-                    mark this order as dispensed?"
-              onClick={() => updateRemarks("dispensed")}
-              isPending={isUpdatingRemarks}
-              closeModal={() => setShowDispensedModal(false)}
-            />
-          )}
-
-          {isNotPaid && status !== "paid" && (
-            <ConfirmationModal
-              hasConfirmButton={false}
-              defaultBtnColor={true}
-              title={`${"Payment Required"}`}
-              description={`${"This order has not been paid yet. Please settle the payment before dispensing"}`}
-              closeModal={() => setIsNotPaid(false)}
-            />
-          )}
-        </>
-      )}
-
-      {userRole === "Nurse" && (
-        <>
-          <ActionButton
-            icon={MdOutlineEdit}
-            onClick={() => setShowRequestEditModal(true)}
-            color={` ${
-              orderData?.status === "canceled"
-                ? "cursor-not-allowed text-gray-300"
-                : "hover:bg-slate-200"
-            }`}
-          />
-          {orderData?.status !== "canceled" ? (
-            <ActionButton
-              icon={IoMdClose}
-              onClick={open}
-              color={` ${
-                orderData?.status !== "pending"
-                  ? "cursor-not-allowed text-gray-300"
-                  : "hover:bg-red-300"
-              }`}
-            />
-          ) : (
-            <>
-              <ActionButton
-                icon={IoArchiveOutline}
-                onClick={() => setShowArchiveModal(true)}
-                color="hover:bg-slate-300"
-              />
-              {showArchiveModal && (
-                <ConfirmationModal
-                  hasConfirmButton={true}
-                  defaultBtnColor={true}
-                  title="Archive Order Request"
-                  description="Are you sure you want to
-                archive this order?"
-                  onClick={() => handleArchive()}
-                  isPending={isLoading}
-                  closeModal={() => setShowArchiveModal(false)}
+      <TooltipProvider>
+        {status === "paid" ||
+        status === "pending" ||
+        status === "canceled" ||
+        status === "refunded" ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">
+                <ActionButton
+                  icon={IoMdEye}
+                  onClick={onView}
+                  color={`hover:bg-slate-200 ${
+                    userRole === "Pharmacist_Staff" ? "text-[16px] px-2" : ""
+                  }`}
                 />
-              )}
-            </>
-          )}
-        </>
-      )}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>View Order</p>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex">
+                  <ActionButton
+                    icon={IoMdEye}
+                    onClick={onView}
+                    color={`hover:bg-slate-200 ${
+                      userRole === "Pharmacist_Staff" ? "text-[16px] px-2" : ""
+                    }`}
+                  />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>View Order</p>
+              </TooltipContent>
+            </Tooltip>
+            {showCheckbox && userRole === "Cashier" && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <ActionButton
+                      icon={IoMdCheckmark}
+                      color="hover:bg-green-200"
+                      onClick={open}
+                    />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Mark as Paid</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </>
+        )}
 
+        {userRole === "Pharmacist_Staff" && (
+          <>
+            {status === "refunded" ? (
+              <div className="border flex items-center justify-center gap-2 rounded-md px-2 py-2 bg-gray-50 w-[11rem]">
+                <RiRefund2Line className="text-orange-500 text-lg" />
+                Refunded
+              </div>
+            ) : status === "canceled" ? (
+              <div className="border flex items-center justify-center gap-2 rounded-md px-2 py-2 bg-gray-50 w-[11rem]">
+                Canceled
+                <FcCancel className="text-red-500 text-lg" />
+              </div>
+            ) : remarks === "Preparing" ? (
+              <button
+                className="border flex items-center justify-center gap-2 rounded-md px-2 hover:bg-slate-100 py-2 w-[11rem]"
+                onClick={() => setShowPreparedModal(true)}
+              >
+                Mark as Prepared
+                <CiPill className="text-blue-500 text-lg" />
+              </button>
+            ) : remarks === "Prepared" ? (
+              <button
+                className="border flex items-center justify-center gap-2 rounded-md px-2 hover:bg-slate-100 py-2 w-[11rem]"
+                onClick={() => {
+                  if (orderData?.type === "Pay Later") {
+                    setShowDispensedModal(true);
+                    setIsNotPaid(false);
+                    return;
+                  }
+
+                  if (status === "paid") {
+                    setShowDispensedModal(true);
+                  } else {
+                    setIsNotPaid(true);
+                  }
+                }}
+              >
+                Mark as Dispensed
+                <GoPackageDependents className="text-orange-500 text-lg" />
+              </button>
+            ) : (
+              <div className="border flex items-center justify-center gap-2 rounded-md px-2 py-2 bg-gray-50 w-[11rem]">
+                Dispensed
+                <IoMdCheckmarkCircleOutline className="text-green-500 text-lg" />
+              </div>
+            )}
+
+            {showPreparedModal && (
+              <ConfirmationModal
+                hasConfirmButton={true}
+                defaultBtnColor={true}
+                title={`${"Mark as Prepared"}`}
+                description={`${"Are you sure you want to mark this order as prepared?"}`}
+                onClick={() => updateRemarks("prepared")}
+                isPending={isUpdatingRemarks}
+                closeModal={() => setShowPreparedModal(false)}
+              />
+            )}
+            {showDispensedModal && (
+              <ConfirmationModal
+                hasConfirmButton={true}
+                defaultBtnColor={true}
+                title="Mark as Dispensed"
+                description="Are you sure you want to
+                    mark this order as dispensed?"
+                onClick={() => updateRemarks("dispensed")}
+                isPending={isUpdatingRemarks}
+                closeModal={() => setShowDispensedModal(false)}
+              />
+            )}
+
+            {isNotPaid && status !== "paid" && (
+              <ConfirmationModal
+                hasConfirmButton={false}
+                defaultBtnColor={true}
+                title={`${"Payment Required"}`}
+                description={`${"This order has not been paid yet. Please settle the payment before dispensing"}`}
+                closeModal={() => setIsNotPaid(false)}
+              />
+            )}
+          </>
+        )}
+
+        {userRole === "Nurse" && (
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex">
+                  <ActionButton
+                    icon={MdOutlineEdit}
+                    onClick={() => setShowRequestEditModal(true)}
+                    color={` ${
+                      orderData?.status === "canceled"
+                        ? "cursor-not-allowed text-gray-300"
+                        : "hover:bg-slate-200"
+                    }`}
+                  />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Edit Order</p>
+              </TooltipContent>
+            </Tooltip>
+
+            {orderData?.status !== "canceled" ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <ActionButton
+                      icon={IoMdClose}
+                      onClick={open}
+                      color={` ${
+                        orderData?.status !== "pending"
+                          ? "cursor-not-allowed text-gray-300"
+                          : "hover:bg-red-300"
+                      }`}
+                    />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Cancel Order</p>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <>
+                <ActionButton
+                  icon={IoArchiveOutline}
+                  onClick={() => setShowArchiveModal(true)}
+                  color="hover:bg-slate-300"
+                />
+                {showArchiveModal && (
+                  <ConfirmationModal
+                    hasConfirmButton={true}
+                    defaultBtnColor={true}
+                    title="Archive Order Request"
+                    description="Are you sure you want to
+                archive this order?"
+                    onClick={() => handleArchive()}
+                    isPending={isLoading}
+                    closeModal={() => setShowArchiveModal(false)}
+                  />
+                )}
+              </>
+            )}
+          </>
+        )}
+      </TooltipProvider>
       {showRequestEditModal && orderData?.status !== "canceled" && (
         <RequestOrderEdit
           setShowRequestEditModal={setShowRequestEditModal}

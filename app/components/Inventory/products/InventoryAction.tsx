@@ -66,26 +66,34 @@ const Action = ({ product }: { product: ProductProps }) => {
             </TooltipContent>
           </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <UserStatusConfirmDialog
-                iconOnly={true}
-                iconColor="text-gray-900"
-                modalButtonLabel={
-                  isPending ? <LoadingButton color="text-white" /> : "Confirm"
-                }
-                buttonLabel="Archive"
-                icon={IoArchiveOutline}
-                title="Archive Product"
-                description="Are you sure you want to
-                archive this product?"
-                confirmButton={handleArchive}
-              />
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Archive Product</p>
-            </TooltipContent>
-          </Tooltip>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <UserStatusConfirmDialog
+                    iconOnly={true}
+                    iconColor="text-gray-900"
+                    modalButtonLabel={
+                      isPending ? (
+                        <LoadingButton color="text-white" />
+                      ) : (
+                        "Confirm"
+                      )
+                    }
+                    buttonLabel="Archive"
+                    icon={IoArchiveOutline}
+                    title="Archive Product"
+                    description="Are you sure you want to
+          archive this product?"
+                    confirmButton={handleArchive}
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Archive Product</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </TooltipProvider>
       </div>
 

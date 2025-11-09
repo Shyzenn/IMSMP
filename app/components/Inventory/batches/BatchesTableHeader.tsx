@@ -16,7 +16,7 @@ const BatchesTableHeader = () => {
         { key: "product_name", label: "Product", sortable: true },
         { key: "batch_number", label: "Batch Number", sortable: true },
         { key: "quantity", label: "Quantity", sortable: true },
-        { key: "release_date", label: "Release Date", sortable: true },
+        { key: "release_date", label: "Manufactured Date", sortable: true },
         { key: "expiry_date", label: "Expiry Date", sortable: true },
       ]}
       extraHeaders={

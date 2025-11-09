@@ -68,7 +68,7 @@ const EditBatchForm = ({
 
             <DateField
               control={control}
-              label="Release Date"
+              label="Manufactured Date"
               name="releaseDate"
               error={errors.releaseDate?.message}
             />
@@ -87,7 +87,7 @@ const EditBatchForm = ({
               className={`px-12 rounded-md ${
                 !isDirty || isSubmitting
                   ? "bg-gray-400 cursor-not-allowed"
-                  : " cursor-pointer bg-green-500 hover:bg-green-600 text-white"
+                  : " cursor-pointer bg-buttonBgColor hover:bg-buttonHover text-white"
               }`}
               type="submit"
             >

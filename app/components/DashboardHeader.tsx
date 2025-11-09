@@ -9,6 +9,7 @@ import { FaCheckDouble } from "react-icons/fa";
 import { useQuery } from "@tanstack/react-query";
 import RequestOrderBtn from "./RequestOrderBtn";
 import WalkInOrder from "./WalkInOrder";
+import Link from "next/link";
 
 function getGreeting() {
   const now = new Date();
@@ -29,10 +30,24 @@ interface alertsProps extends expiringProps {
   expiryDate: string;
 }
 
+interface AlertItem {
+  message: string;
+  link: string;
+}
+
 const DashboardHeader = ({ session }: { session: Session | null }) => {
   const greeting = getGreeting();
   const name = session?.user?.username;
   const role = session?.user?.role;
+
+  const batchBasePath =
+    role === "Manager"
+      ? "/inventory/"
+      : role === "Pharmacist_Staff"
+      ? "/pharmacist_inventory/"
+      : role === "Nurse"
+      ? "/nurse_inventory/"
+      : "/cashier_inventory/";
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [animKey, setAnimKey] = useState(0);
@@ -41,27 +56,31 @@ const DashboardHeader = ({ session }: { session: Session | null }) => {
     data: alerts = [],
     isLoading,
     error,
-  } = useQuery<string[]>({
+  } = useQuery<AlertItem[]>({
     queryKey: ["alerts"],
     queryFn: async () => {
       const res = await fetch("/api/product/alerts");
       if (!res.ok) throw new Error("Failed to fetch alerts");
 
       const data = await res.json();
-      const lowStockMsgs = data.lowStock.map(
-        (p: alertsProps) =>
-          `${capitalLetter(p.productName)} is ${p.quantity} stock left!`
-      );
-      const expiringMsgs = data.expiringBatches
-        .filter((b: alertsProps) => b.quantity > 0)
-        .map(
-          (b: alertsProps) =>
-            `${capitalLetter(b.productName)} batch ${
-              b.batchNumber
-            } expires in ${expiryDate(b.expiryDate)} days`
-        );
 
-      return [...lowStockMsgs, ...expiringMsgs].slice(0, 5);
+      // Low stock alerts
+      const lowStockAlerts = data.lowStock.map((p: alertsProps) => ({
+        message: `${capitalLetter(p.productName)} is ${p.quantity} stock left!`,
+        link: `${batchBasePath}products?query=${p.productName}&page=1&filter=all&sort=totalQuantity&order=asc`,
+      }));
+
+      // Expiring batch alerts
+      const expiringAlerts = data.expiringBatches
+        .filter((b: alertsProps) => b.quantity > 0)
+        .map((b: alertsProps) => ({
+          message: `${capitalLetter(b.productName)} batch ${
+            b.batchNumber
+          } expires in ${expiryDate(b.expiryDate)} days`,
+          link: `${batchBasePath}batches?query=${b.productName}&page=1&filter=all&sort=expiry_date&order=asc`,
+        }));
+
+      return [...lowStockAlerts, ...expiringAlerts].slice(0, 5);
     },
   });
 
@@ -106,9 +125,22 @@ const DashboardHeader = ({ session }: { session: Session | null }) => {
         ) : alerts.length > 0 ? (
           <div className="bg-orange-100 flex gap-2 px-8 py-3 rounded-md md:w-[25rem] w-full">
             <CiWarning className="text-orange-500 text-xl" />
-            <p key={animKey} className="text-sm text-amber-700 slow-blink">
-              {alerts[currentIndex]}
-            </p>
+            {role !== "Cashier" ? (
+              <Link
+                key={animKey}
+                href={alerts[currentIndex].link}
+                className="text-sm text-amber-700 hover:text-amber-800 transition-colors slow-blink"
+              >
+                {alerts[currentIndex].message}
+              </Link>
+            ) : (
+              <>
+                {/** Not Link **/}
+                <p key={animKey} className="text-sm text-amber-700 slow-blink">
+                  {alerts[currentIndex].message}
+                </p>
+              </>
+            )}
           </div>
         ) : (
           <div className="bg-green-100 flex gap-2 px-8 py-3 rounded-md w-[28rem] items-center">

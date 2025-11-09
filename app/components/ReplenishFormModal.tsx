@@ -74,7 +74,7 @@ const ReplenishFormModal = ({
 
               <DateField
                 control={control}
-                label="Release Date"
+                label="Manufactured Date"
                 name="releaseDate"
                 error={errors.releaseDate?.message}
               />

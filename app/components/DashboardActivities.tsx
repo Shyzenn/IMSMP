@@ -75,8 +75,8 @@ export default function DashboardAuditLog({ role, entityType }: AuditLogProps) {
   if (isError) return <p>Something went wrong</p>;
 
   return (
-    <div className="py-2">
-      <div className="px-4 flex justify-between items-center mb-4 border-b pb-4">
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between border-b px-4 py-3">
         <p className="text-lg font-semibold">Recent Activities</p>
         <div>
           <SelectField
@@ -96,7 +96,7 @@ export default function DashboardAuditLog({ role, entityType }: AuditLogProps) {
         </div>
       </div>
 
-      <div className="px-4 flex flex-col gap-4">
+      <div className="px-4 flex flex-col gap-0 mb-4 lg:gap-4 lg:mb-0">
         {logs.length > 0 ? (
           <>
             <div className="overflow-x-auto w-full md:overflow-hidden">
@@ -104,7 +104,10 @@ export default function DashboardAuditLog({ role, entityType }: AuditLogProps) {
                 {logs.map((log) => {
                   const { icon } = getEntityMeta(log.entityType);
                   return (
-                    <div key={log.id} className="border-b pb-4 border-dashed">
+                    <div
+                      key={log.id}
+                      className="border-b pb-4 border-dashed mb-4"
+                    >
                       <div className="flex items-center gap-4">
                         <div className="bg-slate-100 w-11 h-12 flex justify-center items-center rounded-sm shrink-0">
                           {icon}
@@ -128,7 +131,7 @@ export default function DashboardAuditLog({ role, entityType }: AuditLogProps) {
               </div>
             </div>
 
-            <div className="flex justify-center md:justify-between items-center mt-4 mb-4 lg:mb-0">
+            <div className="flex justify-center md:justify-between items-center">
               <p className="text-sm text-gray-500 hidden md:block">
                 Showing <span className="font-semibold">{logs.length}</span> of{" "}
                 <span className="font-semibold">{total}</span> Results

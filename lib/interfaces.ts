@@ -41,6 +41,7 @@ export interface TableComponentProps<T extends Record<string, unknown>> {
   noDataMessage?:string
   colorCodeExpiry?: boolean
   filter?: React.ReactNode;
+  linkCell?:boolean
 }
 
 export interface ProductData {

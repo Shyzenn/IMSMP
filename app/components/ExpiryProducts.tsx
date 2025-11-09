@@ -12,8 +12,6 @@ const columns: Column[] = [
   { label: "Product name", accessor: "name" },
   { label: "Batch#", accessor: "batch_number" },
   { label: "Expiry Date", accessor: "expiryDate" },
-  { label: "Quantity", accessor: "quantity" },
-  { label: "Categories", accessor: "category" },
 ];
 
 const fetchExpiryProducts = async () => {
@@ -32,7 +30,6 @@ const ExpiryProducts = () => {
       ...product,
       expiryDate: `in ${expiryDate(product.expiryDate)} days`,
       name: capitalLetter(product.name),
-      category: capitalLetter(product.category),
     };
   });
 
@@ -41,6 +38,7 @@ const ExpiryProducts = () => {
   return (
     <div className="mx-4 overflow-auto">
       <TableComponent
+        linkCell
         largeContainer={false}
         data={formattedData}
         columns={columns}
