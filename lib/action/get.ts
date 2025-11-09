@@ -397,10 +397,17 @@ export const getProductList = async (
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   const where: Prisma.ProductWhereInput = {
-    product_name: {
-      contains: query,
-    },
     status: "ACTIVE",
+    OR: [
+      {
+        product_name: {
+          contains: query,
+        },
+      },
+      {
+        id: !isNaN(Number(query)) ? Number(query) : undefined, 
+      },
+    ],
   };
 
   const selectedCategoriesParam = filter; 
