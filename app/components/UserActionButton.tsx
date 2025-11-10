@@ -64,6 +64,7 @@ const UserActionButton = ({ user }: { user: UserFormValues }) => {
 
           {user.status === "ACTIVE" ? (
             <UserStatusConfirmDialog
+              bgRedButton={true}
               modalButtonLabel={
                 isPending ? <LoadingButton color="text-white" /> : "Confirm"
               }

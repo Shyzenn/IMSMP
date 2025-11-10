@@ -35,7 +35,7 @@ export const fetchOrderRequest = async (
 
 export const baseColumns: Column[] = [
   { label: "Order ID", accessor: "id" },
-  { label: "Customer Name", accessor: "patient_name" },
+  { label: "Patient Name", accessor: "patient_name" },
   { label: "Date Placed", accessor: "createdAt" },
   { label: "Items", accessor: "items" },
   {

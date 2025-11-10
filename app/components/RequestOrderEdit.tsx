@@ -19,6 +19,7 @@ import CancelButton from "./CancelButton";
 import { OrderItem } from "@/lib/interfaces";
 import { IoAddOutline } from "react-icons/io5";
 import { OrderView } from "./transaction/table/TransactionAction";
+import { Textarea } from "@/components/ui/textarea";
 
 const RequestOrderEdit = ({
   setShowRequestEditModal,
@@ -30,6 +31,11 @@ const RequestOrderEdit = ({
   const { products } = useProducts();
   const queryClient = useQueryClient();
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
+  const [patientSearchQuery, setPatientSearchQuery] = useState<string>("");
+  const [searchSuggestions, setSearchSuggestions] = useState<
+    { patient_name: string; room_number: number | null }[]
+  >([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const {
     register,
@@ -51,6 +57,7 @@ const RequestOrderEdit = ({
         | "pending"
         | "for_payment"
         | "paid",
+      notes: orderData?.notes,
       products: orderData?.itemDetails?.map((item: OrderItem) => ({
         productId: item.productName,
         quantity: item.quantity,
@@ -115,6 +122,67 @@ const RequestOrderEdit = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [products.length, orderData?.id]);
 
+  const handleSearchInput = async (value: string) => {
+    setPatientSearchQuery(value);
+
+    if (value.length < 2) {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/request_order/patient_name?q=${encodeURIComponent(value)}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setSearchSuggestions(data.results || []);
+        setShowSuggestions((data.results || []).length > 0);
+      }
+    } catch (error) {
+      console.error("Search error:", error);
+    }
+  };
+
+  const handleSelectSuggestion = (patient: {
+    patient_name: string;
+    room_number: number | null;
+  }) => {
+    setPatientSearchQuery(patient.patient_name);
+    setValue("patient_name", patient.patient_name);
+    setValue(
+      "room_number",
+      patient.room_number ? String(patient.room_number) : ""
+    );
+    setShowSuggestions(false);
+  };
+
+  // Click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest(".search-container")) {
+        setShowSuggestions(false);
+      }
+
+      if (patientSearchQuery.trim() === "") {
+        setSearchSuggestions([]);
+        setValue("patient_name", "");
+      }
+    };
+
+    if (showSuggestions) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+
+    return;
+  }, [showSuggestions, patientSearchQuery, setValue]);
+
   const onSubmit = async (data: TEditRequestOrderSchema) => {
     const hasInvalidProduct = data.products.some((product, index) => {
       const exists = products.some(
@@ -172,20 +240,64 @@ const RequestOrderEdit = ({
 
         <form className="pb-[70px] mt-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="overflow-y-auto max-h-[calc(95vh-150px)]">
-            <div className="border-b-2 pb-8 px-8 flex flex-col gap-8 text-start">
-              <FormField label="Patient Name">
-                <Input
-                  placeholder="patient name"
-                  {...register("patient_name")}
-                />
-              </FormField>
-              <div className="flex gap-20">
-                <FormField label="Room#">
+            <div className="px-8 flex flex-col gap-4 border-b pb-4">
+              <div className="search-container">
+                <FormField label="Patient Name">
                   <Input
-                    placeholder="room number"
-                    {...register("room_number")}
+                    placeholder="Enter Patient Name"
+                    autoComplete="off"
+                    {...register("patient_name", {
+                      onChange: (e) => {
+                        handleSearchInput(e.target.value);
+                      },
+                    })}
+                    onFocus={() => {
+                      if (searchSuggestions.length > 0) {
+                        setShowSuggestions(true);
+                      }
+                    }}
+                    className={`w-full ${
+                      errors.patient_name
+                        ? "border-red-500 focus:ring-red-500"
+                        : ""
+                    }`}
                   />
                 </FormField>
+                {showSuggestions && searchSuggestions.length > 0 && (
+                  <ul className="absolute z-10 w-[27.4rem] bg-white border rounded-md shadow-md mt-1 max-h-60 overflow-y-auto">
+                    {searchSuggestions.map((patient) => (
+                      <li
+                        key={patient.patient_name}
+                        onClick={() => handleSelectSuggestion(patient)}
+                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex justify-between"
+                      >
+                        <span>{patient.patient_name}</span>
+                        <span className="text-gray-500 text-sm">
+                          Room {patient.room_number ?? "—"}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {errors.patient_name && (
+                  <p className="text-sm text-red-500 mt-1 text-left">
+                    {" "}
+                    {errors.patient_name.message}
+                  </p>
+                )}{" "}
+              </div>
+
+              <div className="flex items-center justify-between gap-6">
+                <div className="w-full">
+                  <FormField label="Room#">
+                    <Input
+                      type="number"
+                      autoComplete="off"
+                      placeholder="Enter Room Number (Optional)"
+                      {...register("room_number")}
+                    />
+                  </FormField>
+                </div>
 
                 <FormField label="Status">
                   <Input
@@ -194,6 +306,15 @@ const RequestOrderEdit = ({
                     className="bg-gray-100 text-gray-700 cursor-not-allowed"
                   />
                 </FormField>
+              </div>
+              <div className="flex flex-col">
+                <label className="text-sm font-medium mb-[3px] text-gray-700 text-left">
+                  Message
+                </label>
+                <Textarea
+                  placeholder="Type your message here. (Optional)"
+                  {...register("notes")}
+                />
               </div>
             </div>
 
@@ -210,9 +331,10 @@ const RequestOrderEdit = ({
               >
                 <IoAddOutline className="text-xl" /> Add Product
               </button>
-              <div className="flex justify-between text-sm mt-8 mr-[118px]">
-                <p className="font-semibold">Product Name</p>
-                <p className="font-semibold">Quantity</p>
+
+              <div className="flex justify-between text-sm font-medium mb-[3px] text-gray-700 mt-8 mr-[118px]">
+                <p>Product Name</p>
+                <p>Quantity</p>
               </div>
 
               <ul className="flex flex-col gap-4 mt-4 relative w-full">
@@ -228,7 +350,8 @@ const RequestOrderEdit = ({
                       {/* Product Input */}
                       <div className="relative w-[53%]">
                         <Input
-                          placeholder="enter product name"
+                          autoComplete="off"
+                          placeholder="Enter Product Name"
                           {...register(`products.${index}.productId` as const, {
                             required: true,
                           })}
@@ -273,10 +396,27 @@ const RequestOrderEdit = ({
                           }}
                         />
 
+                        {/* Errors */}
+                        <div className="flex justify-between">
+                          {errors.products?.[index]?.productId && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.products[index].productId?.message}
+                            </p>
+                          )}
+                          {selectedQuantity[index] !== undefined &&
+                            watchProducts?.[index]?.quantity >
+                              selectedQuantity[index] && (
+                              <p className="text-sm text-red-500 mt-1 text-center mr-3">
+                                Exceeds available stock (
+                                {selectedQuantity[index]} left)
+                              </p>
+                            )}
+                        </div>
+
                         {/* Dropdown */}
                         {dropdownIndex === index &&
                           filteredProducts.length > 0 && (
-                            <ul className="absolute bottom-full mb-2 z-20 w-full bg-white border border-gray-300 shadow-md rounded-md max-h-60 overflow-y-auto">
+                            <ul className="absolute bottom-full mb-2 z-20 w-[26.5rem] bg-white border border-gray-300 shadow-md rounded-md max-h-60 overflow-y-auto">
                               {filteredProducts.map((product, i) => (
                                 <li
                                   key={product.id}
@@ -312,20 +452,30 @@ const RequestOrderEdit = ({
 
                       {/* Quantity Input */}
                       <div className="flex flex-col w-[37%]">
-                        <Input
-                          type="number"
-                          placeholder="enter quantity"
-                          {...register(`products.${index}.quantity` as const, {
-                            valueAsNumber: true,
-                            required: true,
-                          })}
-                          className={`w-full ${
-                            errors.products?.[index]?.quantity
-                              ? "border-red-500"
-                              : ""
-                          }`}
-                          disabled={!watch(`products.${index}.productId`)}
-                        />
+                        <div className="">
+                          <Input
+                            type="number"
+                            placeholder="Enter Quantity"
+                            {...register(
+                              `products.${index}.quantity` as const,
+                              {
+                                valueAsNumber: true,
+                                required: true,
+                              }
+                            )}
+                            className={`w-full ${
+                              errors.products?.[index]?.quantity
+                                ? "border-red-500"
+                                : ""
+                            }`}
+                            disabled={!watch(`products.${index}.productId`)}
+                          />
+                        </div>
+                        {errors.products?.[index]?.quantity && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {errors.products[index].quantity?.message}
+                          </p>
+                        )}
                       </div>
 
                       {/* Remove Product */}
@@ -335,23 +485,6 @@ const RequestOrderEdit = ({
                           onClick={() => remove(index)}
                         />
                       )}
-                    </div>
-
-                    {/* Errors */}
-                    <div className="flex justify-between">
-                      {errors.products?.[index]?.productId && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.products[index].productId?.message}
-                        </p>
-                      )}
-                      {selectedQuantity[index] !== undefined &&
-                        watchProducts?.[index]?.quantity >
-                          selectedQuantity[index] && (
-                          <p className="text-sm text-red-500 mt-1 text-center mr-3">
-                            Exceeds available stock ({selectedQuantity[index]}{" "}
-                            left)
-                          </p>
-                        )}
                     </div>
                   </li>
                 ))}

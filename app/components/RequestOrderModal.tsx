@@ -252,7 +252,9 @@ const RequestOrderModal = ({ close }: Props) => {
                 </div>
 
                 <div className="flex flex-col">
-                  <label className="text-sm font-medium mb-[3px]">Type</label>
+                  <label className="text-sm font-medium mb-[3px] text-gray-700">
+                    Type
+                  </label>
                   <div>
                     <Controller
                       name="type"
@@ -273,10 +275,15 @@ const RequestOrderModal = ({ close }: Props) => {
                   </div>
                 </div>
               </div>
-              <Textarea
-                placeholder="Type your message here. (Optional)"
-                {...register("notes")}
-              />
+              <div className="flex flex-col">
+                <label className="text-sm font-medium mb-[3px] text-gray-700">
+                  Message
+                </label>
+                <Textarea
+                  placeholder="Type your message here. (Optional)"
+                  {...register("notes")}
+                />
+              </div>
             </div>
 
             <div className="p-8 h-[10%]">
@@ -293,7 +300,7 @@ const RequestOrderModal = ({ close }: Props) => {
                 <IoAddOutline className="text-xl" /> Add Product
               </button>
 
-              <div className="flex justify-between text-sm mt-8 mr-[118px]">
+              <div className="flex justify-between text-sm font-medium mb-[3px] text-gray-700 mt-8 mr-[118px]">
                 <p>Product Name</p>
                 <p>Quantity</p>
               </div>

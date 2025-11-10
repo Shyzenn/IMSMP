@@ -23,6 +23,7 @@ type ConfirmDialogProps = {
   confirmButton: () => void;
   iconOnly?: boolean;
   modalButtonLabel: ReactNode;
+  bgRedButton?: boolean;
 };
 
 const UserStatusConfirmDialog = ({
@@ -35,6 +36,7 @@ const UserStatusConfirmDialog = ({
   confirmButton,
   iconOnly,
   modalButtonLabel,
+  bgRedButton,
 }: ConfirmDialogProps) => {
   return (
     <AlertDialog>
@@ -57,7 +59,11 @@ const UserStatusConfirmDialog = ({
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={confirmButton}
-            className="bg-buttonBgColor hover:bg-buttonHover"
+            className={`${
+              bgRedButton
+                ? "bg-red-500 hover:bg-red-400"
+                : "bg-buttonBgColor hover:bg-buttonHover"
+            }`}
           >
             {modalButtonLabel}
           </AlertDialogAction>

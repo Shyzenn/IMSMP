@@ -101,7 +101,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
                   render={({ field }) => (
                     <SelectField
                       field={field}
-                      label="select user type"
+                      label="Select User Type"
                       option={[
                         { label: "Manager", value: "Manager" },
                         { label: "Nurse", value: "Nurse" },

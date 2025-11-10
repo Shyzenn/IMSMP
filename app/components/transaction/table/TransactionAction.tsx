@@ -83,7 +83,7 @@ const TransactionAction = ({
         requestedBy: transaction.requestedBy ?? "Unknown",
         receivedBy: transaction.receivedBy ?? "Unknown",
         processedBy: transaction.processedBy ?? "Unknown",
-        customer: transaction.patient_name ?? "Unknown",
+        customer: transaction.customer ?? "Unknown",
         patient_name: transaction.patient_name ?? "Unknown",
         roomNumber: transaction.roomNumber?.toString() ?? "N/A",
         notes: transaction.notes ?? "",

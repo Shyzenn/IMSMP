@@ -1,5 +1,4 @@
 import { db } from "@/lib/db";
-import { addDays } from "date-fns";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -61,15 +60,15 @@ export async function GET() {
       else highStock++;
     }
 
-    const now = new Date();
-    const in31Days = addDays(now, 31);
+     const now = new Date();
+    const in31Days = new Date();
+    in31Days.setDate(now.getDate() + 31);
 
     const expiring = await db.productBatch.count({
-      where: {
-        expiryDate: {
-          gte: now,
-          lte: in31Days,
-        },
+       where: {
+          type: { not: "ARCHIVED" }, 
+          expiryDate: { gt: now, lte: in31Days },
+          quantity: { gt: 0 },
       },
     });
 

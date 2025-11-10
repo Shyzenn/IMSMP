@@ -21,7 +21,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 type ProductSales = {
   name: string;
-  revenue: number;
+  quantity: number;
 };
 
 const fetchTopSelling = async (filter: string): Promise<ProductSales[]> => {
@@ -45,8 +45,8 @@ const TopSellingProducts = () => {
     labels: topData.map((item) => item.name),
     datasets: [
       {
-        label: "Revenue (₱)",
-        data: topData.map((item) => item.revenue),
+        label: "Quantity Sold",
+        data: topData.map((item) => item.quantity),
         backgroundColor: "#11d695",
         barThickness: 10,
         borderRadius: 100,
@@ -64,7 +64,7 @@ const TopSellingProducts = () => {
         callbacks: {
           label: (ctx: TooltipItem<"bar">) => {
             const value = ctx.raw as number;
-            return `₱${value.toLocaleString()}`;
+            return `${value.toLocaleString()} pcs`;
           },
         },
       },
@@ -74,16 +74,20 @@ const TopSellingProducts = () => {
         grid: { color: "rgba(0,0,0,0.03)" },
       },
       y: {
-        min: -5,
         beginAtZero: true,
         grid: { color: "rgba(0,0,0,0.03)" },
         ticks: {
           callback: (value: string | number) => {
             if (typeof value === "number") {
-              return `₱${value.toLocaleString()}`;
+              return `${value}`;
             }
             return value;
           },
+        },
+        title: {
+          display: true,
+          text: "Quantity Sold",
+          font: { size: 13, weight: "bold" },
         },
       },
     },
@@ -97,7 +101,7 @@ const TopSellingProducts = () => {
         filter={filter}
         setFilter={setFilter}
         title="Top Selling Product"
-        data={data.map((d) => ({ label: d.name, value: d.revenue }))}
+        data={data.map((d) => ({ label: d.name, value: d.quantity }))}
         reportType="top selling product"
       />
 

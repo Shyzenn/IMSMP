@@ -10,10 +10,12 @@ const FormField = ({
   children: ReactNode;
 }) => {
   return (
-    <div className="w-full">
-      <label className="text-sm font-medium">{label}</label>
+    <div className="w-full flex flex-col text-left">
+      <label className="text-sm font-medium mb-[3px] text-gray-700">
+        {label}
+      </label>
       {children}
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
     </div>
   );
 };

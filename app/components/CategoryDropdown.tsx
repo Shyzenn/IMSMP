@@ -5,9 +5,9 @@ import {
 } from "@/components/ui/popover";
 import { capitalLetter } from "@/lib/utils";
 import { GoPlus } from "react-icons/go";
-import { CiEdit } from "react-icons/ci";
+import { CiEdit, CiSearch } from "react-icons/ci";
 import { GoTrash } from "react-icons/go";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ProductCategory } from "@prisma/client";
 import { ControllerRenderProps } from "react-hook-form";
 import { TAddProductSchema } from "@/lib/types";
@@ -62,6 +62,7 @@ const CategoryDropdown: React.FC<CategoryDropdown> = ({
   >([]);
   const [isCheckingDependencies, setIsCheckingDependencies] = useState(false);
   const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const closeCategoryModal = () => {
     setModalMode(null);
@@ -69,6 +70,14 @@ const CategoryDropdown: React.FC<CategoryDropdown> = ({
     setCategoryName("");
     setCategoryError("");
   };
+
+  const filteredCategories = useMemo(() => {
+    if (!categories) return [];
+    if (!searchQuery.trim()) return categories;
+    return categories.filter((c) =>
+      c.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [categories, searchQuery]);
 
   const handleCategoryAction = async () => {
     if (!categoryName.trim() && modalMode !== "delete") return;
@@ -137,31 +146,43 @@ const CategoryDropdown: React.FC<CategoryDropdown> = ({
           </button>
         </PopoverTrigger>
 
-        <PopoverContent className="w-[25rem] max-h-80 overflow-y-auto py-2 px-0">
-          <div className="flex justify-between px-2 py-[2px] items-center border-b pb-2 mb-2 sticky top-0 bg-white">
-            <p className="font-semibold text-sm pl-2">
-              Categories ({categories?.length})
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                openCategoryModal("add");
-                setIsPopoverOpen(false);
-              }}
-              className="text-sm bg-buttonBgColor hover:bg-buttonHover text-white py-1 px-4 rounded-sm flex items-center gap-2 duration-300 ease-in-out"
-            >
-              <GoPlus /> Add
-            </button>
+        <PopoverContent className="w-[25rem] max-h-80 overflow-y-auto p-0">
+          <div className="flex w-full flex-col px-2 items-center border-b sticky top-0 bg-white py-2 gap-2">
+            <div className="flex justify-between w-full">
+              <p className="font-semibold text-sm pl-2">
+                Categories ({categories?.length})
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  openCategoryModal("add");
+                  setIsPopoverOpen(false);
+                }}
+                className="text-sm bg-buttonBgColor hover:bg-buttonHover text-white py-1 px-4 rounded-sm flex items-center gap-2 duration-300 ease-in-out"
+              >
+                <GoPlus /> Add
+              </button>
+            </div>
+
+            <div className="w-full border px-4 rounded-md flex items-center gap-2">
+              <CiSearch className="text-xl text-gray-800 font-bold" />
+              <input
+                placeholder="Search categories..."
+                className="w-full py-2 outline-none text-sm pl-1"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </div>
-          {categories && categories.length > 0 ? (
+          {filteredCategories && filteredCategories.length > 0 ? (
             <>
-              {categories?.map((c) => (
+              {filteredCategories.map((c) => (
                 <div
                   key={c.id}
-                  className="flex items-center justify-between px-2 py-[2px] text-[13px] gap-4 border-b"
+                  className="flex items-center justify-between px-2 text-[13px] gap-4"
                 >
                   <span
-                    className="flex-1 select-none hover:bg-gray-100 py-1 pl-2 rounded-sm"
+                    className="flex-1 select-none hover:bg-gray-100 py-2 pl-2 rounded-sm"
                     onClick={() => {
                       field.onChange(c.name);
                       setIsPopoverOpen(false);
@@ -178,15 +199,12 @@ const CategoryDropdown: React.FC<CategoryDropdown> = ({
                         setIsPopoverOpen(false);
                       }}
                     >
-                      <CiEdit className="text-lg  " />
+                      <CiEdit className="text-lg" />
                     </button>
                     <button
                       type="button"
                       className="border rounded-sm px-1 items-center hover:bg-gray-100"
                       onClick={async () => {
-                        {
-                          /**  FETCH FOR DEPENDENCIES(PRODUCTS if any)  **/
-                        }
                         setIsPopoverOpen(false);
                         setShowDependencyModal(true);
                         setIsCheckingDependencies(true);
@@ -231,8 +249,8 @@ const CategoryDropdown: React.FC<CategoryDropdown> = ({
               ))}
             </>
           ) : (
-            <div className="flex flex-col items-center text-gray-500 mt-2">
-              <p className="text-sm">No categories available yet</p>
+            <div className="flex flex-col items-center text-gray-500 mt-3 mb-3">
+              <p className="text-sm">No categories found</p>
             </div>
           )}
         </PopoverContent>

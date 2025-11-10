@@ -47,6 +47,7 @@ const CashierDashboardCards = () => {
       icon: TbCurrencyPeso,
       bgColor: "bg-blue-50",
       textColor: "text-blue-500",
+      link: "/cashier_transaction?page=1&filter=all&sort=createdAt&order=desc",
     },
     {
       title: "Sales Today",
@@ -54,6 +55,7 @@ const CashierDashboardCards = () => {
       icon: PiChartLineUpLight,
       bgColor: "bg-orange-50",
       textColor: "text-orange-500",
+      link: "/cashier_transaction?page=1&filter=all&sort=createdAt&order=desc",
     },
     {
       title: "Total Orders",
@@ -61,6 +63,7 @@ const CashierDashboardCards = () => {
       icon: LuPackage,
       bgColor: "bg-green-50",
       textColor: "text-green-500",
+      link: "/cashier_transaction?page=1&filter=all&sort=createdAt&order=desc",
     },
     {
       title: "For Payment",
@@ -68,6 +71,7 @@ const CashierDashboardCards = () => {
       icon: TbCreditCardPay,
       bgColor: "bg-red-50",
       textColor: "text-red-500",
+      link: "/cashier_transaction?page=1&filter=for_payment&sort=createdAt&order=desc",
     },
   ];
 

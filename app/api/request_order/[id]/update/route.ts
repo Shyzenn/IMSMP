@@ -32,7 +32,7 @@ export async function PATCH(
       return NextResponse.json({ errors: zodErrors }, { status: 400 });
     }
 
-    const { room_number, patient_name, status, products } = result.data;
+    const { room_number, patient_name, status, products, notes } = result.data;
 
     // 1️Fetch the existing order and its items
     const existingOrder = await db.orderRequest.findUnique({
@@ -131,6 +131,7 @@ export async function PATCH(
         room_number,
         patient_name,
         ...(status && { status }),
+        notes,
         items: {
           deleteMany: {},
           create: products.map((product) => ({
