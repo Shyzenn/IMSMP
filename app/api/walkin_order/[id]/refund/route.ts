@@ -70,13 +70,10 @@ export async function PUT(
       );
     }
 
-    console.log("Processing refund for items:", refundItems); // Debug
-
     let totalRefundAmount = 0;
 
     // Restore inventory based on refund items
     for (const refundItem of refundItems) {
-      console.log(`Processing refund: ${refundItem.quantity} units of ${refundItem.productName}`);
 
       const matchingItem = walkInTransaction.items.find(
         (item) => item.product.product_name === refundItem.productName
@@ -99,7 +96,6 @@ export async function PUT(
       const itemRefundAmount = refundItem.quantity * Number(matchingItem.price);
       totalRefundAmount += itemRefundAmount;
       
-      console.log(`Item refund amount: ${itemRefundAmount}`);
 
       // Update the walk-in item with refunded quantity
       await db.walkInItem.update({
@@ -120,8 +116,6 @@ export async function PUT(
         orderBy: { updatedAt: "desc" },
       });
 
-      console.log(`Found ${batches.length} batches for product ${matchingItem.productId}`);
-
       // If batches exist, increment their quantity
       if (batches.length > 0) {
         const targetBatch = batches[0];
@@ -131,7 +125,6 @@ export async function PUT(
           data: { quantity: { increment: remainingQty } },
         });
 
-        console.log(`Added ${remainingQty} units to batch ${targetBatch.id}`);
         remainingQty = 0;
       }
 
@@ -152,8 +145,6 @@ export async function PUT(
       }
     }
 
-    console.log(`Total refund amount: ${totalRefundAmount}`);
-
     // Check if all items are fully refunded
     const updatedTransaction = await db.walkInTransaction.findUnique({
       where: { id: numericId },
@@ -172,7 +163,7 @@ export async function PUT(
         refundedAt: new Date(),
         refundedById: userId,
         refundReason: reason || "No reason provided",
-        totalAmount: { decrement: totalRefundAmount }, // ✅ Adjust total amount
+        totalAmount: { decrement: totalRefundAmount }, // Adjust total amount
       },
     });
 

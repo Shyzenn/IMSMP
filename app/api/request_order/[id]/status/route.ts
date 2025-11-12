@@ -114,7 +114,6 @@ export async function PUT(
         );
       }
 
-      console.log("Processing refund for order items:", refundItems);
 
       let totalRefundAmount = 0;
 

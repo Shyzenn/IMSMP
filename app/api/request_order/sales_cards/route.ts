@@ -7,9 +7,9 @@ export async function GET() {
     const today = new Date();
 
     // Fetch all paid orders
-    const [paidOrderRequest, paidWalkIn] = await Promise.all([
+   const [paidOrderRequest, paidWalkIn] = await Promise.all([
       db.orderRequest.findMany({
-        where: { status: "paid" },
+        where: { status: { in: ["paid", "refunded"] } }, 
         include: {
           items: {
             include: { product: true },
@@ -17,31 +17,33 @@ export async function GET() {
         },
       }),
       db.walkInTransaction.findMany({
-        where: { status: "paid" },
+        where: { status: { in: ["paid", "refunded"] } }, 
         include: {
           items: {
             include: { product: true },
           },
         },
       })
-    ])
+    ]);
 
     // Calculate total revenue
     const orderRequesttotalRevenue = paidOrderRequest.reduce((acc, order) => {
       const orderTotal = order.items.reduce((sum, item) => {
-        return sum + (Number(item.product.price) || 0) * item.quantity;
+        const netQuantity = item.quantity - (item.refundedQuantity || 0);
+        return sum + (Number(item.product.price) || 0) * netQuantity;
       }, 0);
       return acc + orderTotal;
     }, 0);
 
-    const walkInttotalRevenue = paidWalkIn.reduce((acc, order) => {
-      const orderTotal = order.items.reduce((sum, item) => {
-        return sum + (Number(item.product.price) || 0) * item.quantity;
+    const walkInttotalRevenue = paidWalkIn.reduce((acc, transaction) => {
+      const transactionTotal = transaction.items.reduce((sum, item) => {
+        const netQuantity = item.quantity - (item.refundedQuantity || 0);
+        return sum + (Number(item.price) || 0) * netQuantity; 
       }, 0);
-      return acc + orderTotal;
+      return acc + transactionTotal;
     }, 0);
 
-    const totalRevenue = orderRequesttotalRevenue + walkInttotalRevenue
+    const totalRevenue = orderRequesttotalRevenue + walkInttotalRevenue;
 
     // Fetch all orders made today
     const [orderRequestordersToday, walkInordersToday] = await Promise.all([

@@ -44,6 +44,7 @@ const Header = () => {
             role: data.sender?.role || "Unknown",
           },
           order: {
+            id: data.order?.id ?? data.id,
             patient_name: data.order?.patient_name || "Unknown",
             room_number: data.order?.room_number || "Unknown",
             products: data.order?.products || [],
