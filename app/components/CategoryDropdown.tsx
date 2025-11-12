@@ -69,6 +69,7 @@ const CategoryDropdown: React.FC<CategoryDropdown> = ({
     setSelectedCategoryForEdit(null);
     setCategoryName("");
     setCategoryError("");
+    setSearchQuery("");
   };
 
   const filteredCategories = useMemo(() => {

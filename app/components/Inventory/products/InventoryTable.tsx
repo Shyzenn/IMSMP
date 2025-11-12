@@ -20,6 +20,7 @@ export interface ProductProps {
   icon?: IconType[];
   batchQuantity: number[];
   status: "ACTIVE" | "ARCHIVED";
+  archiveReason: string | null;
 }
 
 export default async function InventoryTable({

@@ -93,7 +93,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
                 />
               </FormField>
 
-              <div className="flex flex-col space-y-1.5">
+              <div className="flex flex-col space-y-1.5 text-sm font-medium mb-[3px] text-gray-700">
                 <Label htmlFor="password">Types</Label>
                 <Controller
                   control={control}

@@ -232,6 +232,7 @@ export async function GET(req: NextRequest) {
           ? toTitleCase(order.patient_name)
           : "Unknown",
         room_number: order.room_number,
+        archiveReason: order.archiveReason,
         createdAt: order.createdAt,
         status: order.status,
         remarks: order.remarks,

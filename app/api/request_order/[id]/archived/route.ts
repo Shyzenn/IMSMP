@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(
-  _req: NextRequest, 
+  req: NextRequest, 
   context: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -23,6 +23,9 @@ export async function PUT(
       );
     }
 
+    const body = await req.json()
+    const reason = body.reason || "No reason provided"
+
     const orderRequest = await db.orderRequest.findUnique({
       where: { id },
     });
@@ -36,7 +39,7 @@ export async function PUT(
 
     await db.orderRequest.update({
       where: { id },
-      data: { isArchived: true, archivedById: session.user.id },
+      data: { isArchived: true, archivedById: session.user.id, archiveReason: reason },
     });
 
     await createAuditLog(

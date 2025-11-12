@@ -38,7 +38,7 @@ const ArchiveAction = ({ item }: ArchiveActionProps) => {
       }
 
       if (result.success) {
-        toast.success(result.message + " ✅");
+        toast.success(result.message + " ✅", { duration: 10000 });
       } else {
         toast.error(result.message + " ❌");
       }

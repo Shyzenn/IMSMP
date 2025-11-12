@@ -186,7 +186,9 @@ const WalkInOrder = () => {
       close();
       fetchProducts();
       setIsSaving(false);
-      toast.success("Walk In Order Submitted successfully! 🎉");
+      toast.success("Walk In Order Submitted successfully! 🎉", {
+        duration: 10000,
+      });
     };
   };
   return (
@@ -200,7 +202,7 @@ const WalkInOrder = () => {
 
       {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
-          <div className="bg-white w-full max-w-[500px] max-h-[95vh] rounded-md relative overflow-hidden">
+          <div className="bg-white w-full max-w-[600px] max-h-[95vh] rounded-md relative overflow-hidden">
             <p className="text-center font-semibold text-xl py-4">
               Walk In Order Form
             </p>
@@ -232,24 +234,30 @@ const WalkInOrder = () => {
                 </div>
 
                 <div className="p-8 h-[10%]">
-                  <div className="flex justify-between text-sm mr-[155px]">
-                    <p>Product Name</p>
-                    <p>Quantity</p>
+                  <div className="flex text-sm border-b pb-4 font-semibold w-full">
+                    <div className="w-[40%] ">
+                      <p>Product Name</p>
+                    </div>
+                    <div className="w-[60%] flex gap-[3.8rem]">
+                      <p>Quantity</p>
+                      <p>Price</p>
+                      <p>Amount</p>
+                    </div>
                   </div>
 
                   <ul className="flex flex-col gap-4 mt-4 relative w-full">
                     {fields.map((item, index) => (
                       <li
                         key={item.id}
-                        className="items-center w-full"
+                        className="items-center w-full relative"
                         ref={(el) => {
                           dropdownRefs.current[index] = el;
                         }}
                       >
-                        <div className="flex gap-8 w-full">
-                          <div className="relative w-[53%]">
+                        <div className="flex w-full border-gray-300 border p-2 rounded-lg">
+                          <div className="relative w-[40%]">
                             <Input
-                              className={`w-full ${
+                              className={`w-auto ${
                                 errors.products?.[index]?.productId
                                   ? "border-red-500 focus:ring-red-500"
                                   : ""
@@ -346,35 +354,79 @@ const WalkInOrder = () => {
                                 </ul>
                               )}
                           </div>
-                          <div className="flex flex-col w-[37%]">
-                            <Input
-                              className={`w-full ${
-                                errors.products?.[index]?.quantity
-                                  ? "border-red-500"
-                                  : ""
-                              }`}
-                              type="number"
-                              placeholder="Enter Quantity"
-                              {...register(
-                                `products.${index}.quantity` as const,
-                                {
-                                  valueAsNumber: true,
-                                  required: true,
-                                }
-                              )}
-                              disabled={!watch(`products.${index}.productId`)}
-                            />
+                          <div className="w-[60%] flex justify-between">
+                            <div className="flex flex-col">
+                              <Input
+                                className={`w-[5rem] ${
+                                  errors.products?.[index]?.quantity
+                                    ? "border-red-500"
+                                    : ""
+                                }`}
+                                type="number"
+                                min={0}
+                                placeholder="Enter Quantity"
+                                {...register(
+                                  `products.${index}.quantity` as const,
+                                  {
+                                    valueAsNumber: true,
+                                    required: true,
+                                  }
+                                )}
+                                disabled={!watch(`products.${index}.productId`)}
+                              />
+                            </div>
+                            <div>
+                              <Input
+                                className="cursor-default text-gray-500 w-[5.5rem] ml-3.5"
+                                type="text"
+                                placeholder="₱0.00"
+                                value={(() => {
+                                  const selectedProductId = watch(
+                                    `products.${index}.productId`
+                                  );
+                                  if (!selectedProductId) return "";
+
+                                  const matchedProduct = products.find(
+                                    (p) =>
+                                      p.productName.toLowerCase() ===
+                                      selectedProductId.toLowerCase()
+                                  );
+
+                                  if (!matchedProduct) return "";
+
+                                  return `₱${Number(
+                                    matchedProduct.price
+                                  ).toLocaleString("en-PH", {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })}`;
+                                })()}
+                                readOnly
+                                disabled={!watch(`products.${index}.productId`)}
+                              />
+                            </div>
+                            <div>
+                              <Input
+                                className="w-[6.5rem]"
+                                value={`₱${
+                                  calculatedTotals[index]?.toFixed(2) || "0.00"
+                                }`}
+                                readOnly
+                              />
+                            </div>
                           </div>
-                          <p className="text-sm text-right mt-1 text-gray-700 w-[10%]">
-                            ₱{calculatedTotals[index]?.toFixed(2) || "0.00"}
-                          </p>
-                          {fields.length > 1 && (
-                            <IoIosClose
-                              className="text-2xl text-red-600 cursor-pointer"
-                              onClick={() => remove(index)}
-                            />
-                          )}
                         </div>
+
+                        {fields.length > 1 && (
+                          <button
+                            className="cursor-pointer absolute -top-2 -right-2 rounded-full w-4 h-4 border border-red-500 items-center flex justify-center"
+                            onClick={() => remove(index)}
+                            type="button"
+                          >
+                            <IoIosClose className="text-2xl text-red-600 " />
+                          </button>
+                        )}
+
                         <div className="flex justify-between">
                           {errors.products?.[index]?.productId && (
                             <p className="text-red-500 text-sm mt-1">
@@ -397,12 +449,19 @@ const WalkInOrder = () => {
               </div>
 
               <div className="flex  bg-white border-t-2 p-4 absolute bottom-0 left-0 w-full justify-between items-center">
-                <p className="font-semibold text-lg">
-                  Total: ₱
-                  {calculatedTotals
-                    .reduce((sum, val) => sum + val, 0)
-                    .toFixed(2)}
-                </p>
+                <div className="font-semibold border p-2 rounded-md">
+                  Total:{" "}
+                  <span className="font-normal text-gray-800">
+                    ₱
+                    {calculatedTotals
+                      .reduce((sum, val) => sum + val, 0)
+                      .toLocaleString("en-PH", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                  </span>
+                </div>
+
                 <div className="flex gap-6">
                   <CancelButton setIsModalOpen={close} reset={reset} />
                   <button

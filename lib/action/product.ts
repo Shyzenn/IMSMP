@@ -22,7 +22,7 @@ export async function createAuditLog(
   });
 }
 
-export async function archiveProduct(productId: number) {
+export async function archiveProduct(productId: number, reason: string) {
   try {
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");
@@ -35,7 +35,8 @@ export async function archiveProduct(productId: number) {
       data: {
         status: "ARCHIVED",
         archiveAt: new Date(),
-        archivedById: session.user.id
+        archivedById: session.user.id,
+        archiveReason: reason || "No reason provided"
       },
     });
 
@@ -58,7 +59,7 @@ export async function archiveProduct(productId: number) {
   }
 }
 
-export async function archiveBatch(id: number) {
+export async function archiveBatch(id: number, reason: string) {
   try {
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");
@@ -74,7 +75,8 @@ export async function archiveBatch(id: number) {
       data: {
         type: "ARCHIVED",
         archiveAt: new Date(),
-        archivedById: session.user.id
+        archivedById: session.user.id,
+        archiveReason: reason
       },
     });
 

@@ -1,14 +1,18 @@
 import { Button } from "@/components/ui/button";
-import React from "react";
+import { Textarea } from "@/components/ui/textarea";
+import React, { useState } from "react";
 
 interface ConfirmationModalProps {
   title: string;
   description: string;
-  onClick?: () => void;
+  onClick?: (reason?: string) => void;
   isPending?: boolean;
   closeModal: () => void;
   defaultBtnColor: boolean;
   hasConfirmButton: boolean;
+  hasReason?: boolean;
+  reasonValue?: string | null;
+  isRefund?: boolean;
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -19,12 +23,26 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   closeModal,
   defaultBtnColor,
   hasConfirmButton,
+  hasReason,
+  isRefund,
 }) => {
+  const [reason, setReason] = useState("");
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 ">
       <div className="bg-white p-6 rounded-lg shadow-md w-[90%] max-w-sm flex items-start flex-col">
         <h2 className="text-lg font-semibold mb-2 text-gray-900">{title}</h2>
         <p className="text-sm text-gray-600 mb-4 text-start">{description}</p>
+        {hasReason && (
+          <>
+            <p>{`Reason for ${isRefund ? "refunding" : "archiving"}:`}</p>
+            <Textarea
+              placeholder="Enter your reason here..."
+              onChange={(e) => setReason(e.target.value)}
+              value={reason}
+            />
+          </>
+        )}
         <div className="flex gap-2 justify-end w-full mt-4">
           <Button
             variant="outline"
@@ -35,7 +53,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           </Button>
           {hasConfirmButton ? (
             <Button
-              onClick={onClick}
+              onClick={() => onClick?.(reason)}
               className={`text-white ${
                 defaultBtnColor
                   ? "bg-buttonBgColor hover:bg-buttonHover"

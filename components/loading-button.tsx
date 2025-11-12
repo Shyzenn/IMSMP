@@ -2,7 +2,7 @@ export default function LoadingButton({ color }: { color: string }) {
   return (
     <div className="flex items-center justify-center">
       <svg
-        className={`animate-spin h-5 w-5 mr-2 ${color}`}
+        className={`animate-spin h-5 w-5 ${color}`}
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"

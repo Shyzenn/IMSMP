@@ -2,7 +2,6 @@ import { EmergencyOrderModalData, Notification } from "@/lib/interfaces";
 import { useOrderModal } from "@/lib/store/useOrderModal";
 import { formattedDateTime } from "@/lib/utils";
 import React, { useState } from "react";
-import { IoCheckmarkDone } from "react-icons/io5";
 import { useEmergencyModal } from "@/lib/store/emergency-modal";
 import { OrderModalSkeleton } from "./Skeleton";
 import { OrderView } from "./transaction/table/TransactionAction";
@@ -45,6 +44,14 @@ interface ApiOrderResponse {
   items: ApiOrderItem[];
 }
 
+interface WalkInOrderItem {
+  quantity: number;
+  product?: {
+    product_name?: string;
+    price?: number;
+  };
+}
+
 const StaffNotificationList = ({
   notifications,
   dropdown,
@@ -68,71 +75,122 @@ const StaffNotificationList = ({
   const handleNotificationClick = async (
     notification: NotificationWithDetails
   ) => {
-    if (!notification.order?.id) return;
+    if (!notification.order?.id && !notification.walkInOrderId) return;
 
     setLoading(true);
 
     try {
-      const res = await fetch(
-        `/api/request_order/${notification.order.id}/notification`
-      );
-      if (!res.ok) throw new Error("Failed to fetch order details");
+      // --- WALK-IN NOTIFICATION ---
+      if (notification.type === "WALK_IN" && notification.walkInOrderId) {
+        const res = await fetch(
+          `/api/walkin_order/${notification.walkInOrderId}/notification`
+        );
 
-      const data: ApiOrderResponse = await res.json();
+        if (!res.ok) throw new Error("Failed to fetch walk-in order details");
 
-      if (data.type === "EMERGENCY") {
-        const payLaterData: EmergencyOrderModalData = {
-          id: data.id,
-          orderType: data.type,
-          order: {
-            id: data.id,
-            patient_name: data.patient_name ?? "Unknown",
-            room_number: data.room_number?.toString() ?? "Unknown",
-            status: data.status,
-            products: data.items.map((item) => ({
-              productName: item.product?.product_name ?? "Unknown",
-              quantity: item.quantity,
-              price: item.product?.price ?? 0,
-            })),
-          },
-          createdAt: new Date(data.createdAt),
-          notes: data.notes ?? "",
-          sender: {
-            username: notification.sender?.username ?? "Unknown",
-            role: notification.sender?.role ?? "Unknown",
-          },
+        const data = (await res.json()) as {
+          id: number;
+          customer_name: string;
+          status: "pending" | "for_payment" | "paid" | "canceled" | "refunded";
+          createdAt: string;
+          items: WalkInOrderItem[];
+          processedBy?: { username?: string };
         };
-        openEmergencyModal(payLaterData);
-        return; // prevent opening regular order
+
+        const orderView: OrderView = {
+          id: `WALKIN-${data.id}`,
+          type: "Walk In",
+          processedBy:
+            data.processedBy?.username ?? notification.submittedBy ?? "Unknown",
+          customer: data.customer_name ?? "Unknown",
+          quantity: data.items.reduce((sum, i) => sum + i.quantity, 0),
+          price: data.items.reduce(
+            (sum, i) => sum + (i.product?.price ?? 0),
+            0
+          ),
+          total: data.items.reduce(
+            (sum, i) => sum + i.quantity * (i.product?.price ?? 0),
+            0
+          ),
+          status: data.status,
+          createdAt: new Date(data.createdAt),
+          source: "Walk In",
+          itemDetails: data.items.map((i) => ({
+            productName: i.product?.product_name ?? "Unknown",
+            quantity: i.quantity,
+            price: i.product?.price ?? 0,
+          })),
+        };
+
+        openModal(orderView);
+        return; // exit so it doesn’t try to open request order
       }
 
-      const orderView: OrderView = {
-        id: `ORD-${data.id}`,
-        type: data.type ?? "Regular",
-        requestedBy: data.user?.username ?? "Unknown",
-        receivedBy: data.receivedBy?.username ?? "Unknown",
-        processedBy: data.processedBy?.username ?? "Unknown",
-        customer: data.patient_name ?? "Unknown",
-        patient_name: data.patient_name ?? "Unknown",
-        roomNumber: data.room_number?.toString() ?? "N/A",
-        notes: data.notes ?? "",
-        quantity: data.items?.reduce((sum, i) => sum + i.quantity, 0),
-        price: data.items?.reduce((sum, i) => sum + (i.product?.price ?? 0), 0),
-        total: data.items?.reduce(
-          (sum, i) => sum + i.quantity * (i.product?.price ?? 0),
-          0
-        ),
-        status: data.status,
-        createdAt: new Date(data.createdAt),
-        source: "Request Order",
-        itemDetails: data.items.map((i) => ({
-          productName: i.product?.product_name ?? "Unknown",
-          quantity: i.quantity,
-          price: i.product?.price ?? 0,
-        })),
-      };
+      // --- REQUEST ORDER NOTIFICATION ---
+      if (notification.order?.id) {
+        const res = await fetch(
+          `/api/request_order/${notification.order.id}/notification`
+        );
+        if (!res.ok) throw new Error("Failed to fetch order details");
+        const data: ApiOrderResponse = await res.json();
 
-      openModal(orderView);
+        if (data.type === "EMERGENCY") {
+          const payLaterData: EmergencyOrderModalData = {
+            id: data.id,
+            orderType: data.type,
+            order: {
+              id: data.id,
+              patient_name: data.patient_name ?? "Unknown",
+              room_number: data.room_number?.toString() ?? "Unknown",
+              status: data.status,
+              products: data.items.map((item) => ({
+                productName: item.product?.product_name ?? "Unknown",
+                quantity: item.quantity,
+                price: item.product?.price ?? 0,
+              })),
+            },
+            createdAt: new Date(data.createdAt),
+            notes: data.notes ?? "",
+            sender: {
+              username: notification.sender?.username ?? "Unknown",
+              role: notification.sender?.role ?? "Unknown",
+            },
+          };
+          openEmergencyModal(payLaterData);
+          return;
+        }
+
+        const orderView: OrderView = {
+          id: `ORD-${data.id}`,
+          type: data.type ?? "Regular",
+          requestedBy: data.user?.username ?? "Unknown",
+          receivedBy: data.receivedBy?.username ?? "Unknown",
+          processedBy: data.processedBy?.username ?? "Unknown",
+          customer: data.patient_name ?? "Unknown",
+          patient_name: data.patient_name ?? "Unknown",
+          roomNumber: data.room_number?.toString() ?? "N/A",
+          notes: data.notes ?? "",
+          quantity: data.items?.reduce((sum, i) => sum + i.quantity, 0),
+          price: data.items?.reduce(
+            (sum, i) => sum + (i.product?.price ?? 0),
+            0
+          ),
+          total: data.items?.reduce(
+            (sum, i) => sum + i.quantity * (i.product?.price ?? 0),
+            0
+          ),
+          status: data.status,
+          createdAt: new Date(data.createdAt),
+          source: "Request Order",
+          itemDetails: data.items.map((i) => ({
+            productName: i.product?.product_name ?? "Unknown",
+            quantity: i.quantity,
+            price: i.product?.price ?? 0,
+          })),
+        };
+
+        openModal(orderView);
+      }
     } catch (error) {
       console.error("Error fetching order details:", error);
     } finally {
@@ -161,11 +219,6 @@ const StaffNotificationList = ({
                   ></div>
                   <p className="text-lg font-semibold">Notifications</p>
                 </div>
-
-                <p className="flex items-center gap-2 text-green-600 cursor-pointer">
-                  <IoCheckmarkDone />
-                  <span className="text-sm">Mark all as read</span>
-                </p>
               </div>
               {uniqueNotifications.map((notification) => {
                 const patientName =
@@ -198,6 +251,16 @@ const StaffNotificationList = ({
                           {roomNumber || "Unknown"}
                         </span>{" "}
                         has been submitted by{" "}
+                        <span className="font-medium">
+                          {submittedBy || "Unknown"} ({role || "Unknown"})
+                        </span>
+                        .
+                      </p>
+                    )}
+
+                    {notification.type === "WALK_IN" && (
+                      <p className="text-sm text-gray-700 mt-1">
+                        A new walk in order has been submitted by{" "}
                         <span className="font-medium">
                           {submittedBy || "Unknown"} ({role || "Unknown"})
                         </span>

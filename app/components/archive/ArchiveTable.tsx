@@ -67,6 +67,11 @@ export default async function ArchiveTable({
                     ? formattedDate(item.expiryDate)
                     : "None"}
                 </TableCell>
+                <TableCell>
+                  {item.archiveReason
+                    ? item.archiveReason
+                    : "No reason provided"}
+                </TableCell>
 
                 <TableCell>{formattedDateTime(item.archivedAt)}</TableCell>
 

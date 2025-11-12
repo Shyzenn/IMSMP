@@ -107,7 +107,7 @@ export interface Notification {
   updatedAt?: string | Date;
   senderId: string;
   recipientId: string;
-  type?: "ORDER_REQUEST" | "ADD_PRODUCT" | "ORDER_RECEIVED" | "PAYMENT_PROCESSED" | "EMERGENCY_ORDER" | "REMARKS";
+  type?: "ORDER_REQUEST" | "ADD_PRODUCT" | "ORDER_RECEIVED" | "PAYMENT_PROCESSED" | "EMERGENCY_ORDER" | "REMARKS" | "WALK_IN";
   orderId?: number | null;
   walkInOrderId?: number | null;
   productId?: number | null;
@@ -144,4 +144,5 @@ export type UserFormValues = {
   status?: "DISABLE" | "ACTIVE"
   isOnline?: "Offline" | "Online"
   email: string
+  bannedReason?: string
 };

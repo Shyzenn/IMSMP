@@ -52,6 +52,8 @@ export async function GET(request: NextRequest) {
       action: "Edit",
       status: user.status,
       isOnline: user.isOnline,
+      bannedReason: user.bannedReason,
+      bannedAt: user.bannedAt
     }));
 
     return NextResponse.json(formattedProducts, { status: 200 });

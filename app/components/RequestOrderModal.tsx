@@ -73,7 +73,9 @@ const RequestOrderModal = ({ close }: Props) => {
     setError,
     () => {
       reset();
-      toast.success("Request Order Submitted successfully! 🎉");
+      toast.success("Request Order Submitted successfully! 🎉", {
+        duration: 10000,
+      });
       close();
       queryClient.invalidateQueries({ queryKey: ["request_order"] });
     }

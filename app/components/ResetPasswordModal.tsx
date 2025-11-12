@@ -39,7 +39,8 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
                       userId: user.id,
                     });
                     toast.success(
-                      "Password reset. The new OTP has been sent to the user’s email."
+                      "Password reset. The new OTP has been sent to the user’s email.",
+                      { duration: 10000 }
                     );
                   } catch (error) {
                     console.error("Failed to reset password", error);

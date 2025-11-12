@@ -5,6 +5,7 @@ import { OrderType, Prisma, Status } from "@prisma/client";
 import { db } from "../db";
 import { OrderItem } from "../interfaces";
 import { dateFilter, isRequestOrderFilterEnabled, isWalkInFilterEnabled, ITEMS_PER_PAGE, mapStatus, TransactionFilter } from "../utils";
+import { auth } from "@/auth";
 
 export type ArchiveItem =
   | {
@@ -15,6 +16,7 @@ export type ArchiveItem =
       quantity: number;
       archivedAt: Date | null;
       archivedBy: string;
+      archiveReason: string | null
     }
   | {
       id: number;
@@ -27,6 +29,7 @@ export type ArchiveItem =
       expiryDate: Date;
       archivedAt: Date | null;
       archivedBy: string;
+      archiveReason: string | null
     }
   | {
       id: number;
@@ -36,6 +39,7 @@ export type ArchiveItem =
       quantity: number;
       archivedAt: Date | null;
       archivedBy: string;
+      archiveReason: string | null
     };
 
 export const getArchive = async (
@@ -158,6 +162,7 @@ export const getArchive = async (
           p.batches?.reduce((sum, b) => sum + (b.quantity || 0), 0) || 0,
         archivedAt: p.archiveAt,
         archivedBy: formatUserName(p.archivedByUser),
+        archiveReason: p.archiveReason
       })),
       ...archivedBatches.map((b) => ({
         id: b.id,
@@ -170,6 +175,7 @@ export const getArchive = async (
         expiryDate: b.expiryDate,
         archivedAt: b.archiveAt,
         archivedBy: formatUserName(b.archivedByUser),
+        archiveReason: b.archiveReason
       })),
       ...archivedOrders.map((o) => ({
         id: o.id,
@@ -179,6 +185,7 @@ export const getArchive = async (
         quantity: o.items?.length || 0,
         archivedAt: o.updatedAt,
         archivedBy: formatUserName(o.archivedByUser),
+         archiveReason: o.archiveReason
       })),
     ];
 
@@ -472,6 +479,7 @@ export const getProductList = async (
       batches: validBatches,
       batchQuantity: validBatches.map((b) => b.quantity),
       status: p.status as "ACTIVE" | "ARCHIVED",
+      archiveReason: p.archiveReason,
       icon: [],
     };
   });
@@ -671,6 +679,10 @@ export type CombinedTransaction = {
   customer: string;
   patient_name?: string;
   roomNumber?: number;
+  refundedBy?: string 
+  refundedAt?: Date 
+  refundedById?: string 
+  refundedReason?: string | null
   quantity: number;
   price: number;
   total: number;
@@ -816,6 +828,8 @@ const buildWalkInWhere = (): Prisma.WalkInTransactionWhereInput => {
       : Promise.resolve([]),
   ]);
 
+  const session = await auth()
+
   const formattedWalkIn: CombinedTransaction[] = walkinOrders.map((tx) => {
     const items = tx.items ?? [];
 
@@ -829,6 +843,10 @@ const buildWalkInWhere = (): Prisma.WalkInTransactionWhereInput => {
       createdAt: tx.createdAt,
       status: tx.status,
       source: "Walk In",
+      refundedAt: tx.refundedAt ? new Date(tx.refundedAt) : undefined,
+      refundedById: session?.user.id,
+      refundedBy: session?.user.username,
+      refundedReason: tx.refundReason,
       quantity: items.reduce((sum, item) => sum + item.quantity, 0),
       price: items.reduce((sum, item) => sum + item.price.toNumber(), 0),
       total: tx.totalAmount?.toNumber?.() ?? 0,
@@ -861,6 +879,10 @@ const buildWalkInWhere = (): Prisma.WalkInTransactionWhereInput => {
       createdAt: tx.createdAt,
       status: tx.status,
       source: "Request Order",
+      refundedAt: tx.refundedAt ? new Date(tx.refundedAt) : undefined,
+      refundedById: session?.user.id,
+      refundedBy: session?.user.username,
+      refundedReason: tx.refundReason,
       quantity: items.reduce((sum, item) => sum + item.quantity, 0),
       price: items.reduce(
         (sum, item) => sum + (item.product?.price?.toNumber?.() ?? 0),

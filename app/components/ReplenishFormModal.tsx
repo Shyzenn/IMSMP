@@ -33,7 +33,10 @@ const ReplenishFormModal = ({
   });
 
   const notify = useCallback(() => {
-    toast.success("Product replenish successfully! 🎉", { icon: "✅" });
+    toast.success("Product replenish successfully! 🎉", {
+      icon: "✅",
+      duration: 10000,
+    });
   }, []);
 
   const { handleSubmitWrapper } = useProductForm(setError, () => {

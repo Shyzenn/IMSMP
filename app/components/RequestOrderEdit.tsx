@@ -84,7 +84,9 @@ const RequestOrderEdit = ({
     setError,
     () => {
       reset();
-      toast.success("Request Order Updated successfully! 🎉");
+      toast.success("Request Order Updated successfully! 🎉", {
+        duration: 10000,
+      });
       setShowRequestEditModal(false);
       queryClient.invalidateQueries({ queryKey: ["request_order"] });
     }

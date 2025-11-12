@@ -37,17 +37,20 @@ const UserEditModal = ({
     defaultValues: {
       id: user.id,
       email: user.email,
-      firstName: user.firstName,
-      middleName: user.middleName,
-      lastName: user.lastName,
+      firstName: user.firstName.trim(),
+      middleName: user.middleName.trim(),
+      lastName: user.lastName.trim(),
       username: user.username,
       role: user.role,
     },
   });
 
   const notify = useCallback(() => {
-    toast.success("User edited successfully! 🎉", { icon: "✅" });
-  }, []);
+    toast.success(`User "${user.username.trim()}" edited successfully! 🎉`, {
+      icon: "✅",
+      duration: 10000,
+    });
+  }, [user]);
 
   const queryClient = useQueryClient();
 

@@ -14,26 +14,33 @@ import { useModal } from "@/app/hooks/useModal";
 import { useState, useTransition } from "react";
 import ReplenishFormModal from "../../ReplenishFormModal";
 import { ProductProps } from "./InventoryTable";
-import UserStatusConfirmDialog from "../../UserStatusConfirmDialog";
 import toast from "react-hot-toast";
-import LoadingButton from "@/components/loading-button";
 import { archiveProduct } from "@/lib/action/product";
+import ConfirmationModal from "../../ConfirmationModal";
 
 const Action = ({ product }: { product: ProductProps }) => {
   const { open, close, isOpen } = useModal();
 
   const [showReplenishModal, setShowReplenishModal] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
 
   const [isPending, startTransition] = useTransition();
 
-  const handleArchive = () => {
+  const handleArchive = (reason?: string) => {
     startTransition(async () => {
-      const result = await archiveProduct(product.id);
+      const sanitizedReason = reason?.trim().replace(/\s+/g, " ") || "";
+      const result = await archiveProduct(product.id, sanitizedReason || "");
 
-      if (result.success) {
-        toast.success(result.message + " ✅");
-      } else {
-        toast.error(result.message + " ❌");
+      try {
+        if (result.success)
+          toast.success(result.message + " ✅", { duration: 10000 });
+        setShowArchiveModal(false);
+      } catch (error) {
+        toast.error(result.message + "❌");
+        console.error(error);
+        setShowArchiveModal(false);
+      } finally {
+        setShowArchiveModal(false);
       }
     });
   };
@@ -70,23 +77,9 @@ const Action = ({ product }: { product: ProductProps }) => {
             <Tooltip>
               <TooltipTrigger asChild>
                 <div>
-                  <UserStatusConfirmDialog
-                    iconOnly={true}
-                    iconColor="text-gray-900"
-                    modalButtonLabel={
-                      isPending ? (
-                        <LoadingButton color="text-white" />
-                      ) : (
-                        "Confirm"
-                      )
-                    }
-                    buttonLabel="Archive"
-                    icon={IoArchiveOutline}
-                    title="Archive Product"
-                    description="Are you sure you want to
-          archive this product?"
-                    confirmButton={handleArchive}
-                  />
+                  <button onClick={() => setShowArchiveModal(true)}>
+                    <IoArchiveOutline />
+                  </button>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
@@ -96,6 +89,20 @@ const Action = ({ product }: { product: ProductProps }) => {
           </TooltipProvider>
         </TooltipProvider>
       </div>
+
+      {showArchiveModal && (
+        <ConfirmationModal
+          hasReason={true}
+          closeModal={() => setShowArchiveModal(false)}
+          description="Are you sure you want to
+          archive this product?"
+          title={`Archive Product "${product.product_name}"`}
+          onClick={handleArchive}
+          defaultBtnColor
+          hasConfirmButton
+          isPending={isPending}
+        />
+      )}
 
       {showReplenishModal && (
         <ReplenishFormModal

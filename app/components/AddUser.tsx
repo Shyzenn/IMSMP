@@ -41,6 +41,7 @@ const AddUser = () => {
         reset();
         toast.success("User added successfully! 🎉", {
           icon: "✅",
+          duration: 10000,
         });
 
         queryClient.invalidateQueries({ queryKey: ["users"] });

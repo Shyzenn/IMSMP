@@ -120,7 +120,7 @@ const ForgotPasswordModal = ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      toast("✅ Password reset successful");
+      toast("✅ Password reset successful", { duration: 10000 });
       setShowModal(false);
     } catch (err) {
       const error = err as Error;

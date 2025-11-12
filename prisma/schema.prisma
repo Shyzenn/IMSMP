@@ -23,7 +23,11 @@ model User {
   otp                String?
   otpExpiresAt       DateTime?
   createdAt          DateTime   @default(now())
+
   status             UserStatus @default(ACTIVE)
+  bannedReason       String?
+  bannedAt           DateTime?
+
   mustChangePassword Boolean    @default(true)
 
   OrderRequest      OrderRequest[]      @relation("RequestedBy")
@@ -31,6 +35,10 @@ model User {
 
   ReceivedOrders  OrderRequest[] @relation("ReceivedBy")
   ProcessedOrders OrderRequest[] @relation("ProcessedBy")
+  RefundedByOrderRequest      OrderRequest[] @relation("RefundedBy")
+  RefundedByWalkIn            WalkInTransaction[] @relation("RefundedBy")
+
+  ProcessedWalkinOrders WalkInTransaction[] @relation("ProcessedBy")
 
   Product  Product[]
   AuditLog AuditLog[]
@@ -83,6 +91,7 @@ model Product {
   archivedById String?
   archivedByUser User? @relation("ArchivedProducts", fields: [archivedById], references: [id])
   archiveAt    DateTime?
+  archiveReason String?
 
   // Relationships
   batches      ProductBatch[]
@@ -105,6 +114,7 @@ model ProductBatch {
   product   Product   @relation(fields: [productId], references: [id])
 
   archiveAt DateTime?
+  archiveReason String?
   archivedById String?
   archivedByUser User? @relation("ArchivedBatches", fields: [archivedById], references: [id])
 
@@ -133,14 +143,19 @@ model OrderRequest {
   notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  refundedAt   DateTime?
+
+  refundedAt    DateTime?
+  refundedBy    User?   @relation("RefundedBy", fields: [refundedById], references: [id])
+  refundedById  String?
+  refundReason  String?
 
   type OrderType @default(REGULAR)
 
   // Archive tracking
-  archivedById String?
-  archivedByUser User? @relation("ArchivedOrderRequests", fields: [archivedById], references: [id])
-  isArchived Boolean @default(false)
+  archivedById    String?
+  archivedByUser  User? @relation("ArchivedOrderRequests", fields: [archivedById], references: [id])
+  isArchived      Boolean @default(false)
+  archiveReason   String?
 
   user   User   @relation("RequestedBy", fields: [userId], references: [id])
   userId String
@@ -184,7 +199,15 @@ model WalkInTransaction {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   status        Status
+
+  processedBy   User?   @relation("ProcessedBy", fields: [processedById], references: [id])
+  processedById String?
+
   refundedAt    DateTime?
+  refundedBy    User?   @relation("RefundedBy", fields: [refundedById], references: [id])
+  refundedById  String?
+  refundReason  String?
+
   items         WalkInItem[]
   totalAmount   Decimal        @default(0.00)
   userId        String // pharmacist who encoded the walk-in
@@ -218,6 +241,7 @@ enum NotificationType {
   PAYMENT_PROCESSED
   EMERGENCY_ORDER
   REMARKS
+  WALK_IN
 }
 
 model Notification {

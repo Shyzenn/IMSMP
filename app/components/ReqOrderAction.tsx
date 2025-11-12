@@ -13,7 +13,7 @@ import toast from "react-hot-toast";
 import ConfirmationModal from "./ConfirmationModal";
 import { OrderView } from "./transaction/table/TransactionAction";
 import { RiRefund2Line } from "react-icons/ri";
-import { FcCancel } from "react-icons/fc";
+import { TbCancel } from "react-icons/tb";
 import {
   Tooltip,
   TooltipContent,
@@ -48,7 +48,7 @@ const ReqOrderAction = ({
   const [isLoading, startTransition] = useTransition();
 
   // Archive Request Order
-  const handleArchive = async () => {
+  const handleArchive = async (reason?: string) => {
     if (!orderData) {
       toast.error("No order data found ❌");
       return;
@@ -68,12 +68,16 @@ const ReqOrderAction = ({
 
         const res = await fetch(`/api/request_order/${numericId}/archived`, {
           method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ reason: reason || "No reason provided" }),
         });
 
         const result = await res.json();
 
         if (result.success) {
-          toast.success(result.message + " ✅");
+          toast.success(result.message + " ✅", { duration: 10000 });
           queryClient.invalidateQueries({ queryKey: ["request_order"] });
           setShowArchiveModal(false);
         } else {
@@ -104,7 +108,7 @@ const ReqOrderAction = ({
       return res.json();
     },
     onSuccess: (result) => {
-      toast.success(result.message + " ✅");
+      toast.success(result.message + " ✅", { duration: 10000 });
       queryClient.invalidateQueries({ queryKey: ["request_order"] });
       queryClient.invalidateQueries({ queryKey: ["request_order/sales"] });
       close();
@@ -128,7 +132,7 @@ const ReqOrderAction = ({
       return res.json();
     },
     onSuccess: (result) => {
-      toast.success(result.message + " ✅");
+      toast.success(result.message + " ✅", { duration: 10000 });
       queryClient.invalidateQueries({ queryKey: ["request_order"] });
       setShowPreparedModal(false);
       setShowDispensedModal(false);
@@ -199,14 +203,14 @@ const ReqOrderAction = ({
         {userRole === "Pharmacist_Staff" && (
           <>
             {status === "refunded" ? (
-              <div className="border flex items-center justify-center gap-2 rounded-md px-2 py-2 bg-gray-50 w-[11rem]">
-                <RiRefund2Line className="text-orange-500 text-lg" />
+              <div className="border flex items-center justify-center gap-2 rounded-md px-2 py-2 bg-gray-50 w-[11rem] text-gray-500">
                 Refunded
+                <RiRefund2Line className="text-orange-300 text-lg " />
               </div>
             ) : status === "canceled" ? (
-              <div className="border flex items-center justify-center gap-2 rounded-md px-2 py-2 bg-gray-50 w-[11rem]">
+              <div className="border flex items-center justify-center gap-2 rounded-md px-2 py-2 bg-gray-50 w-[11rem] text-gray-500">
                 Canceled
-                <FcCancel className="text-red-500 text-lg" />
+                <TbCancel className="text-red-300 text-lg" />
               </div>
             ) : remarks === "Preparing" ? (
               <button
@@ -237,9 +241,9 @@ const ReqOrderAction = ({
                 <GoPackageDependents className="text-orange-500 text-lg" />
               </button>
             ) : (
-              <div className="border flex items-center justify-center gap-2 rounded-md px-2 py-2 bg-gray-50 w-[11rem]">
+              <div className="border flex items-center justify-center gap-2 rounded-md px-2 py-2 bg-gray-50 w-[11rem] text-gray-500">
                 Dispensed
-                <IoMdCheckmarkCircleOutline className="text-green-500 text-lg" />
+                <IoMdCheckmarkCircleOutline className="text-green-300 text-lg" />
               </div>
             )}
 
@@ -328,12 +332,13 @@ const ReqOrderAction = ({
                 />
                 {showArchiveModal && (
                   <ConfirmationModal
+                    hasReason={true}
                     hasConfirmButton={true}
                     defaultBtnColor={true}
-                    title="Archive Order Request"
+                    title={`Archive Order Request (${orderData.id})`}
                     description="Are you sure you want to
                 archive this order?"
-                    onClick={() => handleArchive()}
+                    onClick={handleArchive}
                     isPending={isLoading}
                     closeModal={() => setShowArchiveModal(false)}
                   />

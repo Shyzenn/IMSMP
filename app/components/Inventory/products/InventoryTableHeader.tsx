@@ -12,7 +12,7 @@ const InventoryTableHeader = ({ hasAction }: { hasAction: boolean }) => {
         { key: "product_name", label: "Product", sortable: true },
         { key: "totalQuantity", label: "Quantity(Total)", sortable: true },
         { key: "price", label: "Price", sortable: true },
-        { key: "createdAt", label: "Created At", sortable: true },
+        { key: "createdAt", label: "Date and Time", sortable: true },
         { key: "expiringSoon", label: "Expiring Soon", sortable: true },
         { key: "totalBatches", label: "Total Batches", sortable: true },
       ]}

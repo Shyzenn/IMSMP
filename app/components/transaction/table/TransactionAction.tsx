@@ -16,13 +16,17 @@ import ActionButton from "../../ActionButton";
 export type OrderView = {
   type: "REGULAR" | "EMERGENCY" | "Walk In" | "Pay Later";
   id: number | string;
-  requestedBy: string;
-  receivedBy: string;
+  requestedBy?: string;
+  receivedBy?: string;
   processedBy: string;
+  refundedAt?: Date;
+  refundedBy?: string;
+  refundedById?: string;
+  refundedReason?: string | null;
   customer: string;
-  patient_name: string;
-  roomNumber: string;
-  notes: string;
+  patient_name?: string;
+  roomNumber?: string;
+  notes?: string;
   quantity: number;
   price: number;
   total: number;
@@ -102,6 +106,10 @@ const TransactionAction = ({
         status: transaction.status as OrderView["status"],
         createdAt: new Date(transaction.createdAt),
         source: transaction.source,
+        refundedAt: transaction.refundedAt,
+        refundedById: transaction.refundedById,
+        refundedBy: transaction.refundedBy,
+        refundedReason: transaction.refundedReason,
         itemDetails: transaction.itemDetails.map((i) => ({
           productName: i.productName ?? "Unknown",
           quantity: i.quantity,
@@ -113,7 +121,7 @@ const TransactionAction = ({
     }
   };
 
-  const handleRefund = async () => {
+  const handleRefund = async (reason?: string) => {
     startTransition(async () => {
       try {
         let endpoint = "";
@@ -125,12 +133,17 @@ const TransactionAction = ({
           endpoint = `/api/request_order/${transaction.id}/status`;
         }
 
+        const sanitizedReason = reason?.trim().replace(/\s+/g, " ") || "";
+
         const response = await fetch(endpoint, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ status: "refunded" }),
+          body: JSON.stringify({
+            status: "refunded",
+            reason: sanitizedReason || "No reason provided",
+          }),
         });
 
         const data = await response.json();
@@ -200,6 +213,8 @@ const TransactionAction = ({
 
       {isOpen && (
         <ConfirmationModal
+          isRefund
+          hasReason={true}
           hasConfirmButton={true}
           defaultBtnColor={false}
           title={getRefundTitle()}

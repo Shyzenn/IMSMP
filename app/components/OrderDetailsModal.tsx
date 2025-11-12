@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { handlePrint } from "@/lib/printUtlis";
 import { OrderView } from "./transaction/table/TransactionAction";
+import { Textarea } from "@/components/ui/textarea";
 
 interface OrderDetailsModalProps {
   isOrderModalOpen?: boolean;
@@ -68,9 +69,12 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
         >
           <div className="space-y-2 text-sm w-full">
             <div className="flex justify-between items-center border-b-2 border-gray-100 pb-2 w-full">
-              <div className="flex items-center justify-between w-full">
+              <div className="flex items-baseline justify-between w-full">
                 <div className="flex flex-col gap-2">
-                  <p className="text-lg font-semibold">{currentOrder.id}</p>
+                  <p className="text-lg font-semibold">
+                    {currentOrder.id}{" "}
+                    {currentOrder.status === "refunded" ? "(Refunded)" : ""}
+                  </p>
                   <p className="font-semibold">Order details</p>
                 </div>
 
@@ -98,7 +102,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       Patient Name:{" "}
                       <span className="font-normal">
                         {" "}
-                        {toTitleCase(currentOrder.patient_name)}
+                        {toTitleCase(currentOrder.patient_name ?? "Unknown")}
                       </span>
                     </p>
 
@@ -135,13 +139,45 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                           : "Regular"}
                       </span>
                     </p>
+                    {currentOrder.status === "refunded" && (
+                      <>
+                        <p className="mt-2 font-semibold">
+                          Refunded At:{" "}
+                          <span className="font-normal">
+                            {new Date(
+                              currentOrder?.refundedAt ?? "Unknown"
+                            ).toLocaleString("en-PH", {
+                              timeZone: "Asia/Manila",
+                            })}
+                          </span>
+                        </p>
+                        <p className="mt-2 font-semibold">
+                          Refunded By:{"  "}
+                          <span className="font-normal">
+                            {" "}
+                            {toTitleCase(currentOrder.refundedBy ?? "Unknown")}
+                          </span>
+                        </p>
+                        <p className="mt-2 font-semibold flex flex-col">
+                          Reason:
+                          <Textarea
+                            className="font-normal"
+                            readOnly
+                            value={
+                              currentOrder.refundedReason ??
+                              "No reason provided"
+                            }
+                          />
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
               ) : (
                 <div className="flex flex-col gap-2">
                   <div className="flex gap-2">
                     <p className="font-semibold">Customer Name:</p>
-                    <p>{currentOrder.customer}</p>
+                    <p>{toTitleCase(currentOrder.customer)}</p>
                   </div>
                   <div>
                     <p className="mt-2 font-semibold">
@@ -160,6 +196,37 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       )}
                     </span>
                   </p>
+                  {currentOrder.status === "refunded" && (
+                    <>
+                      <p className="mt-2 font-semibold">
+                        Refunded At:{" "}
+                        <span className="font-normal">
+                          {new Date(
+                            currentOrder?.refundedAt ?? "Unknown"
+                          ).toLocaleString("en-PH", {
+                            timeZone: "Asia/Manila",
+                          })}
+                        </span>
+                      </p>
+                      <p className="mt-2 font-semibold">
+                        Refunded By:{"  "}
+                        <span className="font-normal">
+                          {" "}
+                          {toTitleCase(currentOrder.refundedBy ?? "Unknown")}
+                        </span>
+                      </p>
+                      <p className="mt-2 font-semibold flex flex-col">
+                        Reason:
+                        <Textarea
+                          className="font-normal"
+                          readOnly
+                          value={
+                            currentOrder.refundedReason ?? "No reason provided"
+                          }
+                        />
+                      </p>
+                    </>
+                  )}
                 </div>
               )}
             </div>

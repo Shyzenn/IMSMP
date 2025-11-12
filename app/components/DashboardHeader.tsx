@@ -115,58 +115,63 @@ const DashboardHeader = ({ session }: { session: Session | null }) => {
       </div>
 
       {/* Alerts + Add Button */}
-      <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
-        {isLoading ? (
-          <div className="bg-gray-100 px-8 py-[22px] rounded-md md:w-[25rem] animate-pulse w-full"></div>
-        ) : error ? (
-          <div className="bg-red-100 px-8 py-3 rounded-md w-[25rem]">
-            <p className="text-sm text-red-500">Failed to load alerts</p>
-          </div>
-        ) : alerts.length > 0 ? (
-          <div className="bg-orange-100 flex gap-2 px-8 py-3 rounded-md md:w-[25rem] w-full">
-            <CiWarning className="text-orange-500 text-xl" />
-            {role !== "Cashier" ? (
-              <Link
-                key={animKey}
-                href={alerts[currentIndex].link}
-                className="text-sm text-amber-700 hover:text-amber-800 transition-colors slow-blink"
-              >
-                {alerts[currentIndex].message}
-              </Link>
-            ) : (
-              <>
-                {/** Not Link **/}
-                <p key={animKey} className="text-sm text-amber-700 slow-blink">
+      {role !== "Cashier" ? (
+        <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
+          {isLoading ? (
+            <div className="bg-gray-100 px-8 py-[22px] rounded-md md:w-[25rem] animate-pulse w-full"></div>
+          ) : error ? (
+            <div className="bg-red-100 px-8 py-3 rounded-md w-[25rem]">
+              <p className="text-sm text-red-500">Failed to load alerts</p>
+            </div>
+          ) : alerts.length > 0 ? (
+            <div className="bg-orange-100 flex gap-2 px-8 py-3 rounded-md md:w-[25rem] w-full">
+              <CiWarning className="text-orange-500 text-xl" />
+              {role !== "Cashier" ? (
+                <Link
+                  key={animKey}
+                  href={alerts[currentIndex].link}
+                  className="text-sm text-amber-700 hover:text-amber-800 transition-colors slow-blink"
+                >
                   {alerts[currentIndex].message}
-                </p>
-              </>
-            )}
-          </div>
-        ) : (
-          <div className="bg-green-100 flex gap-2 px-8 py-3 rounded-md w-[28rem] items-center">
-            <FaCheckDouble className="text-sm text-green-500" />
-            <p className="text-sm">
-              Product stock levels are stable — nothing to worry about.
-            </p>
-          </div>
-        )}
+                </Link>
+              ) : (
+                <>
+                  {/** Not Link **/}
+                  <p
+                    key={animKey}
+                    className="text-sm text-amber-700 slow-blink"
+                  >
+                    {alerts[currentIndex].message}
+                  </p>
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="bg-green-100 flex gap-2 px-8 py-3 rounded-md w-[28rem] items-center">
+              <FaCheckDouble className="text-sm text-green-500" />
+              <p className="text-sm">
+                Product stock levels are stable — nothing to worry about.
+              </p>
+            </div>
+          )}
 
-        {(role === "Pharmacist_Staff" || role === "Manager") && (
-          <div>
-            <AddProductForm />
-          </div>
-        )}
-        {role === "Pharmacist_Staff" && (
-          <div className="md:hidden">
-            <WalkInOrder />
-          </div>
-        )}
-        {role === "Nurse" && (
-          <div>
-            <RequestOrderBtn />
-          </div>
-        )}
-      </div>
+          {(role === "Pharmacist_Staff" || role === "Manager") && (
+            <div>
+              <AddProductForm />
+            </div>
+          )}
+          {role === "Pharmacist_Staff" && (
+            <div className="md:hidden">
+              <WalkInOrder />
+            </div>
+          )}
+          {role === "Nurse" && (
+            <div>
+              <RequestOrderBtn />
+            </div>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 };

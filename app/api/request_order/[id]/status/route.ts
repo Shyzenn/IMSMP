@@ -20,7 +20,7 @@ export async function PUT(
     return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
   }
 
-  const { status } = await req.json();
+  const { status, reason } = await req.json();
   if (!status || !["for_payment", "paid", "canceled", "refunded"].includes(status)) {
     return NextResponse.json(
       { message: "Invalid or missing status" },
@@ -43,6 +43,8 @@ export async function PUT(
 
     if (status === "refunded") {
       dataToUpdate.refundedAt = new Date();
+      dataToUpdate.refundedBy = { connect: { id: userId } }
+      dataToUpdate.refundReason = reason
     }
 
     const updatedOrder = await db.orderRequest.update({

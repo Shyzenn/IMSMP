@@ -84,7 +84,10 @@ const EditProfileModal = ({ close }: { close: () => void }) => {
   };
 
   const notify = useCallback(() => {
-    toast.success("Profile edited successfully! 🎉", { icon: "✅" });
+    toast.success("Profile edited successfully! 🎉", {
+      icon: "✅",
+      duration: 10000,
+    });
   }, []);
 
   const onSubmit = async (formData: TeditUserProfileSchema) => {

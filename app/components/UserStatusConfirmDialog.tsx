@@ -1,75 +1,93 @@
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { ReactNode } from "react";
-import { IconType } from "react-icons/lib";
+import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
 
-type ConfirmDialogProps = {
-  iconColor: string;
-  icon: IconType;
-  buttonLabel: string;
+interface UserStatusConfirmDialogProps {
   title: string;
   description: string;
-  buttonWidth?: string;
-  confirmButton: () => void;
-  iconOnly?: boolean;
-  modalButtonLabel: ReactNode;
+  confirmButton: (reason?: string) => void;
+  closeModal?: () => void;
+  hasConfirmButton?: boolean;
   bgRedButton?: boolean;
-};
+  defaultBtnColor?: boolean;
+  modalButtonLabel?: React.ReactNode;
+  hasReason?: boolean;
+  readReason?: boolean;
+  reasonValue?: string;
+  isPending: boolean;
+}
 
 const UserStatusConfirmDialog = ({
-  buttonWidth,
-  iconColor,
-  icon: Icon,
-  buttonLabel,
   title,
   description,
   confirmButton,
-  iconOnly,
-  modalButtonLabel,
+  closeModal,
+  hasConfirmButton = true,
   bgRedButton,
-}: ConfirmDialogProps) => {
+  defaultBtnColor,
+  modalButtonLabel = "Confirm",
+  hasReason,
+  readReason,
+  reasonValue,
+  isPending,
+}: UserStatusConfirmDialogProps) => {
+  const [reason, setReason] = useState("");
+
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        {iconOnly ? (
-          <Icon className={`${iconColor} cursor-pointer`} />
-        ) : (
-          <Button variant="outline" className={buttonWidth}>
-            {buttonLabel}
-            <Icon className={iconColor} />
-          </Button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+      <div className="bg-white p-6 rounded-lg shadow-md w-[90%] max-w-sm flex flex-col">
+        <h2 className="text-lg font-semibold mb-2 text-gray-900">{title}</h2>
+        <p className="text-sm text-gray-600 mb-4 text-start">{description}</p>
+
+        {/* Reason section */}
+        {hasReason && (
+          <div className="w-full">
+            <label className="text-sm text-gray-700 font-medium mb-1 block">
+              Reason for banning:
+            </label>
+            {readReason ? (
+              <p className="text-sm text-gray-600 bg-gray-100 rounded-md p-2">
+                {reasonValue ? reasonValue : "No reason provided"}
+              </p>
+            ) : (
+              <Textarea
+                className="w-full border rounded-md p-2 text-sm resize-none outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="Enter your reason here..."
+                rows={3}
+                readOnly={readReason}
+                onChange={(e) => setReason(e.target.value)}
+              />
+            )}
+          </div>
         )}
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={confirmButton}
-            className={`${
-              bgRedButton
-                ? "bg-red-500 hover:bg-red-400"
-                : "bg-buttonBgColor hover:bg-buttonHover"
-            }`}
+
+        {/* Buttons */}
+        <div className="flex gap-2 justify-end w-full mt-4">
+          <Button
+            variant="outline"
+            onClick={closeModal}
+            className="text-gray-900"
           >
-            {modalButtonLabel}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+            {hasConfirmButton ? "Cancel" : "Close"}
+          </Button>
+          {hasConfirmButton && (
+            <Button
+              onClick={() => confirmButton(reason)}
+              disabled={isPending}
+              className={`text-white ${
+                bgRedButton
+                  ? "bg-red-600 hover:bg-red-500"
+                  : defaultBtnColor
+                  ? "bg-buttonBgColor hover:bg-buttonHover"
+                  : "bg-buttonBgColor hover:bg-buttonHover"
+              }`}
+            >
+              {modalButtonLabel}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 

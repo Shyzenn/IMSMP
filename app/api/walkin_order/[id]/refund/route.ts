@@ -19,7 +19,7 @@ export async function PUT(
     return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
   }
 
-  const { status } = await req.json();
+  const { status, reason } = await req.json();
   if (status !== "refunded") {
     return NextResponse.json(
       { message: "Invalid status for walk-in transaction" },
@@ -57,6 +57,8 @@ export async function PUT(
       data: {
         status: "refunded",
         refundedAt: new Date(),
+        refundedById: userId,
+        refundReason: reason
       },
       include: {
         items: { include: { product: true } },

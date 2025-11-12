@@ -2,6 +2,8 @@ import { WalkInOrderSchema } from "@/lib/types";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { pusherServer } from "@/lib/pusher/server";
+import { NotificationType } from "@prisma/client";
 
 export async function POST(req: Request) {
   try {
@@ -83,6 +85,8 @@ export async function POST(req: Request) {
           })
         );
 
+            
+
         return await tx.walkInTransaction.create({
           data: {
             customer_name,
@@ -95,6 +99,49 @@ export async function POST(req: Request) {
       },
       { timeout: 15000 }
     );
+
+    const cashiers = await db.user.findMany({
+              where: { role: "Cashier" }
+            });
+        
+            for (const cashier of cashiers) {
+              const notification = await db.notification.create({
+                data: {
+                  title: "New walk in order",
+                  type: NotificationType.WALK_IN,
+                  walkInOrderId: newOrder.id,
+                  senderId: session.user.id,
+                  recipientId: cashier.id,
+                  submittedBy: session.user.username,
+                  role: session.user.role,
+                },
+                include: { sender: true, recipient: true },
+              });
+        
+             await pusherServer.trigger(
+              `private-user-${cashier.id}`,
+              "new-notification",
+              {
+                id: notification.id,
+                title: notification.title,
+                createdAt: notification.createdAt,
+                type: notification.type,
+                read: false,
+                submittedBy: notification.submittedBy,
+                role: notification.role,
+                walkInOrderId: newOrder.id,
+                order: {
+                  id: newOrder.id,
+                  products: products.map((item) => ({
+                    productName: item.productId,
+                    quantity: item.quantity,
+                    price: item.price,
+                  })),
+                },
+              }
+            );
+
+            }
 
     // Create audit log
     await db.auditLog.create({
