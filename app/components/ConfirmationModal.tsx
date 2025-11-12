@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import React, { useState } from "react";
+import React, { ReactNode, useState } from "react";
 
 interface ConfirmationModalProps {
   title: string;
@@ -13,6 +13,7 @@ interface ConfirmationModalProps {
   hasReason?: boolean;
   reasonValue?: string | null;
   isRefund?: boolean;
+  children?: ReactNode;
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -25,12 +26,17 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   hasConfirmButton,
   hasReason,
   isRefund,
+  children,
 }) => {
   const [reason, setReason] = useState("");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 ">
-      <div className="bg-white p-6 rounded-lg shadow-md w-[90%] max-w-sm flex items-start flex-col">
+      <div
+        className={`bg-white p-6 rounded-lg shadow-md ${
+          isRefund ? "max-w-xl" : "max-w-sm"
+        }  flex items-start flex-col`}
+      >
         <h2 className="text-lg font-semibold mb-2 text-gray-900">{title}</h2>
         <p className="text-sm text-gray-600 mb-4 text-start">{description}</p>
         {hasReason && (
@@ -43,6 +49,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             />
           </>
         )}
+        <div className="w-full">{children}</div>
         <div className="flex gap-2 justify-end w-full mt-4">
           <Button
             variant="outline"

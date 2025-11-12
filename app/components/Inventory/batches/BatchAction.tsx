@@ -25,6 +25,13 @@ const BatchAction = ({ batch }: { batch: BatchProps }) => {
     startTransition(async () => {
       const sanitizedReason = reason?.trim().replace(/\s+/g, " ") || "";
 
+      if (!sanitizedReason || sanitizedReason.length < 5) {
+        toast.error("Reason must be at least 5 characters", {
+          duration: 5000,
+        });
+        return;
+      }
+
       const result = await archiveBatch(batch.id, sanitizedReason);
 
       try {

@@ -12,6 +12,8 @@ import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import ConfirmationModal from "../../ConfirmationModal";
 import ActionButton from "../../ActionButton";
+import { useRefundStore } from "@/lib/store/useRefundStore";
+import RefundDetails from "../../RefundDetails";
 
 export type OrderView = {
   type: "REGULAR" | "EMERGENCY" | "Walk In" | "Pay Later";
@@ -47,6 +49,7 @@ const TransactionAction = ({
   const { open, isOpen, close } = useModal();
   const [isPending, startTransition] = useTransition();
   const { data: session } = useSession();
+  const { setTransaction, refundItems } = useRefundStore();
 
   const handleViewClick = async (transaction: CombinedTransaction) => {
     if (!transaction?.id) return;
@@ -124,16 +127,38 @@ const TransactionAction = ({
   const handleRefund = async (reason?: string) => {
     startTransition(async () => {
       try {
-        let endpoint = "";
+        // Validate reason before processing
+        const sanitizedReason = reason?.trim().replace(/\s+/g, " ") || "";
 
-        // Determine the correct API endpoint based on transaction source
-        if (transaction.source === "Walk In") {
-          endpoint = `/api/walkin_order/${transaction.id}/refund`;
-        } else {
-          endpoint = `/api/request_order/${transaction.id}/status`;
+        if (!sanitizedReason || sanitizedReason.length < 5) {
+          toast.error("Reason must be at least 5 characters", {
+            duration: 5000,
+          });
+          return;
         }
 
-        const sanitizedReason = reason?.trim().replace(/\s+/g, " ") || "";
+        // Filter items to refund (quantity > 0)
+        const itemsToRefund = refundItems.filter((item) => item.quantity > 0);
+
+        if (itemsToRefund.length === 0) {
+          toast.error("Please select at least one item to refund", {
+            duration: 5000,
+          });
+          return;
+        }
+
+        // Determine the correct API endpoint based on transaction source
+        const endpoint =
+          transaction.source === "Walk In"
+            ? `/api/walkin_order/${transaction.id}/refund`
+            : `/api/request_order/${transaction.id}/status`;
+
+        console.log("Sending refund request:", {
+          // Debug log
+          itemsToRefund,
+          reason: sanitizedReason,
+          endpoint,
+        });
 
         const response = await fetch(endpoint, {
           method: "PUT",
@@ -142,7 +167,8 @@ const TransactionAction = ({
           },
           body: JSON.stringify({
             status: "refunded",
-            reason: sanitizedReason || "No reason provided",
+            reason: sanitizedReason,
+            items: itemsToRefund,
           }),
         });
 
@@ -154,9 +180,11 @@ const TransactionAction = ({
 
         toast.success(
           transaction.source === "Walk In"
-            ? "Walk-in transaction refunded successfully"
-            : "Order refunded successfully"
+            ? "Walk-in transaction refunded successfully ✅"
+            : "Order refunded successfully ✅",
+          { duration: 5000 }
         );
+
         close();
 
         // Refresh the page to show updated data
@@ -166,7 +194,8 @@ const TransactionAction = ({
         toast.error(
           error instanceof Error
             ? error.message
-            : "Failed to refund transaction"
+            : "Failed to refund transaction ❌",
+          { duration: 5000 }
         );
       }
     });
@@ -182,7 +211,7 @@ const TransactionAction = ({
   const getRefundDescription = () => {
     return `Are you sure you want to refund this ${
       transaction.source === "Walk In" ? "walk-in transaction" : "order"
-    } ? This action cannot be undone and will restore the inventory.`;
+    }? This action cannot be undone and will restore the inventory.`;
   };
 
   const refundDisabled =
@@ -193,7 +222,10 @@ const TransactionAction = ({
       <div className="flex gap-2">
         <ActionButton
           icon={RiRefund2Line}
-          onClick={open}
+          onClick={() => {
+            setTransaction(transaction);
+            open();
+          }}
           disabled={refundDisabled}
           color={
             refundDisabled
@@ -213,7 +245,7 @@ const TransactionAction = ({
 
       {isOpen && (
         <ConfirmationModal
-          isRefund
+          isRefund={true}
           hasReason={true}
           hasConfirmButton={true}
           defaultBtnColor={false}
@@ -222,7 +254,9 @@ const TransactionAction = ({
           onClick={handleRefund}
           isPending={isPending}
           closeModal={close}
-        />
+        >
+          <RefundDetails />
+        </ConfirmationModal>
       )}
     </>
   );

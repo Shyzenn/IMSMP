@@ -187,6 +187,7 @@ enum OrderType {
 model OrderItem {
   id        Int          @id @default(autoincrement())
   quantity  Int          @default(1)
+  refundedQuantity Int   @default(0)
   order     OrderRequest @relation(fields: [orderId], references: [id])
   orderId   Int
   product   Product      @relation(fields: [productId], references: [id])
@@ -218,6 +219,7 @@ model WalkInTransaction {
 model WalkInItem {
   id            Int               @id @default(autoincrement())
   quantity      Int
+  refundedQuantity Int            @default(0)
   price         Decimal
   total         Decimal // quantity * price
   product       Product           @relation(fields: [productId], references: [id])

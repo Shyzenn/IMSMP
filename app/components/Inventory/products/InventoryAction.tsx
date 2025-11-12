@@ -29,6 +29,13 @@ const Action = ({ product }: { product: ProductProps }) => {
   const handleArchive = (reason?: string) => {
     startTransition(async () => {
       const sanitizedReason = reason?.trim().replace(/\s+/g, " ") || "";
+      if (!sanitizedReason || sanitizedReason.length < 5) {
+        toast.error("Reason must be at least 5 characters", {
+          duration: 5000,
+        });
+        return;
+      }
+
       const result = await archiveProduct(product.id, sanitizedReason || "");
 
       try {

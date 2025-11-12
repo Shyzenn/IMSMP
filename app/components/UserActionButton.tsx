@@ -34,6 +34,14 @@ const UserActionButton = ({ user }: { user: UserFormValues }) => {
       try {
         setIsPending(true);
         const sanitizedReason = bannedReason?.trim().replace(/\s+/g, " ") || "";
+
+        if (!sanitizedReason || sanitizedReason.length < 5) {
+          toast.error("Reason must be at least 5 characters", {
+            duration: 5000,
+          });
+          return;
+        }
+
         const result = await updateUserStatus({
           userId: user.id!,
           status,

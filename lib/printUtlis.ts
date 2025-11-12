@@ -241,8 +241,8 @@ export const handlePrint = async (
   try {
     const receiptData: ReceiptData = {
       orderInfo: {
-        Patient: selectedOrder.patient_name,
-        Room: selectedOrder.roomNumber,
+        Patient: selectedOrder.patient_name ?? "Unknown",
+        Room: selectedOrder.roomNumber ?? "Unknown",
         Date: new Date(selectedOrder.createdAt).toLocaleString("en-PH"),
         Type: selectedOrder.type === "REGULAR" ? "Regular" : selectedOrder.type,
       },

@@ -4,6 +4,12 @@ import { NotificationType, Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { pusherServer } from "@/lib/pusher/server";
 
+type RefundItem = {
+  productName: string;
+  quantity: number;
+  price?: number;
+};
+
 export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -20,7 +26,8 @@ export async function PUT(
     return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
   }
 
-  const { status, reason } = await req.json();
+  const { status, reason, items } = await req.json();
+  
   if (!status || !["for_payment", "paid", "canceled", "refunded"].includes(status)) {
     return NextResponse.json(
       { message: "Invalid or missing status" },
@@ -43,8 +50,8 @@ export async function PUT(
 
     if (status === "refunded") {
       dataToUpdate.refundedAt = new Date();
-      dataToUpdate.refundedBy = { connect: { id: userId } }
-      dataToUpdate.refundReason = reason
+      dataToUpdate.refundedBy = { connect: { id: userId } };
+      dataToUpdate.refundReason = reason || "No reason provided";
     }
 
     const updatedOrder = await db.orderRequest.update({
@@ -54,6 +61,7 @@ export async function PUT(
         user: true,
         receivedBy: true,
         processedBy: true,
+        refundedBy: true,
         items: { include: { product: true } },
       },
     });
@@ -92,48 +100,130 @@ export async function PUT(
       }
     }
 
-    // Handle refund - restore inventory
+    // Handle refund - restore inventory based on refund items
     if (status === "refunded") {
-      for (const item of updatedOrder.items) {
-        let remainingQty = item.quantity;
+      // Filter items - only process items with quantity > 0
+      const refundItems: RefundItem[] = (items || []).filter(
+        (item: RefundItem) => item.quantity > 0
+      );
+
+      if (refundItems.length === 0) {
+        return NextResponse.json(
+          { message: "No items to refund" },
+          { status: 400 }
+        );
+      }
+
+      console.log("Processing refund for order items:", refundItems);
+
+      let totalRefundAmount = 0;
+
+      for (const refundItem of refundItems) {
+        console.log(
+          `Processing refund: ${refundItem.quantity} units of ${refundItem.productName}`
+        );
+
+        // Find matching order item
+        const matchingItem = updatedOrder.items.find(
+          (item) => item.product.product_name === refundItem.productName
+        );
+
+        if (!matchingItem) {
+          console.warn(`Product ${refundItem.productName} not found in order`);
+          continue;
+        }
+
+        // Validate refund quantity doesn't exceed original quantity
+        if (refundItem.quantity > matchingItem.quantity) {
+          console.warn(
+            `Refund quantity (${refundItem.quantity}) exceeds original quantity (${matchingItem.quantity}) for ${refundItem.productName}`
+          );
+          continue;
+        }
+
+        // Calculate refund amount for this item
+        const itemRefundAmount =
+          refundItem.quantity * Number(matchingItem.product.price);
+        totalRefundAmount += itemRefundAmount;
+
+        console.log(`Item refund amount: ${itemRefundAmount}`);
+
+        // Update the order item with refunded quantity
+        await db.orderItem.update({
+          where: { id: matchingItem.id },
+          data: {
+            refundedQuantity: { increment: refundItem.quantity },
+          },
+        });
+
+        let remainingQty = refundItem.quantity;
 
         // Get batches that were deducted (prioritize recently updated batches)
         const batches = await db.productBatch.findMany({
           where: {
-            productId: item.productId,
+            productId: matchingItem.productId,
             type: "ACTIVE",
           },
           orderBy: { updatedAt: "desc" },
         });
 
-        for (const batch of batches) {
-          if (remainingQty <= 0) break;
+        console.log(
+          `Found ${batches.length} batches for product ${matchingItem.productId}`
+        );
 
-          const incrementQty = remainingQty;
+        // If batches exist, increment their quantity
+        if (batches.length > 0) {
+          const targetBatch = batches[0];
 
           await db.productBatch.update({
-            where: { id: batch.id },
-            data: { quantity: { increment: incrementQty } },
+            where: { id: targetBatch.id },
+            data: { quantity: { increment: remainingQty } },
           });
 
-          remainingQty -= incrementQty;
+          console.log(`Added ${remainingQty} units to batch ${targetBatch.id}`);
+          remainingQty = 0;
         }
 
+        // If no existing batches, create a new batch
         if (remainingQty > 0) {
-          // If no existing batches, create a new batch for returned items
-          await db.productBatch.create({
+          const newBatch = await db.productBatch.create({
             data: {
-              productId: item.productId,
-              batchNumber: `REFUND-${updatedOrder.id}-${item.id}`,
+              productId: matchingItem.productId,
+              batchNumber: `REFUND-ORD-${updatedOrder.id}-${matchingItem.id}`,
               quantity: remainingQty,
               releaseDate: new Date(),
               expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
               type: "ACTIVE",
             },
           });
+
+          console.log(
+            `Created new batch ${newBatch.id} with ${remainingQty} units`
+          );
         }
       }
 
+      console.log(`Total refund amount: ${totalRefundAmount}`);
+
+      // Check if all items are fully refunded
+      const orderWithItems = await db.orderRequest.findUnique({
+        where: { id: numericId },
+        include: { items: true },
+      });
+
+      const allItemsRefunded = orderWithItems?.items.every(
+        (item) => item.refundedQuantity >= item.quantity
+      );
+
+      // Update order status based on refund completeness
+      if (!allItemsRefunded) {
+        await db.orderRequest.update({
+          where: { id: numericId },
+          data: {
+            status: "paid", // Keep as paid if partial refund
+          },
+        });
+      }
     }
 
     if (status === "paid") {
@@ -220,7 +310,11 @@ export async function PUT(
       }
     }
 
-    if (updatedOrder.userId && updatedOrder.userId !== userId && status !== "refunded") {
+    if (
+      updatedOrder.userId &&
+      updatedOrder.userId !== userId &&
+      status !== "refunded"
+    ) {
       let title = "";
       let notifType: NotificationType = NotificationType.ORDER_RECEIVED;
 
@@ -272,19 +366,45 @@ export async function PUT(
       }
     }
 
+    // Get final order status for audit log
+    const finalOrder = await db.orderRequest.findUnique({
+      where: { id: numericId },
+      include: { items: true },
+    });
+
+    const allItemsRefunded = finalOrder?.items.every(
+      (item) => item.refundedQuantity >= item.quantity
+    );
+
+    const auditDescription =
+      status === "refunded"
+        ? `ORD-0${updatedOrder.id} ${
+            allItemsRefunded ? "fully" : "partially"
+          } refunded by ${session.user.username}. Reason: ${
+            reason || "No reason provided"
+          }`
+        : `ORD-0${updatedOrder.id} marked as ${status.toUpperCase()} by ${
+            session.user.username
+          }`;
+
     await db.auditLog.create({
       data: {
         userId,
         action: status === "refunded" ? "Refund" : "Status Update",
         entityType: "OrderRequest",
         entityId: updatedOrder.id,
-        description: `ORD-0${updatedOrder.id} marked as ${status.toUpperCase()} by ${session.user.username}`,
+        description: auditDescription,
       },
     });
 
     return NextResponse.json({
       success: true,
-      message: `Order marked as ${status}`,
+      message:
+        status === "refunded"
+          ? allItemsRefunded
+            ? "Order fully refunded successfully"
+            : "Partial refund successful"
+          : `Order marked as ${status}`,
       data: updatedOrder,
     });
   } catch (error) {

@@ -3,10 +3,9 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    // Fetch all paid orders
     const [paidOrderRequest, paidWalkIn] = await Promise.all([
       db.orderRequest.findMany({
-        where: { status: "paid" },
+        where: { status: { in: ["paid", "refunded"] } }, 
         include: {
           items: {
             include: { product: true },
@@ -14,31 +13,32 @@ export async function GET() {
         },
       }),
       db.walkInTransaction.findMany({
-        where: { status: "paid" },
+        where: { status: { in: ["paid", "refunded"] } }, 
         include: {
           items: {
             include: { product: true },
           },
         },
       })
-    ])
+    ]);
 
-    // Calculate total revenue
     const orderRequesttotalRevenue = paidOrderRequest.reduce((acc, order) => {
       const orderTotal = order.items.reduce((sum, item) => {
-        return sum + (Number(item.product.price) || 0) * item.quantity;
+        const netQuantity = item.quantity - (item.refundedQuantity || 0);
+        return sum + (Number(item.product.price) || 0) * netQuantity;
       }, 0);
       return acc + orderTotal;
     }, 0);
 
-    const walkInttotalRevenue = paidWalkIn.reduce((acc, order) => {
-      const orderTotal = order.items.reduce((sum, item) => {
-        return sum + (Number(item.product.price) || 0) * item.quantity;
+    const walkInttotalRevenue = paidWalkIn.reduce((acc, transaction) => {
+      const transactionTotal = transaction.items.reduce((sum, item) => {
+        const netQuantity = item.quantity - (item.refundedQuantity || 0);
+        return sum + (Number(item.price) || 0) * netQuantity; 
       }, 0);
-      return acc + orderTotal;
+      return acc + transactionTotal;
     }, 0);
 
-    const totalRevenue = orderRequesttotalRevenue + walkInttotalRevenue
+    const totalRevenue = orderRequesttotalRevenue + walkInttotalRevenue;
 
     const productWithStock = await db.product.findMany({
       select: {
@@ -60,15 +60,15 @@ export async function GET() {
       else highStock++;
     }
 
-     const now = new Date();
+    const now = new Date();
     const in31Days = new Date();
     in31Days.setDate(now.getDate() + 31);
 
     const expiring = await db.productBatch.count({
-       where: {
-          type: { not: "ARCHIVED" }, 
-          expiryDate: { gt: now, lte: in31Days },
-          quantity: { gt: 0 },
+      where: {
+        type: { not: "ARCHIVED" },
+        expiryDate: { gt: now, lte: in31Days },
+        quantity: { gt: 0 },
       },
     });
 
