@@ -70,7 +70,7 @@ export async function POST(req: Request) {
     // === ORDER REQUEST SALES ===
     if (type === "all" || type === "orderrequest") {
       const whereReq: Prisma.OrderRequestWhereInput = {
-        status: "paid",
+        status: {in : ["paid" , "refunded"]}
       };
       if (createdAtFilter) whereReq.createdAt = createdAtFilter;
 
@@ -118,7 +118,7 @@ export async function POST(req: Request) {
     // === WALK-IN SALES ===
     if (type === "all" || type === "walkin") {
       const whereWalkin: Prisma.WalkInTransactionWhereInput = {
-        status: "paid",
+        status: {in: ["paid", "refunded"]},
       };
       if (createdAtFilter) whereWalkin.createdAt = createdAtFilter;
 
