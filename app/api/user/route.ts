@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { username, firstName, middleName, lastName, email, role, password, status } = body;
-    const otp = String(randomInt(10000000, 99999999)); // 8-digit
+    const otp = String(randomInt(10000000, 99999999));
     const hashedOtp = await bcrypt.hash(otp, 10);
 
     // Validate input using Zod schema
@@ -26,34 +26,40 @@ export async function POST(req: Request) {
       status
     });
 
-    // Create an object to store validation errors
     const zodErrors: Record<string, string> = {};
     if (!result.success) {
       result.error.issues.forEach((issue) => {
         zodErrors[issue.path[0]] = issue.message;
       });
     }
-    
-    const normalizedUsername = username.toLowerCase();
 
-    const existingUser = await db.user.findFirst({
-      where: { username: normalizedUsername },
+    // Check for existing username
+    const allUsers = await db.user.findMany({
+      select: { username: true },
     });
 
-    if (existingUser) {
-      if (existingUser.username === username) {
-        zodErrors.username = "Username is already taken";
-      }
+    const usernameExists = allUsers.some(
+      (user) => user.username.toLowerCase() === username.toLowerCase()
+    );
+
+    if (usernameExists) {
+      zodErrors.username = "Username is already taken";
+    }
+
+    // Check for existing email
+    const existingEmail = await db.user.findUnique({
+      where: { email },
+    });
+
+    if (existingEmail) {
+      zodErrors.email = "Email is already registered";
     }
 
     if (Object.keys(zodErrors).length > 0) {
       return NextResponse.json({ errors: zodErrors }, { status: 400 });
     }
 
-    // Hash the password using bcrypt
-    // const hashedPassword = await bcrypt.hash(password, 10);
-
-    const formattedUsername = toTitleCase(username)
+    const formattedUsername = toTitleCase(username);
 
     try {
       await db.user.create({
@@ -68,19 +74,29 @@ export async function POST(req: Request) {
           mustChangePassword: true,
           status: (status as UserStatus) ?? UserStatus.ACTIVE,
           otp: null,
-          otpExpiresAt: new Date(Date.now() + 1000 * 60 * 15), //15m expiration
+          otpExpiresAt: new Date(Date.now() + 1000 * 60 * 15),
         },
       });
 
-    await sendOTPEmail(email, otp);
+      await sendOTPEmail(email, otp);
 
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === "P2002") {
-          return NextResponse.json(
-            { errors: { username: "Username is already taken" } },
-            { status: 400 }
-          );
+          const target = (error.meta?.target as string[]) || [];
+          
+          if (target.includes('username')) {
+            return NextResponse.json(
+              { errors: { username: "Username is already taken" } },
+              { status: 400 }
+            );
+          }
+          if (target.includes('email')) {
+            return NextResponse.json(
+              { errors: { email: "Email is already registered" } },
+              { status: 400 }
+            );
+          }
         }
       }
       throw error;

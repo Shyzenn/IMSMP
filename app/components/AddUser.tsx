@@ -39,10 +39,13 @@ const AddUser = () => {
       } else if (responseData.success) {
         setIsOpen(false);
         reset();
-        toast.success("User added successfully! 🎉", {
-          icon: "✅",
-          duration: 10000,
-        });
+        toast.success(
+          "User created successfully. An OTP has been sent to their email for verification. 🎉",
+          {
+            icon: "✅",
+            duration: 10000,
+          }
+        );
 
         queryClient.invalidateQueries({ queryKey: ["users"] });
       }
@@ -85,6 +88,7 @@ const AddUser = () => {
             isSubmitting={mutation.isPending}
             control={control}
             setIsOpen={setIsOpen}
+            reset={reset}
           />
         </div>
       )}

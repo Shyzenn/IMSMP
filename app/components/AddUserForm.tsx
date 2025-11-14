@@ -11,6 +11,7 @@ import {
   SubmitHandler,
   UseFormHandleSubmit,
   UseFormRegister,
+  UseFormReset,
 } from "react-hook-form";
 import { TSignUpSchema } from "@/lib/types";
 import FormField from "./FormField";
@@ -24,6 +25,7 @@ interface AddUserFormProps {
   errors: FieldErrors<TSignUpSchema>;
   control: Control<TSignUpSchema>;
   isSubmitting: boolean;
+  reset: UseFormReset<TSignUpSchema>;
 }
 
 const AddUserForm: React.FC<AddUserFormProps> = ({
@@ -34,12 +36,18 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
   errors,
   control,
   isSubmitting,
+  reset,
 }) => {
+  const handleClose = () => {
+    reset();
+    setIsOpen(false);
+  };
+
   return (
     <>
       <Card className="w-[400px] bg-white ">
         <div className="flex justify-end">
-          <button className="mt-2 mx-2" onClick={() => setIsOpen(false)}>
+          <button className="mt-2 mx-2" onClick={handleClose}>
             <RxCross2 />
           </button>
         </div>
@@ -110,6 +118,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
                           value: "Pharmacist_Staff",
                         },
                         { label: "Cashier", value: "Cashier" },
+                        { label: "Med Tech", value: "MedTech" },
                       ]}
                     />
                   )}

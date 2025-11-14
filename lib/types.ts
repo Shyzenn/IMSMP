@@ -5,8 +5,8 @@ const nameRegex = /^[A-Za-z\s]+$/;
 // Register Form
 export const signUpSchema = z
   .object({
-    username: z.string().trim().min(4, "Username must contain at least 4 characters").max(20, "Username must not exceed 20 characters"),
-    role: z.enum(["Pharmacist_Staff", "Nurse","Manager", "Cashier"], { message: "User Type is required." }),
+    username: z.string().trim().min(4, "Username must contain at least 4 characters").max(20, "Username must not exceed 20 characters").regex(nameRegex, "Username must not contain numbers or special characters"),
+    role: z.enum(["Pharmacist_Staff", "Nurse","Manager", "Cashier", "MedTech"], { message: "User Type is required." }),
     firstName: z.string().trim().min(1, "First name is required").max(30, "First name must not exceed 30 characters").regex(nameRegex, "First name must not contain numbers or special characters"),
     middleName: z.string().trim().max(30, "Middle name must not exceed 30 characters").optional().refine((val) => !val || nameRegex.test(val), {
       message: "Middle name must not contain numbers or special characters",
@@ -63,7 +63,7 @@ export type TChangePasswordSchema = z.infer<typeof changePasswordSchema>;
 export const editUserSchema = () =>
   z.object({
       id: z.string(),
-      username: z.string().trim().min(4, "Username must contain at least 4 characters").max(20, "Username must not exceed 20 characters"),
+      username: z.string().trim().min(4, "Username must contain at least 4 characters").max(20, "Username must not exceed 20 characters").regex(nameRegex, "Username must not contain numbers or special characters"),
       firstName: z.string().trim().min(1, "First name is required").max(30, "First name must not exceed 30 characters").regex(nameRegex, "First name must not contain numbers or special characters"),
       middleName: z.string().trim().max(30, "Middle name must not exceed 30 characters").optional().refine((val) => !val || nameRegex.test(val), {
         message: "Middle name must not contain numbers or special characters",
@@ -82,14 +82,14 @@ export const editUserSchema = () =>
             message: "Only Gmail are allowed",
           }
       ),
-      role: z.string().min(1, "Role is required"),
+      role: z.enum(["Pharmacist_Staff", "Nurse","Manager", "Cashier", "MedTech"], { message: "User Type is required." }),
   })
 
 export type TEditUserSchema = z.infer<ReturnType<typeof editUserSchema>>;
 
 // Edit User Profile
 export const editUserProfileSchema = z.object({
-      username: z.string().trim().min(4, "Username must contain at least 4 characters").max(20, "Username must not exceed 20 characters"),
+      username: z.string().trim().min(4, "Username must contain at least 4 characters").max(20, "Username must not exceed 20 characters").regex(nameRegex, "Username must not contain numbers or special characters"),
       profileImage: z.string().optional(),
       firstName: z.string().trim().min(1, "First name is required").max(30, "First name must not exceed 30 characters").regex(nameRegex, "First name must not contain numbers or special characters"),
       middleName: z.string().trim().max(30, "Middle name must not exceed 30 characters").optional().refine((val) => !val || nameRegex.test(val), {

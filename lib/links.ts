@@ -76,6 +76,19 @@ export const cashierLinks = [
   { name: "Transaction", href: "/cashier_transaction", icon: GrTransaction }
 ]
 
+export const medTechLinks = [
+   {
+    name: "Dashboard",
+    href: "/medtech_dashboard",
+    icon: RiDashboardHorizontalLine,
+  },
+  {
+    name: "Transaction",
+    href: "/medtech_transaction",
+    icon: GrTransaction,
+  },
+]
+
 export function getLogoLink(role?: string) {
   switch (role) {
     case "Pharmacist_Staff":

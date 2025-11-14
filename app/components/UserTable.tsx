@@ -60,7 +60,9 @@ const UserTable = ({
               <TableRow key={i}>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.firstName}</TableCell>
-                <TableCell>{user.middleName}</TableCell>
+                <TableCell>
+                  {user.middleName ? user.middleName : "Unknown"}
+                </TableCell>
                 <TableCell>{user.lastName}</TableCell>
                 <TableCell>{user.username}</TableCell>
                 <TableCell>{user.role}</TableCell>

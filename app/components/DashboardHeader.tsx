@@ -115,7 +115,7 @@ const DashboardHeader = ({ session }: { session: Session | null }) => {
       </div>
 
       {/* Alerts + Add Button */}
-      {role !== "Cashier" ? (
+      {role !== "Cashier" && role !== "MedTech" ? (
         <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
           {isLoading ? (
             <div className="bg-gray-100 px-8 py-[22px] rounded-md md:w-[25rem] animate-pulse w-full"></div>
@@ -172,6 +172,12 @@ const DashboardHeader = ({ session }: { session: Session | null }) => {
           )}
         </div>
       ) : null}
+
+      {role === "MedTech" && (
+        <div>
+          <RequestOrderBtn />
+        </div>
+      )}
     </div>
   );
 };

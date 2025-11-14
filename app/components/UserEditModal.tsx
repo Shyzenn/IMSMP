@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useCallback, useState } from "react";
-import CategoryField from "./CategoryField";
 import CancelButton from "./CancelButton";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { editUserSchema, TEditUserSchema } from "@/lib/types";
 import { UserFormValues } from "@/lib/interfaces";
@@ -16,6 +15,8 @@ import axios from "axios";
 import ResetPasswordModal from "./ResetPasswordModal";
 import FormField from "./FormField";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import SelectField from "./SelectField";
 
 const UserEditModal = ({
   setIsModalOpen,
@@ -143,16 +144,34 @@ const UserEditModal = ({
                 type="email"
               />
             </FormField>
-            <CategoryField
-              label="User Type"
-              control={control}
-              name="role"
-              error={errors.role?.message}
-              categoryLabel={user.role.replace("_", " ")}
-              items={["Nurse", "Pharmacist Staff", "Manager", "Cashier"].map(
-                (role, index) => ({ id: index + 1, name: role })
+            <div className="flex flex-col space-y-1.5 text-sm mb-[3px] text-gray-700">
+              <Label htmlFor="password">Types</Label>
+              <Controller
+                control={control}
+                name="role"
+                render={({ field }) => (
+                  <SelectField
+                    field={field}
+                    label="Select User Type"
+                    option={[
+                      { label: "Manager", value: "Manager" },
+                      { label: "Nurse", value: "Nurse" },
+                      {
+                        label: "Pharmacist Staff",
+                        value: "Pharmacist_Staff",
+                      },
+                      { label: "Cashier", value: "Cashier" },
+                      { label: "Med Tech", value: "MedTech" },
+                    ]}
+                  />
+                )}
+              />
+              {errors.role && (
+                <p className="mt-2 text-sm text-red-500">
+                  {`${errors.role.message}`}
+                </p>
               )}
-            />
+            </div>
           </div>
 
           <div className="mx-12">
