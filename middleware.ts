@@ -59,6 +59,7 @@ export const config = {
     "/auth/signin",
     "/manager_settings/:path*",
     "/nurse_dashboard/:path*",
+    "/medtech_dashboard/:path*",
     "/cashier_dashboard/:path*",
     "/pharmacist_dashboard/:path*",
     "/change-password",

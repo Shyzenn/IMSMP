@@ -89,6 +89,7 @@ export type TEditUserSchema = z.infer<ReturnType<typeof editUserSchema>>;
 
 // Edit User Profile
 export const editUserProfileSchema = z.object({
+      username: z.string().trim().min(4, "Username must contain at least 4 characters").max(20, "Username must not exceed 20 characters"),
       profileImage: z.string().optional(),
       firstName: z.string().trim().min(1, "First name is required").max(30, "First name must not exceed 30 characters").regex(nameRegex, "First name must not contain numbers or special characters"),
       middleName: z.string().trim().max(30, "Middle name must not exceed 30 characters").optional().refine((val) => !val || nameRegex.test(val), {

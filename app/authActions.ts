@@ -89,6 +89,7 @@ export async function handleCredentialsSignIn({
     if (user.role === "Nurse") return { redirectUrl: "/nurse_dashboard" };
     if (user.role === "Pharmacist_Staff") return { redirectUrl: "/pharmacist_dashboard" };
     if (user.role === "Cashier") return { redirectUrl: "/cashier_dashboard" };
+    if (user.role === "MedTech") return { redirectUrl: "/medtech_dashboard" };
 
     return { message: "Login successful" };
   } catch (error) {
