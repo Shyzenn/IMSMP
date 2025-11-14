@@ -38,7 +38,7 @@ const ManagerDashboardCards = ({ userRole }: { userRole?: string }) => {
     {
       title: "Total Revenue",
       value: `₱${Number(totalSales).toLocaleString("en-PH", {
-        minimumFractionDigits: 0,
+        minimumFractionDigits: 2,
       })}`,
       icon: LuPhilippinePeso,
       bgColor: "bg-blue-50",

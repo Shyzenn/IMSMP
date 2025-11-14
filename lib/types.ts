@@ -1,23 +1,29 @@
 import { object, string, z } from "zod";
 
+const nameRegex = /^[A-Za-z\s]+$/;
+
 // Register Form
 export const signUpSchema = z
   .object({
-    username: z.string().min(4, "Username must contain at least 4 characters"),
+    username: z.string().trim().min(4, "Username must contain at least 4 characters").max(20, "Username must not exceed 20 characters"),
     role: z.enum(["Pharmacist_Staff", "Nurse","Manager", "Cashier"], { message: "User Type is required." }),
-    firstName: z.string().min(1, "First name is required"),
-    middleName: z.string().optional(),
-    lastName: z.string().min(1, "Last name is Required"),
+    firstName: z.string().trim().min(1, "First name is required").max(30, "First name must not exceed 30 characters").regex(nameRegex, "First name must not contain numbers or special characters"),
+    middleName: z.string().trim().max(30, "Middle name must not exceed 30 characters").optional().refine((val) => !val || nameRegex.test(val), {
+      message: "Middle name must not contain numbers or special characters",
+    }),
+    lastName: z.string().trim().min(1, "Last name is Required").max(30, "Last name must not exceed 30 characters").regex(nameRegex, "Last name must not contain numbers or special characters"),
     email: z
-    .string()
-    .min(1, "Email is required")
-    .email("Invalid email address")
-    .refine(
-      (val) =>
-        val.endsWith("@gmail.com"),
-      {
-        message: "Only Gmail are allowed",
-      }
+      .string()
+      .trim()
+      .min(1, "Email is required")
+      .max(50, "Email must not exceed 50 characters")
+      .email("Invalid email address")
+      .refine(
+        (val) =>
+          val.endsWith("@gmail.com"),
+        {
+          message: "Only Gmail are allowed",
+        }
     ),
   });
 
@@ -28,15 +34,18 @@ export const changePasswordSchema = z
     currentPassword: z
       .string()
       .trim()
-      .min(8, "Password must contain at least 8 characters"),
+      .min(8, "Password must contain at least 8 characters")
+      .max(32, "Current password must not exceed 32 characters"),
     newPassword: z
       .string()
       .trim()
-      .min(8, "Password must contain at least 8 characters"),
+      .min(8, "Password must contain at least 8 characters")
+      .max(32, "Password must not exceed 32 characters"),
     confirmPassword: z
       .string()
       .trim()
-      .min(8, "Confirm Password must contain at least 8 characters"),
+      .min(8, "Confirm Password must contain at least 8 characters")
+      .max(32, "Confirm password must not exceed 32 characters"),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     path: ["confirmPassword"],
@@ -54,10 +63,17 @@ export type TChangePasswordSchema = z.infer<typeof changePasswordSchema>;
 export const editUserSchema = () =>
   z.object({
       id: z.string(),
-      username: z.string().min(4, "Username must contain at least 4 characters"),
+      username: z.string().trim().min(4, "Username must contain at least 4 characters").max(20, "Username must not exceed 20 characters"),
+      firstName: z.string().trim().min(1, "First name is required").max(30, "First name must not exceed 30 characters").regex(nameRegex, "First name must not contain numbers or special characters"),
+      middleName: z.string().trim().max(30, "Middle name must not exceed 30 characters").optional().refine((val) => !val || nameRegex.test(val), {
+        message: "Middle name must not contain numbers or special characters",
+      }),
+      lastName: z.string().trim().min(1, "Last name is Required").max(30, "Last name must not exceed 30 characters").regex(nameRegex, "Last name must not contain numbers or special characters"),
       email: z
         .string()
+        .trim()
         .min(1, "Email is required")
+        .max(50, "Email must not exceed 50 characters")
         .email("Invalid email address")
         .refine(
           (val) =>
@@ -66,9 +82,6 @@ export const editUserSchema = () =>
             message: "Only Gmail are allowed",
           }
       ),
-      firstName: z.string().min(1, "First name is required"),
-      lastName: z.string().min(1, "Last name is Required"),
-      middleName: z.string().optional(),
       role: z.string().min(1, "Role is required"),
   })
 
@@ -76,15 +89,25 @@ export type TEditUserSchema = z.infer<ReturnType<typeof editUserSchema>>;
 
 // Edit User Profile
 export const editUserProfileSchema = z.object({
-    profileImage: z.string().optional(),
-    firstName: z.string().min(1, "First name is required"),
-    lastName: z.string().min(1, "Last name is Required"),
-    middleName: z.string().optional(),
-    username: z.string().min(1, "Username is required"),
-    email: z
-      .string()
-      .min(1, "Email is required")
-      .email("Invalid email address"),
+      profileImage: z.string().optional(),
+      firstName: z.string().trim().min(1, "First name is required").max(30, "First name must not exceed 30 characters").regex(nameRegex, "First name must not contain numbers or special characters"),
+      middleName: z.string().trim().max(30, "Middle name must not exceed 30 characters").optional().refine((val) => !val || nameRegex.test(val), {
+        message: "Middle name must not contain numbers or special characters",
+      }),
+      lastName: z.string().trim().min(1, "Last name is Required").max(30, "Last name must not exceed 30 characters").regex(nameRegex, "Last name must not contain numbers or special characters"),
+      email: z
+        .string()
+        .trim()
+        .min(1, "Email is required")
+        .max(50, "Email must not exceed 50 characters")
+        .email("Invalid email address")
+        .refine(
+          (val) =>
+            val.endsWith("@gmail.com"),
+          {
+            message: "Only Gmail are allowed",
+          }
+      ),
 });
 
 export type TeditUserProfileSchema = z.infer<typeof editUserProfileSchema>;
@@ -105,13 +128,14 @@ export type TSignInSchema = z.infer<typeof signInSchema>;
 
 // Add Product
 export const addProductSchema = z.object({
-  product_name: z.string().min(1, "Product Name is required").trim(),
+  product_name: z.string().trim().min(1, "Product name is required").max(100, "Product name must not exceed 100 characters").trim(),
   category: z.string({ required_error: "Category is required" }).min(1),
   price: z.preprocess(
     (val) => (val === "" || val === undefined ? undefined : Number(val)),
     z
       .number({ required_error: "Price is required" })
       .min(0, "Price must be 0 or higher")
+      .max(999999.99, "Price must not exceed ₱999,999.99")
       .multipleOf(0.01, "Price must be a valid decimal number")
   ),
 });
@@ -120,13 +144,14 @@ export type TAddProductSchema = z.infer<typeof addProductSchema>;
 
 export const editProductSchema = z.object({
   productId: z.number(),
-  product_name: z.string().min(1, "Product Name is required").trim(),
+  product_name: z.string().trim().min(1, "Product name is required").max(100, "Product name must not exceed 100 characters").trim(),
   category: z.string({ required_error: "Category is required" }).min(1),
   price: z.preprocess(
     (val) => (val === "" || val === undefined ? undefined : Number(val)),
     z
       .number({ required_error: "Price is required" })
       .min(0, "Price must be 0 or higher")
+      .max(999999.99, "Price must not exceed ₱999,999.99")
       .multipleOf(0.01, "Price must be a valid decimal number")
   ),
 });
@@ -144,7 +169,8 @@ export const editBatchSchema = z.object({
   quantity: z.preprocess(
     (val) => (val === "" || val === undefined ? undefined : Number(val)),
     z.number({ required_error: "Quantity is required" })
-      .min(0, "Quantity must be 0 or higher")
+      .min(1, "Quantity must be 0 or higher")
+      .max(10000, "Quantity must not exceed 10,000"),
   ),
   releaseDate: z.preprocess(
     (val) => {
@@ -192,7 +218,8 @@ export const replenishProductSchema = z.object({
   quantity: z.preprocess(
     (val) => (val === "" || val === undefined ? undefined : Number(val)),
     z.number({ required_error: "Quantity is required" })
-      .min(0, "Quantity must be 0 or higher")
+      .min(1, "Quantity must be 0 or higher")
+      .max(10000, "Quantity must not exceed 10,000"),
   ),
   releaseDate: z.preprocess(
     (val) => {
@@ -234,15 +261,15 @@ export type TReplenishProductSchema = z.infer<typeof replenishProductSchema>;
 
 export const addRequestOrderSchema = z.object({
  room_number: z.string().optional(),
-  patient_name: z.string().min(1, "Patient name is required"),
+  patient_name: z.string().trim().min(1, "Patient name is required").max(50, "First name must not exceed 50 characters"),
   status: z.enum(["pending", "for_payment", "paid"]),
   type: z.enum(["REGULAR", "EMERGENCY"]),
-  notes: z.string().optional(),
+  notes: z.string().trim().max(1000, "Notes must not exceed 1000 characters").optional(),
   remarks: z.enum(["preparing", "prepared", "dispensed"]).optional().default("preparing"),
   products: z.array(
     z.object({
-      productId: z.string().min(1, "Product name is required"),
-      quantity: z.number().min(1, "Quantity is required")
+      productId: z.string().min(1, "Product name is required").max(100, "Product name must not exceed 100 characters"),
+      quantity: z.number().min(1, "Quantity is required").max(10000, "Quantity must not exceed 10,000"),
     })
   ),
 });
@@ -250,14 +277,14 @@ export const addRequestOrderSchema = z.object({
 export type TAddRequestOrderSchema = z.infer<typeof addRequestOrderSchema>;
 
 export const editRequestOrderSchema = z.object({
-  room_number: z.string().optional(),
-  patient_name: z.string().min(1, "Patient name is required"),
+  room_number: z.string().trim().optional(),
+  patient_name: z.string().trim().min(1, "Patient name is required"),
   status: z.enum(["pending", "for_payment", "paid"]).optional(),
-  notes: z.string().optional(),
+  notes: z.string().trim().optional(),
   products: z.array(
     z.object({
-      productId: z.string().min(1, "Product name is required"),
-      quantity: z.number().min(1, "Quantity is required")
+      productId: z.string().min(1, "Product name is required").max(100, "Product name must not exceed 100 characters"),
+      quantity: z.number().min(1, "Quantity is required").max(10000, "Quantity must not exceed 10,000"),
     })
   ),
 });
@@ -265,11 +292,11 @@ export const editRequestOrderSchema = z.object({
 export type TEditRequestOrderSchema = z.infer<typeof editRequestOrderSchema>;
 
 export const WalkInOrderSchema = z.object({
-  customer_name: z.string().optional(),
+  customer_name: z.string().trim().optional(),
   products: z.array(
     z.object({
-      productId: z.string().min(1, "Product name is required"),
-      quantity: z.number().min(1, "Quantity must be at least 1"),
+      productId: z.string().min(1, "Product name is required").max(100, "Product name must not exceed 100 characters"),
+      quantity: z.number().min(1, "Quantity is required").max(10000, "Quantity must not exceed 10,000"),
       price: z.number().min(0).optional(),
     })
   ),
@@ -281,9 +308,17 @@ export type TWalkInOrderSchema = z.infer<typeof WalkInOrderSchema>;
 export const forgotPasswordSchema = z.object({
    email: z
     .string()
+    .trim()
     .min(1, "Email is required")
+    .max(50, "Email must not exceed 50 characters")
     .email("Invalid email address")
-    
+    .refine(
+      (val) =>
+        val.endsWith("@gmail.com"),
+      {
+        message: "Only Gmail are allowed",
+      }
+    ),
 });
 
 export const otpSchema = z.object({
@@ -292,14 +327,16 @@ export const otpSchema = z.object({
 
 export const resetPasswordSchema = z
   .object({
-     newPassword: z
+    newPassword: z
       .string()
       .trim()
-      .min(8, "Password must contain at least 8 characters"),
+      .min(8, "Password must contain at least 8 characters")
+      .max(32, "Password must not exceed 32 characters"),
     confirmPassword: z
       .string()
       .trim()
-      .min(8, "Confirm Password must contain at least 8 characters"),
+      .min(8, "Confirm Password must contain at least 8 characters")
+      .max(32, "Confirm password must not exceed 32 characters"),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     path: ["confirmPassword"],
