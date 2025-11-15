@@ -107,9 +107,10 @@ export interface Notification {
   updatedAt?: string | Date;
   senderId: string;
   recipientId: string;
-  type?: "ORDER_REQUEST" | "ADD_PRODUCT" | "ORDER_RECEIVED" | "PAYMENT_PROCESSED" | "EMERGENCY_ORDER" | "REMARKS" | "WALK_IN";
+  type?: "ORDER_REQUEST" | "ADD_PRODUCT" | "ORDER_RECEIVED" | "PAYMENT_PROCESSED" | "EMERGENCY_ORDER" | "REMARKS" | "WALK_IN" | "MEDTECH_REQUEST" | "MT_REQUEST_READY" | "MT_REQUEST_RELEASED" | "MT_REQUEST_APPROVED" | "MT_REQUEST_DECLINED";
   orderId?: number | null;
   walkInOrderId?: number | null;
+  medTechRequestId?: number | null
   productId?: number | null;
   sender?: {
     username: string;

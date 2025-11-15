@@ -89,12 +89,10 @@ const Header = () => {
                 {userRole === "Pharmacist_Staff" && <WalkInOrder />}
               </div>
 
-              {userRole !== "Manager" && (
-                <StaffNotificationBell
-                  userId={session?.user.id}
-                  userRole={userRole}
-                />
-              )}
+              <StaffNotificationBell
+                userId={session?.user.id}
+                userRole={userRole}
+              />
             </>
           )}
 

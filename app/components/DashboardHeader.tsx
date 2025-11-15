@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import RequestOrderBtn from "./RequestOrderBtn";
 import WalkInOrder from "./WalkInOrder";
 import Link from "next/link";
+import MedTechReqBtn from "./MedTechReqBtn";
 
 function getGreeting() {
   const now = new Date();
@@ -175,7 +176,7 @@ const DashboardHeader = ({ session }: { session: Session | null }) => {
 
       {role === "MedTech" && (
         <div>
-          <RequestOrderBtn />
+          <MedTechReqBtn />
         </div>
       )}
     </div>

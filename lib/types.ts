@@ -277,6 +277,20 @@ export const addRequestOrderSchema = z.object({
 
 export type TAddRequestOrderSchema = z.infer<typeof addRequestOrderSchema>;
 
+export const addMedTechRequestSchema = z.object({
+  status: z.enum(["pending_for_approval", "approved", "declined"]),
+  notes: z.string().trim().max(1000, "Notes must not exceed 1000 characters").optional(),
+  remarks: z.enum(["processing", "ready", "released"]).optional().default("processing"),
+  products: z.array(
+    z.object({
+      productId: z.string().min(1, "Product name is required").max(100, "Product name must not exceed 100 characters"),
+      quantity: z.number().min(1, "Quantity is required").max(10000, "Quantity must not exceed 10,000"),
+    })
+  ),
+});
+
+export type TAddMedTechRequestSchema = z.infer<typeof addMedTechRequestSchema>;
+
 export const editRequestOrderSchema = z.object({
   room_number: z.string().trim().optional(),
   patient_name: z.string().trim().min(1, "Patient name is required"),

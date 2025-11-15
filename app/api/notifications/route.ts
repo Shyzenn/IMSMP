@@ -27,6 +27,17 @@ export async function GET() {
           room_number: true,
         },
       },
+      walkInOrder: {
+        select : {
+          id: true,
+          customer_name: true
+        }
+      },
+      medTechRequest: {
+        select: {
+          id: true
+        }
+      }
     },
     orderBy: {
       createdAt: "desc",
@@ -34,5 +45,11 @@ export async function GET() {
     take:20
   });
 
-  return NextResponse.json(notifications);
+    const formattedNotifications = notifications.map((notif) => ({
+    ...notif,
+    medTechRequestId: notif.medTechRequest?.id || null,
+    walkInOrderId: notif.walkInOrder?.id || null,
+  }));
+
+  return NextResponse.json(formattedNotifications);
 }

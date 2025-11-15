@@ -1,5 +1,5 @@
 import { ProductCategory } from "@prisma/client";
-import { TAddProductSchema, TAddRequestOrderSchema, TEditBatchSchema, TEditProductSchema, TEditRequestOrderSchema, TEditUserSchema, TReplenishProductSchema, TSignUpSchema, TWalkInOrderSchema } from "../types";
+import { TAddMedTechRequestSchema, TAddProductSchema, TAddRequestOrderSchema, TEditBatchSchema, TEditProductSchema, TEditRequestOrderSchema, TEditUserSchema, TReplenishProductSchema, TSignUpSchema, TWalkInOrderSchema } from "../types";
 import { QueryObserverResult } from "@tanstack/react-query";
 
 //register user
@@ -238,6 +238,33 @@ export const editUser = async (data: TEditUserSchema) => {
 export const addRequesOrder = async (data:TAddRequestOrderSchema) => {
   try{
     const response = await fetch("/api/request_order", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json",
+        }
+      })
+
+      if (!response.ok) {
+        // If the response is not OK, throw an error
+        const errorData = await response.json();
+        throw new Error(JSON.stringify(errorData));
+      }
+      const responseData = await response.json();
+      return responseData;
+  } catch (error: unknown) {
+        if (error instanceof Error) {
+          throw error;
+        } else {
+          throw new Error("An unexpected error occurred while adding request order.");
+        }
+      }  
+}
+
+// add medtech request
+export const addMedTechRequest = async (data:TAddMedTechRequestSchema) => {
+  try{
+    const response = await fetch("/api/medtech_request", {
         method: "POST",
         body: JSON.stringify(data),
         headers: {

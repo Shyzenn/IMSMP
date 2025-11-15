@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { useEmergencyModal } from "@/lib/store/emergency-modal";
 import { OrderModalSkeleton } from "./Skeleton";
 import { OrderView } from "./transaction/table/TransactionAction";
+import MedTechRequestDetailsModal, { RequestView } from "./MTRequestDetails";
 
 export interface NotificationWithDetails extends Notification {
   patientName?: string;
@@ -66,7 +67,10 @@ const StaffNotificationList = ({
   const uniqueNotifications = Array.from(
     new Map(notifications.map((n) => [n.id, n])).values()
   );
-
+  const [selectedRequest, setSelectedRequest] = useState<RequestView | null>(
+    null
+  );
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const { openModal } = useOrderModal();
@@ -75,11 +79,63 @@ const StaffNotificationList = ({
   const handleNotificationClick = async (
     notification: NotificationWithDetails
   ) => {
-    if (!notification.order?.id && !notification.walkInOrderId) return;
+    if (
+      !notification.order?.id &&
+      !notification.walkInOrderId &&
+      !notification.medTechRequestId
+    )
+      return;
 
     setLoading(true);
 
     try {
+      if (
+        (notification.type === "MEDTECH_REQUEST" ||
+          notification.type === "MT_REQUEST_READY" ||
+          notification.type === "MT_REQUEST_RELEASED" ||
+          notification.type === "MT_REQUEST_APPROVED" ||
+          notification.type === "MT_REQUEST_DECLINED") &&
+        notification.medTechRequestId
+      ) {
+        const res = await fetch(
+          `/api/medtech_request/${notification.medTechRequestId}/notification`
+        );
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          id: number;
+          status: "pending_for_approval" | "approved" | "declined";
+          remarks: "processing" | "ready" | "released";
+          notes: string;
+          createdAt: string;
+          items: WalkInOrderItem[];
+          requestedBy?: { username: string } | null;
+          receivedBy?: { username: string } | null;
+          approvedBy: { username: string } | null;
+        };
+
+        const requestView: RequestView = {
+          id: `${data.id}`,
+          status: data.status,
+          remarks: data.remarks,
+          notes: data.notes,
+          quantity: data.items.reduce((sum, i) => sum + i.quantity, 0),
+          createdAt: new Date(data.createdAt),
+          requestedBy: data.requestedBy,
+          receivedBy: data.receivedBy,
+          approvedBy: data.approvedBy,
+          itemDetails: data.items.map((i) => ({
+            productName: i.product?.product_name ?? "Unknown",
+            quantity: i.quantity,
+            price: i.product?.price ?? 0,
+          })),
+        };
+
+        setSelectedRequest(requestView);
+        setIsModalOpen(true);
+
+        return;
+      }
+
       // --- WALK-IN NOTIFICATION ---
       if (notification.type === "WALK_IN" && notification.walkInOrderId) {
         const res = await fetch(
@@ -127,7 +183,12 @@ const StaffNotificationList = ({
       }
 
       // --- REQUEST ORDER NOTIFICATION ---
-      if (notification.order?.id) {
+      if (
+        notification.order?.id &&
+        (notification.type === "ORDER_RECEIVED" ||
+          notification.type === "ORDER_REQUEST" ||
+          notification.type === "EMERGENCY_ORDER")
+      ) {
         const res = await fetch(
           `/api/request_order/${notification.order.id}/notification`
         );
@@ -239,6 +300,105 @@ const StaffNotificationList = ({
                       <span className="w-2 h-2 mt-2 bg-blue-500 rounded-full flex-shrink-0"></span>
                     )}
                     <p className="font-semibold">{notification.title}</p>
+
+                    {notification.type === "MT_REQUEST_DECLINED" &&
+                      userRole === "MedTech" && (
+                        <p className="text-sm text-gray-700 mt-1">
+                          Your MedTech request has been declined by{" "}
+                          <span className="font-medium">
+                            {submittedBy || "Unknown"} ({role || "Unknown"})
+                          </span>
+                          .
+                        </p>
+                      )}
+
+                    {notification.type === "MT_REQUEST_DECLINED" &&
+                      userRole === "Pharmacist_Staff" && (
+                        <p className="text-sm text-gray-700 mt-1">
+                          A MedTech request has been declined by{" "}
+                          <span className="font-medium">
+                            {submittedBy || "Unknown"} ({role || "Unknown"})
+                          </span>
+                          .
+                        </p>
+                      )}
+
+                    {notification.type === "MT_REQUEST_APPROVED" &&
+                      userRole === "Pharmacist_Staff" && (
+                        <p className="text-sm text-gray-700 mt-1">
+                          A MedTech request has been approved by{" "}
+                          <span className="font-medium">
+                            {submittedBy || "Unknown"} ({role || "Unknown"})
+                          </span>
+                          .
+                        </p>
+                      )}
+
+                    {notification.type === "MT_REQUEST_APPROVED" &&
+                      userRole === "MedTech" && (
+                        <p className="text-sm text-gray-700 mt-1">
+                          Your MedTech request has been approved by{" "}
+                          <span className="font-medium">
+                            {submittedBy || "Unknown"} ({role || "Unknown"})
+                          </span>
+                          .
+                        </p>
+                      )}
+
+                    {notification.type === "MT_REQUEST_RELEASED" &&
+                      userRole === "MedTech" && (
+                        <p className="text-sm text-gray-700 mt-1">
+                          Your MedTech request has been released by{" "}
+                          <span className="font-medium">
+                            {submittedBy || "Unknown"} ({role || "Unknown"})
+                          </span>
+                          .
+                        </p>
+                      )}
+
+                    {notification.type === "MT_REQUEST_RELEASED" &&
+                      userRole === "Manager" && (
+                        <p className="text-sm text-gray-700 mt-1">
+                          A MedTech request has been released by{" "}
+                          <span className="font-medium">
+                            {submittedBy || "Unknown"} ({role || "Unknown"})
+                          </span>
+                          .
+                        </p>
+                      )}
+
+                    {notification.type === "MT_REQUEST_READY" &&
+                      userRole === "MedTech" && (
+                        <p className="text-sm text-gray-700 mt-1">
+                          Your MedTech request is ready for pickup. Prepared by{" "}
+                          <span className="font-medium">
+                            {submittedBy || "Unknown"}
+                          </span>
+                          .
+                        </p>
+                      )}
+
+                    {notification.type === "MEDTECH_REQUEST" &&
+                      userRole === "Pharmacist_Staff" && (
+                        <p className="text-sm text-gray-700 mt-1">
+                          You have a new MedTech Request from{" "}
+                          <span className="font-medium">
+                            {submittedBy || "Unknown"} ({role || "Unknown"})
+                          </span>
+                          .
+                        </p>
+                      )}
+
+                    {notification.type === "MEDTECH_REQUEST" &&
+                      userRole === "Manager" && (
+                        <p className="text-sm text-gray-700 mt-1">
+                          New MedTech request submitted by{" "}
+                          <span className="font-medium">
+                            {submittedBy || "Unknown"} ({role || "Unknown"})
+                          </span>
+                          .
+                        </p>
+                      )}
 
                     {notification.type === "ORDER_REQUEST" && (
                       <p className="text-sm text-gray-700 mt-1">
@@ -379,6 +539,11 @@ const StaffNotificationList = ({
         </div>
       )}
       {loading && <OrderModalSkeleton />}
+      <MedTechRequestDetailsModal
+        isRequestModalOpen={isModalOpen}
+        selectedRequest={selectedRequest}
+        setIsOrderModalOpen={setIsModalOpen}
+      />
     </>
   );
 };

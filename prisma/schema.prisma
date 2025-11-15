@@ -2,6 +2,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator erd {
+  provider = "prisma-erd-generator"
+}
+
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
@@ -13,44 +17,49 @@ model User {
   role     Role
   email    String @unique
   password String
-  
-  firstName String @default("N/A")
-  lastName  String @default("N/A")
-  middleName String? 
+
+  firstName  String  @default("N/A")
+  lastName   String  @default("N/A")
+  middleName String?
 
   profileImage String?
 
-  otp                String?
-  otpExpiresAt       DateTime?
-  createdAt          DateTime   @default(now())
+  otp          String?
+  otpExpiresAt DateTime?
+  createdAt    DateTime  @default(now())
 
-  status             UserStatus @default(ACTIVE)
-  bannedReason       String?
-  bannedAt           DateTime?
+  status       UserStatus @default(ACTIVE)
+  bannedReason String?
+  bannedAt     DateTime?
 
-  mustChangePassword Boolean    @default(true)
+  mustChangePassword Boolean @default(true)
 
   OrderRequest      OrderRequest[]      @relation("RequestedBy")
   WalkInTransaction WalkInTransaction[]
 
-  ReceivedOrders  OrderRequest[] @relation("ReceivedBy")
-  ProcessedOrders OrderRequest[] @relation("ProcessedBy")
-  RefundedByOrderRequest      OrderRequest[] @relation("RefundedBy")
-  RefundedByWalkIn            WalkInTransaction[] @relation("RefundedBy")
+  ReceivedOrders         OrderRequest[]      @relation("ReceivedBy")
+  ProcessedOrders        OrderRequest[]      @relation("ProcessedBy")
+  RefundedByOrderRequest OrderRequest[]      @relation("RefundedBy")
+  RefundedByWalkIn       WalkInTransaction[] @relation("RefundedBy")
 
   ProcessedWalkinOrders WalkInTransaction[] @relation("ProcessedBy")
 
   Product  Product[]
   AuditLog AuditLog[]
   lastSeen DateTime   @default(now()) @updatedAt
-  isOnline Boolean    @default(false)
+  isOnline Boolean    @default(false) 
 
   SentNotification     Notification[] @relation("SentNotification")
   ReceivedNotification Notification[] @relation("ReceivedNotification")
 
-  ArchivedProducts      Product[]       @relation("ArchivedProducts")
-  ArchivedBatches       ProductBatch[]  @relation("ArchivedBatches")
-  ArchivedOrderRequests OrderRequest[]  @relation("ArchivedOrderRequests")
+  ArchivedProducts      Product[]      @relation("ArchivedProducts")
+  ArchivedBatches       ProductBatch[] @relation("ArchivedBatches")
+  ArchivedOrderRequests OrderRequest[] @relation("ArchivedOrderRequests")
+
+  medTechRequestsCreated  MedTechRequest[] @relation("MedTechRequestedBy")
+  medTechRequestsReceived MedTechRequest[] @relation("MedTechReceivedBy")
+  medTechRequestsApproved MedTechRequest[] @relation("MedTechApprovedBy")
+  archivedMedTechRequests MedTechRequest[] @relation("ArchivedMedTechRequests")
 }
 
 enum Role {
@@ -81,42 +90,41 @@ model AuditLog {
 }
 
 model Product {
-  id           Int       @id @default(autoincrement())
-  product_name String    @unique
-  price        Decimal   @default(0.00)
-  status       String    @default("ACTIVE") // ACTIVE | ARCHIVED
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id           Int      @id @default(autoincrement())
+  product_name String   @unique
+  price        Decimal  @default(0.00)
+  status       String   @default("ACTIVE") // ACTIVE | ARCHIVED
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  archivedById String?
-  archivedByUser User? @relation("ArchivedProducts", fields: [archivedById], references: [id])
-  archiveAt    DateTime?
-  archiveReason String?
+  archivedById   String?
+  archivedByUser User?     @relation("ArchivedProducts", fields: [archivedById], references: [id])
+  archiveAt      DateTime?
+  archiveReason  String?
 
   // Relationships
-  batches      ProductBatch[]
-  orderItems   OrderItem[]
-  WalkInItem   WalkInItem[]
-  Notification Notification[]
+  batches             ProductBatch[]
+  orderItems          OrderItem[]
+  WalkInItem          WalkInItem[]
+  Notification        Notification[]
+  medTechRequestItems MedTechRequestItem[]
 
   userId String?
   user   User?   @relation(fields: [userId], references: [id])
 
   categoryId Int?
   category   ProductCategory? @relation(fields: [categoryId], references: [id])
-
- 
 }
 
 model ProductBatch {
-  id        Int       @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   productId Int
-  product   Product   @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
 
-  archiveAt DateTime?
-  archiveReason String?
-  archivedById String?
-  archivedByUser User? @relation("ArchivedBatches", fields: [archivedById], references: [id])
+  archiveAt      DateTime?
+  archiveReason  String?
+  archivedById   String?
+  archivedByUser User?     @relation("ArchivedBatches", fields: [archivedById], references: [id])
 
   batchNumber String
   quantity    Int      @default(0)
@@ -134,28 +142,89 @@ model ProductCategory {
   products Product[]
 }
 
+model MedTechRequest {
+  id      Int            @id @default(autoincrement())
+  notes   String?
+  status  MedTechStatus  @default(pending_for_approval)
+  remarks MedTechRemarks @default(processing)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Requester (MedTech)
+  requestedBy   User   @relation("MedTechRequestedBy", fields: [requestedById], references: [id])
+  requestedById String
+
+  // Receiver (Pharmacist who receives)
+  receivedBy   User?     @relation("MedTechReceivedBy", fields: [receivedById], references: [id])
+  receivedById String?
+  receivedAt   DateTime?
+
+  // Approver (Pharmacist who approves/releases)
+  approvedBy   User?     @relation("MedTechApprovedBy", fields: [approvedById], references: [id])
+  approvedById String?
+  approvedAt   DateTime?
+
+  // Back-relation to OrderRequest
+  orderRequests OrderRequest[] @relation("MedTechOrderRequests")
+
+  // Archive tracking
+  archivedById   String?
+  archivedByUser User?   @relation("ArchivedMedTechRequests", fields: [archivedById], references: [id])
+  isArchived     Boolean @default(false)
+  archiveReason  String?
+
+  items        MedTechRequestItem[]
+  Notification Notification[]
+}
+
+model MedTechRequestItem {
+  id               Int            @id @default(autoincrement())
+  quantity         Int            @default(1)
+  medTechRequest   MedTechRequest @relation(fields: [medTechRequestId], references: [id], onDelete: Cascade)
+  medTechRequestId Int
+  product          Product        @relation(fields: [productId], references: [id])
+  productId        Int
+}
+
+enum MedTechStatus {
+  pending_for_approval
+  approved
+  declined
+}
+
+enum MedTechRemarks {
+  processing
+  ready
+  released
+}
+
 model OrderRequest {
   id           Int      @id @default(autoincrement())
   room_number  String?
   patient_name String?
-  status       Status  
+  status       Status
   remarks      Remarks  @default(preparing)
   notes        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  refundedAt    DateTime?
-  refundedBy    User?   @relation("RefundedBy", fields: [refundedById], references: [id])
-  refundedById  String?
-  refundReason  String?
+  refundedAt   DateTime?
+  refundedBy   User?     @relation("RefundedBy", fields: [refundedById], references: [id])
+  refundedById String?
+  refundReason String?
 
   type OrderType @default(REGULAR)
 
+  // Link to MedTechRequest
+  medTechRequest   MedTechRequest? @relation("MedTechOrderRequests", fields: [medTechRequestId], references: [id])
+  medTechRequestId Int?
+
   // Archive tracking
-  archivedById    String?
-  archivedByUser  User? @relation("ArchivedOrderRequests", fields: [archivedById], references: [id])
-  isArchived      Boolean @default(false)
-  archiveReason   String?
+  archivedById   String?
+  archivedByUser User?   @relation("ArchivedOrderRequests", fields: [archivedById], references: [id])
+  isArchived     Boolean @default(false)
+  archiveReason  String?
 
   user   User   @relation("RequestedBy", fields: [userId], references: [id])
   userId String
@@ -185,47 +254,47 @@ enum OrderType {
 }
 
 model OrderItem {
-  id        Int          @id @default(autoincrement())
-  quantity  Int          @default(1)
-  refundedQuantity Int   @default(0)
-  order     OrderRequest @relation(fields: [orderId], references: [id])
-  orderId   Int
-  product   Product      @relation(fields: [productId], references: [id])
-  productId Int
+  id               Int          @id @default(autoincrement())
+  quantity         Int          @default(1)
+  refundedQuantity Int          @default(0)
+  order            OrderRequest @relation(fields: [orderId], references: [id])
+  orderId          Int
+  product          Product      @relation(fields: [productId], references: [id])
+  productId        Int
 }
 
 model WalkInTransaction {
-  id            Int            @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   customer_name String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   status        Status
 
   processedBy   User?   @relation("ProcessedBy", fields: [processedById], references: [id])
   processedById String?
 
-  refundedAt    DateTime?
-  refundedBy    User?   @relation("RefundedBy", fields: [refundedById], references: [id])
-  refundedById  String?
-  refundReason  String?
+  refundedAt   DateTime?
+  refundedBy   User?     @relation("RefundedBy", fields: [refundedById], references: [id])
+  refundedById String?
+  refundReason String?
 
-  items         WalkInItem[]
-  totalAmount   Decimal        @default(0.00)
-  userId        String // pharmacist who encoded the walk-in
-  user          User           @relation(fields: [userId], references: [id])
-  Notification  Notification[]
+  items        WalkInItem[]
+  totalAmount  Decimal        @default(0.00)
+  userId       String // pharmacist who encoded the walk-in
+  user         User           @relation(fields: [userId], references: [id])
+  Notification Notification[]
 }
 
 model WalkInItem {
-  id            Int               @id @default(autoincrement())
-  quantity      Int
-  refundedQuantity Int            @default(0)
-  price         Decimal
-  total         Decimal // quantity * price
-  product       Product           @relation(fields: [productId], references: [id])
-  productId     Int
-  transaction   WalkInTransaction @relation(fields: [transactionId], references: [id])
-  transactionId Int
+  id               Int               @id @default(autoincrement())
+  quantity         Int
+  refundedQuantity Int               @default(0)
+  price            Decimal
+  total            Decimal // quantity * price
+  product          Product           @relation(fields: [productId], references: [id])
+  productId        Int
+  transaction      WalkInTransaction @relation(fields: [transactionId], references: [id])
+  transactionId    Int
 }
 
 enum Status {
@@ -237,6 +306,11 @@ enum Status {
 }
 
 enum NotificationType {
+  MEDTECH_REQUEST
+  MT_REQUEST_READY
+  MT_REQUEST_RELEASED
+  MT_REQUEST_APPROVED
+  MT_REQUEST_DECLINED
   ORDER_REQUEST
   ADD_PRODUCT
   ORDER_RECEIVED
@@ -263,6 +337,9 @@ model Notification {
 
   walkInOrderId Int?
   walkInOrder   WalkInTransaction? @relation(fields: [walkInOrderId], references: [id])
+
+  medTechRequest   MedTechRequest? @relation(fields: [medTechRequestId], references: [id])
+  medTechRequestId Int?
 
   productId Int?
   product   Product? @relation(fields: [productId], references: [id])

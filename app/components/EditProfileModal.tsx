@@ -92,7 +92,16 @@ const EditProfileModal = ({ close }: { close: () => void }) => {
 
   const onSubmit = async (formData: TeditUserProfileSchema) => {
     try {
-      await axios.put("/api/user/me", formData);
+      const response = await axios.put("/api/user/me", formData);
+
+      // Check if response contains errors
+      if (response.data.errors) {
+        // Display errors from backend
+        Object.keys(response.data.errors).forEach((field) => {
+          toast.error(response.data.errors[field], { duration: 10000 });
+        });
+        return;
+      }
 
       await update({
         ...formData,
@@ -101,8 +110,16 @@ const EditProfileModal = ({ close }: { close: () => void }) => {
       notify();
       close();
     } catch (error) {
-      console.error("Failed to update profile", error);
-      toast.error("Something went wrong");
+      if (axios.isAxiosError(error) && error.response?.data?.errors) {
+        // Handle validation errors
+        const errors = error.response.data.errors;
+        Object.keys(errors).forEach((field) => {
+          toast.error(errors[field]);
+        });
+      } else {
+        console.error("Failed to update profile", error);
+        toast.error("Something went wrong");
+      }
     }
   };
 

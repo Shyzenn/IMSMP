@@ -2,7 +2,7 @@ import DashboardAuditLog from "@/app/components/DashboardActivities";
 import DashboardHeader from "@/app/components/DashboardHeader";
 import ExpiryProducts from "@/app/components/ExpiryProducts";
 import ManagerDashboardCards from "@/app/components/ManagerDashboardCards";
-import RecentRequestTable from "@/app/components/RecentRequestTable";
+import RequestTableDropdown from "@/app/components/RequestTableDropDown";
 import SalesByCategory from "@/app/components/SalesByCategory";
 import SalesGraph from "@/app/components/SalesGraph";
 import TopSellingProducts from "@/app/components/TopSellingProductChart";
@@ -19,11 +19,11 @@ export default async function Dashboard() {
 
       <ManagerDashboardCards userRole={userRole} />
 
-      <div className="h-auto lg:h-96 flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
-        <div className="w-full lg:w-[70%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-96">
-          <RecentRequestTable userRole={userRole} />
+      <div className="h-auto lg:h-96 flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0 mb-24">
+        <div className="w-full lg:w-[70%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-[30rem]">
+          <RequestTableDropdown userRole={userRole} />
         </div>
-        <div className="w-full lg:w-[30%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-96">
+        <div className="w-full lg:w-[30%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-[30rem]">
           <ExpiryProducts />
         </div>
       </div>
