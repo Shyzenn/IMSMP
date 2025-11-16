@@ -1,7 +1,16 @@
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
+
+    const session = await auth();
+  
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+  
+
   const { searchParams } = new URL(req.url);
   const filter = searchParams.get("filter");
   const page = Number(searchParams.get("page")) || 1;

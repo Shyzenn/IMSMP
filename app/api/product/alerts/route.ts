@@ -1,8 +1,17 @@
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { capitalLetter } from "@/lib/utils";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+
+    const session = await auth();
+  
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+  
+
   try {
     const today = new Date();
     const threshold = new Date();

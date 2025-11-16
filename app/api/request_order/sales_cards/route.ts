@@ -1,8 +1,15 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { startOfDay, endOfDay } from "date-fns";
+import { auth } from "@/auth";
 
 export async function GET() {
+  const session = await auth();
+
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const today = new Date();
 

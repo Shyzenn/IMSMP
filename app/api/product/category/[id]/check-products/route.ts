@@ -1,3 +1,4 @@
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 
@@ -5,6 +6,14 @@ export async function GET(
   _request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+
+    const session = await auth();
+  
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+  
+
   try {
     const { id } = await context.params;
     const categoryId = Number(id);

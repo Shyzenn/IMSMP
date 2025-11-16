@@ -6,8 +6,16 @@ import { Prisma, UserStatus } from "@prisma/client";
 import { randomInt } from "crypto";
 import { sendOTPEmail } from "@/lib/mailer";
 import { toTitleCase } from "@/lib/utils";
+import { auth } from "@/auth";
 
 export async function POST(req: Request) {
+
+  const session = await auth();
+
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { username, firstName, middleName, lastName, email, role, password, status } = body;

@@ -2,8 +2,16 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { sendOTPEmail } from "@/lib/mailer";
+import { auth } from "@/auth";
 
 export async function POST(req: Request) {
+
+  const session = await auth();
+
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { userId } = await req.json();
 

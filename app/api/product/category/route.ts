@@ -4,6 +4,13 @@ import { auth } from "@/auth";
 
 // GET all categories
 export async function GET() {
+
+  const session = await auth();
+
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const categories = await db.productCategory.findMany({
       orderBy: { name: "asc" },

@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { subDays, startOfMonth, startOfYear } from "date-fns";
+import { auth } from "@/auth";
 
 export async function GET(req: Request) {
+
+  const session = await auth();
+
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
   const filter = searchParams.get("filter") || "This Month";
 

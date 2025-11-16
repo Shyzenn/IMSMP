@@ -1,9 +1,16 @@
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { capitalLetter } from "@/lib/utils";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
+      const session = await auth();
+    
+      if (!session || !session.user?.id) {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      }
+    
     const now = new Date();
     const in31Days = new Date();
     in31Days.setDate(now.getDate() + 31);

@@ -1,9 +1,17 @@
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 
 const LOW_STOCK_THRESHOLD = 6;
 
 export async function GET(req: Request) {
+
+  const session = await auth();
+
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type");

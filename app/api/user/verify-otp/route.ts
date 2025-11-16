@@ -1,8 +1,16 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { auth } from "@/auth";
 
 export async function POST(req: Request) {
+
+  const session = await auth();
+
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { email, otp, password } = body;

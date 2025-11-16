@@ -185,6 +185,13 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: NextRequest) {
+
+  const session = await auth();
+
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 400 });
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1", 10);

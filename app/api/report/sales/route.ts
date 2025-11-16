@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { startOfDay, endOfDay } from "date-fns";
 import { Prisma } from "@prisma/client";
+import { auth } from "@/auth";
 
 export type Body = {
   from?: string | null;
@@ -36,6 +37,13 @@ export interface SalesFilterMeta {
 }
 
 export async function POST(req: Request) {
+
+  const session = await auth();
+
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+  
   try {
     const body: Body = await req.json();
     const type = (body.type || "all").toLowerCase();

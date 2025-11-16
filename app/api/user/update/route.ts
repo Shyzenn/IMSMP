@@ -2,8 +2,16 @@ import { db } from "@/lib/db";
 import { editUserSchema } from "@/lib/types";
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
+import { auth } from "@/auth";
 
 export async function PATCH(req: Request) {
+
+  const session = await auth();
+
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { id, role, username, email, firstName, lastName, middleName } = body;

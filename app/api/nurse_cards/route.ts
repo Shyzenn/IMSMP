@@ -1,8 +1,15 @@
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
+      const session = await auth();
+    
+      if (!session || !session.user?.id) {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      }
+    
 
     const totalOrders = await db.orderRequest.count();
 

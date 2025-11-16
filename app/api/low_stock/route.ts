@@ -1,9 +1,17 @@
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { capitalLetter } from "@/lib/utils";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
+      const session = await auth();
+    
+      if (!session || !session.user?.id) {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      }
+    
+
     // Fetch products with their batches
     const products = await db.product.findMany({
       take: 20,
