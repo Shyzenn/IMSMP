@@ -31,7 +31,7 @@ export const roleConfig = {
   },
   MedTech: {
     base: "/medtech_dashboard",
-    routes: ["/medtech_dashboard", "/medtech_transaction"],
+    routes: ["/medtech_dashboard", "/medtech_transaction", "/medtech_inventory", "/medtech_inventory/products", "/medtech_inventory/batches"],
   },
   Cashier: {
     base: "/cashier_dashboard",

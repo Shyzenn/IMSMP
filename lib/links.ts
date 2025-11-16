@@ -83,6 +83,15 @@ export const medTechLinks = [
     icon: RiDashboardHorizontalLine,
   },
   {
+    name: "Inventory " ,
+    icon: MdOutlineInventory2,
+    subLinks: [
+      { name: "Products", href: "/medtech_inventory/products" },
+      { name: "Batches", href: "/medtech_inventory/batches" },
+      
+    ],
+  },
+  {
     name: "Transaction",
     href: "/medtech_transaction",
     icon: GrTransaction,

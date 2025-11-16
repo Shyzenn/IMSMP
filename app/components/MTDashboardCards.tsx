@@ -5,10 +5,12 @@ import DashboardCards from "./DashboardCards";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { CardSkeleton } from "./Skeleton";
-import { TbCurrencyPeso } from "react-icons/tb";
-import { PiChartLineUpLight } from "react-icons/pi";
-import { LuPackage } from "react-icons/lu";
-import { TbCreditCardPay } from "react-icons/tb";
+import {
+  LuBadgeCheck,
+  LuCircleX,
+  LuClipboardList,
+  LuPackageCheck,
+} from "react-icons/lu";
 
 type RequestCardData = {
   totalRequest: number;
@@ -43,7 +45,7 @@ const MTDashboardCards = () => {
     {
       title: "Total Request",
       value: totalRequest,
-      icon: TbCurrencyPeso,
+      icon: LuClipboardList,
       bgColor: "bg-blue-50",
       textColor: "text-blue-500",
       link: "/medtech_transaction?page=1&filter=all&sort=createdAt&order=desc",
@@ -51,25 +53,25 @@ const MTDashboardCards = () => {
     {
       title: "Total Approved Request",
       value: approvedRequest,
-      icon: PiChartLineUpLight,
-      bgColor: "bg-orange-50",
-      textColor: "text-orange-500",
-      link: "/medtech_transaction?page=1&filter=all&sort=createdAt&order=desc",
-    },
-    {
-      title: "Total Declined Request",
-      value: declinedRequest,
-      icon: LuPackage,
+      icon: LuBadgeCheck,
       bgColor: "bg-green-50",
       textColor: "text-green-500",
       link: "/medtech_transaction?page=1&filter=all&sort=createdAt&order=desc",
     },
     {
-      title: "Total Released Request",
-      value: releasedRequest,
-      icon: TbCreditCardPay,
+      title: "Total Declined Request",
+      value: declinedRequest,
+      icon: LuCircleX,
       bgColor: "bg-red-50",
       textColor: "text-red-500",
+      link: "/medtech_transaction?page=1&filter=all&sort=createdAt&order=desc",
+    },
+    {
+      title: "Total Released Request",
+      value: releasedRequest,
+      icon: LuPackageCheck,
+      bgColor: "bg-slate-50",
+      textColor: "text-slate-500",
       link: "/medtech_transaction?page=1&filter=for_payment&sort=createdAt&order=desc",
     },
   ];

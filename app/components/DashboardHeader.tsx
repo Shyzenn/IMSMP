@@ -48,6 +48,8 @@ const DashboardHeader = ({ session }: { session: Session | null }) => {
       ? "/pharmacist_inventory/"
       : role === "Nurse"
       ? "/nurse_inventory/"
+      : role === "MedTech"
+      ? "/medtech_inventory/"
       : "/cashier_inventory/";
 
   const [currentIndex, setCurrentIndex] = useState(0);

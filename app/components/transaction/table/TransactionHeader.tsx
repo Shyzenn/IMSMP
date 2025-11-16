@@ -15,7 +15,7 @@ const TransactionTableHeader = ({ userRole }: { userRole: string }) => {
       headers={[
         { key: "number", label: "No.", sortable: true },
         { key: "customer_name", label: "Customer Name", sortable: true },
-        { key: "createdAt", label: "Date and Time", sortable: true },
+        { key: "createdAt", label: "Created At", sortable: true },
         { key: "quantity", label: "Quantity", sortable: true },
         { key: "total", label: "Total Price", sortable: true },
       ]}

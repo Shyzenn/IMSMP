@@ -30,7 +30,9 @@ async function Transaction(props: {
   const to = searchParams?.to;
 
   if (!filter || !page) {
-    redirect(`/transaction?page=1&filter=all&sort=createdAt&order=desc`);
+    redirect(
+      `/medtech_transaction?page=1&filter=all&sort=createdAt&order=desc`
+    );
   }
 
   const sortBy = searchParams?.sort || "createdAt";
@@ -50,7 +52,6 @@ async function Transaction(props: {
       <PageTableHeader
         searchPlaceholder="Search customer name..."
         title="History"
-        transactionExport={true}
         hasDateFilter={true}
         isTransactionFilter={true}
       />
