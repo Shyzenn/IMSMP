@@ -26,7 +26,7 @@ export async function PUT(
     return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
   }
 
-  const { status, reason, items } = await req.json();
+  const { status, reason, items, patient_name, room_number } = await req.json();
   
   if (!status || !["for_payment", "paid", "canceled", "refunded"].includes(status)) {
     return NextResponse.json(
@@ -63,6 +63,17 @@ export async function PUT(
         processedBy: true,
         refundedBy: true,
         items: { include: { product: true } },
+      },
+    });
+
+    const orderWithItems = await db.orderRequest.findUnique({
+      where: { id: numericId },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
       },
     });
 
@@ -247,22 +258,35 @@ export async function PUT(
         });
 
         await pusherServer.trigger(
-          `private-user-${pharmacist.id}`,
+          `private-user-${updatedOrder.userId}`,
           "new-notification",
-          {
-            id: notification.id,
-            title: notification.title,
-            createdAt: notification.createdAt,
-            type: notification.type,
-            sender: {
-              username: notification.sender.username,
-              role: notification.sender.role,
-            },
-            order: {
-              patient_name: updatedOrder.patient_name,
-              room_number: updatedOrder.room_number,
-            },
-          }
+            {
+                  id: notification.id,
+                  title: notification.title,
+                  orderType: updatedOrder.type,
+                  createdAt: notification.createdAt,
+                  type: notification.type,
+                  notes: updatedOrder.notes || "",
+                  read: false,
+                  sender: {
+                    username: notification.sender.username,
+                    role: notification.sender.role,
+                  },
+                  submittedBy: notification.submittedBy,   
+                  role: notification.role,                 
+                  patientName: notification.patientName,   
+                  roomNumber: notification.roomNumber,     
+                  order: {
+                    id: updatedOrder.id,
+                    patient_name: updatedOrder.patient_name ?? "",  
+                    room_number: updatedOrder.room_number ?? "",   
+                    products: orderWithItems?.items.map((item) => ({
+                      productName: item.product.product_name,
+                      quantity: item.quantity,
+                      price: item.product.price
+                    })) || [],
+                  },
+              }
         );
       }
     }
@@ -288,24 +312,33 @@ export async function PUT(
           include: { sender: true },
         });
 
-        await pusherServer.trigger(
-          `private-user-${cashier.id}`,
-          "new-notification",
-          {
-            id: notification.id,
-            title: notification.title,
-            createdAt: notification.createdAt,
-            type: notification.type,
-            sender: {
-              username: notification.sender.username,
-              role: notification.sender.role,
-            },
-            order: {
-              patient_name: updatedOrder.patient_name,
-              room_number: updatedOrder.room_number,
-            },
-          }
-        );
+       await pusherServer.trigger(
+        `private-user-${cashier.id}`,
+        "new-notification",
+        {
+          id: notification.id,
+          title: notification.title,
+          orderType: updatedOrder.type,
+          createdAt: notification.createdAt,
+          type: notification.type,
+          notes: updatedOrder.notes || "",
+          read: false,
+          sender: {
+            username: notification.sender.username,
+            role: notification.sender.role,
+          },
+         order: {
+          id: updatedOrder.id,
+          patient_name: patient_name,
+          room_number: room_number,
+          products: orderWithItems?.items.map((item) => ({
+            productName: item.product.product_name,
+            quantity: item.quantity,
+            price: item.product.price
+          })), 
+        },
+        }
+      );
       }
     }
 
@@ -342,7 +375,7 @@ export async function PUT(
           },
           include: { sender: true },
         });
-
+        
         // Trigger Pusher event to recipient
         await pusherServer.trigger(
           `private-user-${updatedOrder.userId}`,
@@ -350,15 +383,28 @@ export async function PUT(
           {
             id: notification.id,
             title: notification.title,
+            orderType: updatedOrder.type,
             createdAt: notification.createdAt,
             type: notification.type,
+            notes: updatedOrder.notes || "",
+            submittedBy: notification.submittedBy,
+            role: notification.role,
+            patientName: updatedOrder.patient_name ?? "",
+            roomNumber: updatedOrder.room_number ?? "",
+            read: false,
             sender: {
               username: notification.sender.username,
               role: notification.sender.role,
             },
-            order: {
-              patient_name: updatedOrder.patient_name,
-              room_number: updatedOrder.room_number,
+           order: {
+              id: updatedOrder.id,
+              patient_name: updatedOrder.patient_name ?? "",
+              room_number: updatedOrder.room_number ?? "",
+              products: orderWithItems?.items.map((item) => ({
+                productName: item.product.product_name,
+                quantity: item.quantity,
+                price: item.product.price
+              })) || [],
             },
           }
         );

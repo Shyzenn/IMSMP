@@ -76,21 +76,40 @@ const StaffNotificationList = ({
   const { openModal } = useOrderModal();
   const { openModal: openEmergencyModal } = useEmergencyModal();
 
+  // The issue: Handler checks if notification.order?.id exists
+  // But for PAYMENT_PROCESSED and REMARKS notifications, the order might not be populated
+
   const handleNotificationClick = async (
     notification: NotificationWithDetails
   ) => {
-    if (
-      !notification.order?.id &&
-      !notification.walkInOrderId &&
-      !notification.medTechRequestId
-    )
+    // Debug: Log what IDs are available
+    console.log("Notification clicked:", {
+      type: notification.type,
+      orderId: notification.orderId, // From DB field
+      order_id: notification.order?.id, // From relation
+      walkInOrderId: notification.walkInOrderId,
+      medTechRequestId: notification.medTechRequestId,
+    });
+
+    // FIXED: Check orderId field directly, not just order relation
+    const hasValidId =
+      notification.orderId || // Direct field (most reliable)
+      notification.order?.id || // Relation
+      notification.walkInOrderId ||
+      notification.medTechRequestId;
+
+    if (!hasValidId) {
+      console.log("No valid ID found for notification:", notification.type);
       return;
+    }
 
     setLoading(true);
 
     try {
+      // --- MEDTECH REQUEST NOTIFICATIONS ---
       if (
         (notification.type === "MEDTECH_REQUEST" ||
+          notification.type === "MEDTECH_REQUEST_EDIT" ||
           notification.type === "MT_REQUEST_READY" ||
           notification.type === "MT_REQUEST_RELEASED" ||
           notification.type === "MT_REQUEST_APPROVED" ||
@@ -100,7 +119,10 @@ const StaffNotificationList = ({
         const res = await fetch(
           `/api/medtech_request/${notification.medTechRequestId}/notification`
         );
-        if (!res.ok) return;
+        if (!res.ok) {
+          console.error("Failed to fetch MedTech request");
+          return;
+        }
         const data = (await res.json()) as {
           id: number;
           status: "pending_for_approval" | "approved" | "declined";
@@ -132,7 +154,6 @@ const StaffNotificationList = ({
 
         setSelectedRequest(requestView);
         setIsModalOpen(true);
-
         return;
       }
 
@@ -142,7 +163,10 @@ const StaffNotificationList = ({
           `/api/walkin_order/${notification.walkInOrderId}/notification`
         );
 
-        if (!res.ok) throw new Error("Failed to fetch walk-in order details");
+        if (!res.ok) {
+          console.error("Failed to fetch walk-in order");
+          return;
+        }
 
         const data = (await res.json()) as {
           id: number;
@@ -179,20 +203,28 @@ const StaffNotificationList = ({
         };
 
         openModal(orderView);
-        return; // exit so it doesn’t try to open request order
+        return;
       }
 
-      // --- REQUEST ORDER NOTIFICATION ---
+      // --- REQUEST ORDER NOTIFICATIONS ---
+      // FIXED: Use orderId field directly if order relation is not populated
+      const orderIdToFetch = notification.order?.id || notification.orderId;
+
       if (
-        notification.order?.id &&
+        orderIdToFetch &&
         (notification.type === "ORDER_RECEIVED" ||
           notification.type === "ORDER_REQUEST" ||
-          notification.type === "EMERGENCY_ORDER")
+          notification.type === "EMERGENCY_ORDER" ||
+          notification.type === "PAYMENT_PROCESSED" ||
+          notification.type === "REMARKS")
       ) {
         const res = await fetch(
-          `/api/request_order/${notification.order.id}/notification`
+          `/api/request_order/${orderIdToFetch}/notification`
         );
-        if (!res.ok) throw new Error("Failed to fetch order details");
+        if (!res.ok) {
+          console.error("Failed to fetch order details");
+          return;
+        }
         const data: ApiOrderResponse = await res.json();
 
         if (data.type === "EMERGENCY") {
@@ -251,7 +283,10 @@ const StaffNotificationList = ({
         };
 
         openModal(orderView);
+        return;
       }
+
+      console.log("Notification type not handled:", notification.type);
     } catch (error) {
       console.error("Error fetching order details:", error);
     } finally {
@@ -300,6 +335,17 @@ const StaffNotificationList = ({
                       <span className="w-2 h-2 mt-2 bg-blue-500 rounded-full flex-shrink-0"></span>
                     )}
                     <p className="font-semibold">{notification.title}</p>
+
+                    {notification.type === "MEDTECH_REQUEST_EDIT" &&
+                      userRole === "Manager" && (
+                        <p className="text-sm text-gray-700 mt-1">
+                          request has been edited by{" "}
+                          <span className="font-medium">
+                            {submittedBy || "Unknown"} ({role || "Unknown"})
+                          </span>
+                          .
+                        </p>
+                      )}
 
                     {notification.type === "MT_REQUEST_DECLINED" &&
                       userRole === "MedTech" && (

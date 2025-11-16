@@ -99,31 +99,50 @@ export interface EmergencyOrderModalData {
 
 export interface Notification {
   id: number;
-  orderType: "REGULAR" | "EMERGENCY"
+  orderType?: "REGULAR" | "EMERGENCY";
   title: string;
-  message: string;
+  message?: string; 
   read: boolean;
   createdAt: string | Date;
   updatedAt?: string | Date;
   senderId: string;
   recipientId: string;
-  type?: "ORDER_REQUEST" | "ADD_PRODUCT" | "ORDER_RECEIVED" | "PAYMENT_PROCESSED" | "EMERGENCY_ORDER" | "REMARKS" | "WALK_IN" | "MEDTECH_REQUEST" | "MT_REQUEST_READY" | "MT_REQUEST_RELEASED" | "MT_REQUEST_APPROVED" | "MT_REQUEST_DECLINED";
+  type?: 
+    | "ORDER_REQUEST" 
+    | "ADD_PRODUCT" 
+    | "ORDER_RECEIVED" 
+    | "PAYMENT_PROCESSED" 
+    | "EMERGENCY_ORDER" 
+    | "REMARKS" 
+    | "WALK_IN" 
+    | "MEDTECH_REQUEST" 
+    | "MEDTECH_REQUEST_EDIT"
+    | "MT_REQUEST_READY" 
+    | "MT_REQUEST_RELEASED" 
+    | "MT_REQUEST_APPROVED" 
+    | "MT_REQUEST_DECLINED";
+  
   orderId?: number | null;
   walkInOrderId?: number | null;
-  medTechRequestId?: number | null
+  medTechRequestId?: number | null;
   productId?: number | null;
+  
+  patientName?: string;
+  roomNumber?: string;
+  submittedBy?: string;
+  role?: string;
+  notes?: string;
+  
   sender?: {
     username: string;
     role: string;
   };
   order?: {
-    id: number
-    price?: number
+    id: number;
     patient_name: string;
     room_number: string;
-    products?: OrderItem[]
+    products?: OrderItem[];
   };
-  notes?: string
 }
 
 export interface Links {

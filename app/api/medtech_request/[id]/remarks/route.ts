@@ -38,6 +38,17 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
       data: updateData,
     });
 
+    const orderWithItems = await db.medTechRequest.findUnique({
+      where: { id: numericId },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+
     // Decrement stock if released
     if (remarks === "released") {
       const requestItems = await db.medTechRequestItem.findMany({
@@ -74,7 +85,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
             title: "Request is ready to pick up",
             senderId: userId,
             recipientId: medTech.id,
-            orderId: numericId,
+            medTechRequestId: updatedOrder.id,
             type: NotificationType.MT_REQUEST_READY,
             submittedBy: session.user.username ?? "",
             role: session.user.role ?? "",
@@ -87,7 +98,18 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
           title: notification.title,
           createdAt: notification.createdAt,
           type: notification.type,
+          notes: orderWithItems?.notes || "",
           sender: { username: notification.sender.username, role: notification.sender.role },
+          medTechRequestId: updatedOrder.id,
+          submittedBy: notification.submittedBy,
+           role: notification.role,
+          order: {
+            id: updatedOrder.id,
+            products: orderWithItems?.items.map((item) => ({
+              productName: item.product.product_name,
+              quantity: item.quantity,
+            })) || [],
+          },
         });
       }
     }
@@ -101,7 +123,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
             title: "Request has been released",
             senderId: userId,
             recipientId: manager.id,
-            orderId: numericId,
+            medTechRequestId: updatedOrder.id,
             type: NotificationType.MT_REQUEST_RELEASED,
             submittedBy: session.user.username ?? "",
             role: session.user.role ?? "",
@@ -109,12 +131,23 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
           include: { sender: true },
         });
 
-        await pusherServer.trigger(`private-user-${manager.id}`, "new-notification", {
+       await pusherServer.trigger(`private-user-${manager.id}`, "new-notification", {
           id: notification.id,
           title: notification.title,
           createdAt: notification.createdAt,
           type: notification.type,
+          notes: orderWithItems?.notes || "",
           sender: { username: notification.sender.username, role: notification.sender.role },
+          medTechRequestId: updatedOrder.id,
+          submittedBy: notification.submittedBy,
+           role: notification.role,
+          order: {
+            id: updatedOrder.id,
+            products: orderWithItems?.items.map((item) => ({
+              productName: item.product.product_name,
+              quantity: item.quantity,
+            })) || [],
+          },
         });
       }
     }

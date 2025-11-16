@@ -105,7 +105,6 @@ export async function handleCredentialsSignIn({
 
 }
 
-
 export async function handleSignOut() {
   const session = await auth();
 

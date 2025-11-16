@@ -38,9 +38,16 @@ export async function PUT(
       },
     });
 
-    // ---------------------------
-    // NOTIFICATION TITLE + TYPE
-    // ---------------------------
+    const orderWithItems = await db.medTechRequest.findUnique({
+      where: { id: numericId },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
 
     const notifTitle =
       status === "approved"
@@ -51,10 +58,6 @@ export async function PUT(
       status === "approved"
         ? NotificationType.MT_REQUEST_APPROVED
         : NotificationType.MT_REQUEST_DECLINED;
-
-    // ---------------------------
-    // SEND TO PHARMACIST + MEDTECH
-    // ---------------------------
 
     const recipients = await db.user.findMany({
       where: {
@@ -68,7 +71,7 @@ export async function PUT(
           title: notifTitle,
           senderId: userId,
           recipientId: user.id,
-          orderId: updatedOrder.id,
+          medTechRequestId: updatedOrder.id,
           type: notifType,
           submittedBy: session.user.username ?? "",
           role: session.user.role ?? "",
@@ -76,25 +79,25 @@ export async function PUT(
         include: { sender: true },
       });
 
-      await pusherServer.trigger(
-        `private-user-${user.id}`,
-        "new-notification",
-        {
+     await pusherServer.trigger(`private-user-${user.id}`, "new-notification", {
           id: notification.id,
           title: notification.title,
           createdAt: notification.createdAt,
           type: notification.type,
-          sender: {
-            username: notification.sender.username,
-            role: notification.sender.role,
+          notes: orderWithItems?.notes || "",
+          sender: { username: notification.sender.username, role: notification.sender.role },
+          medTechRequestId: updatedOrder.id,
+          submittedBy: notification.submittedBy,
+           role: notification.role,
+          order: {
+            id: updatedOrder.id,
+            products: orderWithItems?.items.map((item) => ({
+              productName: item.product.product_name,
+              quantity: item.quantity,
+            })) || [],
           },
-        }
-      );
+        });
     }
-
-    // ---------------------------
-    // AUDIT LOG
-    // ---------------------------
 
     await db.auditLog.create({
       data: {

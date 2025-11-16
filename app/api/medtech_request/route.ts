@@ -4,7 +4,6 @@ import {  NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { MedTechStatus, NotificationType, Prisma } from "@prisma/client";
 import { pusherServer } from "@/lib/pusher/server";
-import { toTitleCase } from "@/lib/utils";
 
 export async function POST(req: Request) {
   try {
@@ -207,15 +206,9 @@ export async function GET(req: Request) {
               product: true 
             } 
           },
-          requestedBy: {
-            select: { username: true },
-          },
-          receivedBy: {
-            select: { username: true },
-          },
-          approvedBy: {
-            select: { username: true },
-          },
+        receivedBy: true,
+        approvedBy: true,
+        requestedBy:true,
         },
         orderBy: { createdAt: "desc" },
         skip,
@@ -226,13 +219,13 @@ export async function GET(req: Request) {
 
     const formattedRequests = requests.map((req) => ({
       ...req,
-     requestedBy: req.requestedBy?.username ? toTitleCase(req.requestedBy.username) : "Unknown",
-      receivedBy: req.receivedBy?.username ? toTitleCase(req.receivedBy.username) : "Unknown",
-      approvedBy: req.approvedBy?.username ? toTitleCase(req.approvedBy.username) : "Unknown",
+      requestedBy: req.requestedBy,
+      receivedBy: req.receivedBy,
+      approvedBy: req.approvedBy,
       remarks: req.remarks,
       status: req.status,
       notes: req.notes,
-       createdAt: req.createdAt,
+      createdAt: req.createdAt,
       itemDetails: req.items.map((i) => ({
         productName: i.product.product_name,
         quantity: i.quantity,

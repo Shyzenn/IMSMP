@@ -21,7 +21,7 @@ export async function PUT(
             return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
         }
 
-        const { remarks } = await req.json();
+        const { remarks, patient_name, room_number } = await req.json();
         const validRemarks = ["preparing", "prepared", "dispensed"] as const;
 
         if (!validRemarks.includes(remarks)) {
@@ -33,46 +33,70 @@ export async function PUT(
             data: { remarks },
         });
 
+        const orderWithItems = await db.orderRequest.findUnique({
+          where: { id: numericId },
+          include: {
+            items: {
+              include: {
+                product: true,
+              },
+            },
+          },
+        });
+
         if (remarks === "prepared") {
             const nurses = await db.user.findMany({
             where: { role: "Nurse" },
             });
         
             for (const nurse of nurses) {
-                const notification = await db.notification.create({
-                    data: {
-                      title: "Order Prepared",
-                      senderId: session.user.id,
-                      recipientId: nurse.id,
-                      orderId: updatedOrder.id,
-                      type: NotificationType.REMARKS,
-                      patientName: updatedOrder.patient_name ?? "",
-                      roomNumber: updatedOrder.room_number ?? "",
-                      submittedBy: session.user.username ?? "",
-                      role: session.user.role ?? "",
-                    },
-                      include: { sender: true },
-                });
-            
-                await pusherServer.trigger(
-                  `private-user-${nurse.id}`,
-                  "new-notification",
-                  {
-                        id: notification.id,
-                        title: notification.title,
-                        createdAt: notification.createdAt,
-                        type: notification.type,
-                        sender: {
-                          username: notification.sender.username,
-                          role: notification.sender.role,
-                        },
-                        order: {
-                          patient_name: updatedOrder.patient_name,
-                          room_number: updatedOrder.room_number,
-                        },
-                      }
-                    );
-              }
+              const notification = await db.notification.create({
+                data: {
+                  title: "Order Prepared",
+                  type: NotificationType.REMARKS,
+                  senderId: session.user.id,
+                  recipientId: nurse.id,
+                  orderId: updatedOrder.id,
+                  patientName: patient_name,
+                  roomNumber: room_number,
+                  submittedBy: session.user.username,
+                  role: session.user.role,
+                },
+                include: { sender: true },
+              });
+
+              await pusherServer.trigger(
+                `private-user-${updatedOrder.userId}`,
+                "new-notification",
+                {
+                  id: notification.id,
+                  title: notification.title,
+                  orderType: updatedOrder.type,
+                  createdAt: notification.createdAt,
+                  type: notification.type,
+                  notes: updatedOrder.notes || "",
+                  read: false,
+                  sender: {
+                    username: notification.sender.username,
+                    role: notification.sender.role,
+                  },
+                  submittedBy: notification.submittedBy,   
+                  role: notification.role,                 
+                  patientName: notification.patientName,   
+                  roomNumber: notification.roomNumber,     
+                  order: {
+                    id: updatedOrder.id,
+                    patient_name: updatedOrder.patient_name ?? "",  
+                    room_number: updatedOrder.room_number ?? "",   
+                    products: orderWithItems?.items.map((item) => ({
+                      productName: item.product.product_name,
+                      quantity: item.quantity,
+                      price: item.product.price
+                    })) || [],
+                  },
+                }
+              );
+            }
          }
 
         await db.auditLog.create({

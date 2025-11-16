@@ -198,13 +198,13 @@ const RecentMedTechRequestTable = ({ userRole }: { userRole?: string }) => {
                 ? "Pending"
                 : filter === "approved"
                 ? "Approved"
-                : "Cancelled"
+                : "Declined"
             }
             option={[
               { label: "All", value: "all" },
               { label: "Pending for Approval", value: "pending_for_approval" },
               { label: "Approved", value: "approved" },
-              { label: "Cancelled", value: "cancelled" },
+              { label: "Declined", value: "declined" },
             ]}
             value={filter}
             onChange={(val) => {

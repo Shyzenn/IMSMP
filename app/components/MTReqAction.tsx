@@ -8,12 +8,14 @@ import React, { useState } from "react";
 import ActionButton from "./ActionButton";
 import { RequestView } from "./MTRequestDetails";
 import { IoMdCheckmarkCircleOutline, IoMdEye } from "react-icons/io";
+import { MdOutlineEdit } from "react-icons/md";
 import { CiPill } from "react-icons/ci";
 import { GoPackageDependents } from "react-icons/go";
 import ConfirmationModal from "./ConfirmationModal";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { TbCancel } from "react-icons/tb";
+import MTRequestEdit from "./MTRequestEdit";
 
 const MTReqAction = ({
   onView,
@@ -31,6 +33,7 @@ const MTReqAction = ({
   const [showPreparedModal, setShowPreparedModal] = useState(false);
   const [showDispensedModal, setShowDispensedModal] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
+  const [showRequestEdit, setShowRequestEdit] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -77,9 +80,31 @@ const MTReqAction = ({
               </span>
             </TooltipTrigger>
             <TooltipContent>
-              <p>View Order</p>
+              <p>View Request</p>
             </TooltipContent>
           </Tooltip>
+          {userRole === "MedTech" && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex">
+                  <ActionButton
+                    icon={MdOutlineEdit}
+                    onClick={() => setShowRequestEdit(true)}
+                    disabled={remarks === "released" || status === "declined"}
+                    color={`hover:bg-slate-200 ${
+                      remarks === "released" || status === "declined"
+                        ? "cursor-not-allowed text-gray-300"
+                        : ""
+                    }`}
+                  />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Edit Request</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+
           {userRole === "Pharmacist_Staff" && (
             <>
               {status === "declined" ? (
@@ -152,6 +177,13 @@ const MTReqAction = ({
           )}
         </div>
       </TooltipProvider>
+
+      {showRequestEdit && (
+        <MTRequestEdit
+          setShowRequestEdit={setShowRequestEdit}
+          requestData={orderData}
+        />
+      )}
     </div>
   );
 };

@@ -300,8 +300,13 @@ const ReqOrderAction = ({
                   <ActionButton
                     icon={MdOutlineEdit}
                     onClick={() => setShowRequestEditModal(true)}
+                    disabled={
+                      orderData?.status === "canceled" ||
+                      orderData?.status === "refunded"
+                    }
                     color={` ${
-                      orderData?.status === "canceled"
+                      orderData?.status === "canceled" ||
+                      orderData?.status === "refunded"
                         ? "cursor-not-allowed text-gray-300"
                         : "hover:bg-slate-200"
                     }`}
@@ -320,6 +325,7 @@ const ReqOrderAction = ({
                     <ActionButton
                       icon={IoMdClose}
                       onClick={open}
+                      disabled={orderData?.status !== "pending"}
                       color={` ${
                         orderData?.status !== "pending"
                           ? "cursor-not-allowed text-gray-300"
@@ -334,11 +340,21 @@ const ReqOrderAction = ({
               </Tooltip>
             ) : (
               <>
-                <ActionButton
-                  icon={IoArchiveOutline}
-                  onClick={() => setShowArchiveModal(true)}
-                  color="hover:bg-slate-300"
-                />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex">
+                      <ActionButton
+                        icon={IoArchiveOutline}
+                        onClick={() => setShowArchiveModal(true)}
+                        color="hover:bg-slate-300"
+                      />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Archive Order</p>
+                  </TooltipContent>
+                </Tooltip>
+
                 {showArchiveModal && (
                   <ConfirmationModal
                     hasReason={true}

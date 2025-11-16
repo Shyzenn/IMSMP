@@ -1,7 +1,7 @@
 "use client";
 
 import { OrderItem } from "@/lib/interfaces";
-import { capitalLetter } from "@/lib/utils";
+import { capitalLetter, toTitleCase } from "@/lib/utils";
 import React, { Dispatch, SetStateAction } from "react";
 import CancelButton from "./CancelButton";
 import {
@@ -191,21 +191,27 @@ const MedTechRequestDetailsModal: React.FC<MedTechRequestDetailsModalProps> = ({
             <p className="font-semibold">
               Requested By:{" "}
               <span className="font-normal">
-                {selectedRequest.requestedBy?.username}
+                {selectedRequest.requestedBy?.username
+                  ? toTitleCase(selectedRequest.requestedBy?.username)
+                  : "Unknown"}
               </span>
             </p>
 
             <p className="font-semibold">
               Received By:{" "}
               <span className="font-normal">
-                {selectedRequest.receivedBy?.username}
+                {selectedRequest.receivedBy?.username
+                  ? toTitleCase(selectedRequest.receivedBy?.username)
+                  : "Unknown"}
               </span>
             </p>
 
             <p className="font-semibold">
               Approved By:{" "}
               <span className="font-normal">
-                {selectedRequest.approvedBy?.username}
+                {selectedRequest.approvedBy?.username
+                  ? toTitleCase(selectedRequest.approvedBy?.username)
+                  : "Unknown"}
               </span>
             </p>
           </div>
