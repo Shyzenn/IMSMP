@@ -99,6 +99,8 @@ export function getLogoLink(role?: string) {
       return "/nurse_dashboard";
     case "Cashier":
       return "/cashier_dashboard";
+    case "MedTech":
+      return "/medtech_dashboard";
     default:
       return "/"; 
   }

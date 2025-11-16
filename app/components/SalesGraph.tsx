@@ -27,15 +27,26 @@ ChartJS.register(
   Filler
 );
 
-const fetchSales = async (filter: string) => {
-  const { data } = await axios.get("/api/request_order/sales", {
-    params: { filter },
-  });
-  return Array.isArray(data) ? data : [];
-};
-
-const SalesGraph = ({ username }: { username: string }) => {
+const SalesGraph = ({
+  username,
+  userRole,
+}: {
+  username: string;
+  userRole?: string;
+}) => {
   const [filter, setFilter] = useState("This Year");
+
+  const apiRole =
+    userRole === "MedTech"
+      ? "/api/charts/mt_request_trends"
+      : "/api/request_order/sales";
+
+  const fetchSales = async (filter: string) => {
+    const { data } = await axios.get(apiRole, {
+      params: { filter },
+    });
+    return Array.isArray(data) ? data : [];
+  };
 
   const { data: salesData = [], isLoading } = useQuery({
     queryFn: () => fetchSales(filter),
@@ -43,21 +54,35 @@ const SalesGraph = ({ username }: { username: string }) => {
   });
 
   if (isLoading) return <SalesGraphSkeleton />;
+  const isMedTech = userRole === "MedTech";
 
-  const data = {
-    labels: salesData.map((entry) => entry.date),
-    datasets: [
-      {
-        label: "Sales",
-        data: salesData.map((entry) => entry.totalSales),
-        borderColor: "#11d695 ",
-        backgroundColor: "rgba(103,255,153,0.1)",
-        fill: true,
-        tension: 0,
-      },
-    ],
-    hoverRadius: 8,
-  };
+  const data = isMedTech
+    ? {
+        labels: salesData.map((entry) => entry.date),
+        datasets: [
+          {
+            label: "Total Requests",
+            data: salesData.map((entry) => entry.total),
+            borderColor: "#11d695",
+            backgroundColor: "rgba(103,255,153,0.1)",
+            fill: true,
+            tension: 0,
+          },
+        ],
+      }
+    : {
+        labels: salesData.map((entry) => entry.date),
+        datasets: [
+          {
+            label: "Sales",
+            data: salesData.map((entry) => entry.totalSales),
+            borderColor: "#11d695",
+            backgroundColor: "rgba(103,255,153,0.1)",
+            fill: true,
+            tension: 0,
+          },
+        ],
+      };
 
   const options = {
     responsive: true,
@@ -94,7 +119,7 @@ const SalesGraph = ({ username }: { username: string }) => {
       <WidgetHeader
         filter={filter}
         setFilter={setFilter}
-        title="Sales"
+        title={isMedTech ? "Request Trends" : "Sales"}
         data={salesData.map((s) => ({ label: s.date, value: s.totalSales }))}
         reportType="sales"
         userName={username}
@@ -103,7 +128,9 @@ const SalesGraph = ({ username }: { username: string }) => {
       <div className="h-full">
         {salesData.length === 0 ? (
           <p className="text-center text-sm text-gray-500">
-            No sales data available for this range.
+            {isMedTech
+              ? "No request data available for this range."
+              : "No sales data available for this range."}
           </p>
         ) : (
           <Line options={options} data={data} />

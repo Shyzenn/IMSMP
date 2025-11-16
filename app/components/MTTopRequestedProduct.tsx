@@ -15,7 +15,6 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import SalesGraphSkeleton from "./Skeleton";
 import DateRangeSelector from "./WidgetHeader";
-import { useSession } from "next-auth/react";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
@@ -24,22 +23,15 @@ type ProductData = {
   quantity: number;
 };
 
-const TopRequestedProducts = () => {
+const fetchTopProducts = async (filter: string): Promise<ProductData[]> => {
+  const { data } = await axios.get("/api/charts/mt_top_requested", {
+    params: { filter },
+  });
+  return Array.isArray(data) ? data : [];
+};
+
+const MTTopRequestedProducts = () => {
   const [filter, setFilter] = useState("This Year");
-  const { data: session } = useSession();
-  const userRole = session?.user.role;
-
-  const userApi =
-    userRole === "MedTech"
-      ? "/api/charts/mt_top_requested"
-      : "/api/charts/top_requested";
-
-  const fetchTopProducts = async (filter: string): Promise<ProductData[]> => {
-    const { data } = await axios.get(userApi, {
-      params: { filter },
-    });
-    return Array.isArray(data) ? data : [];
-  };
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["topRequestedProducts", filter],
@@ -113,4 +105,4 @@ const TopRequestedProducts = () => {
   );
 };
 
-export default TopRequestedProducts;
+export default MTTopRequestedProducts;
