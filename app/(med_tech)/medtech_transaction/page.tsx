@@ -1,10 +1,9 @@
 import PageTableHeader from "@/app/components/PageTableHeader";
 import Pagination from "@/app/components/Pagination";
 import { TableRowSkeleton } from "@/app/components/Skeleton";
-import TransactionTable from "@/app/components/transaction/table/Table";
-import { auth } from "@/auth";
-import { fetchTransactionPages } from "@/lib/action/get";
-import { transactionSkeletonHeaders } from "@/lib/utils";
+import MTTransactionTable from "@/app/components/transaction/table/MTTable";
+import { fetchMTTransactionPages } from "@/lib/action/get";
+import { transactionMTSkeletonHeaders } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import React, { Suspense } from "react";
 
@@ -19,8 +18,6 @@ async function Transaction(props: {
     to: string;
   }>;
 }) {
-  const session = await auth();
-  const userRole = session?.user.role;
   const searchParams = await props.searchParams;
 
   const query = searchParams?.query || "";
@@ -39,7 +36,7 @@ async function Transaction(props: {
   const sortOrder = (searchParams?.order as "asc" | "desc") || "desc";
 
   const currentPage = Number(page);
-  const totalPages = await fetchTransactionPages(query, filter, userRole, {
+  const totalPages = await fetchMTTransactionPages(query, filter, {
     from,
     to,
   });
@@ -50,20 +47,19 @@ async function Transaction(props: {
       style={{ height: "calc(94vh - 70px)" }}
     >
       <PageTableHeader
-        searchPlaceholder="Search customer name..."
+        searchPlaceholder="Search request number..."
         title="History"
         hasDateFilter={true}
-        isTransactionFilter={true}
+        isMTTransactionFilter={true}
       />
       <div className="mt-4">
         <Suspense
           key={`${query}-${currentPage}-${sortBy}-${sortOrder}-${from}-${to}`}
           fallback={
-            <TableRowSkeleton headerLabel={transactionSkeletonHeaders} />
+            <TableRowSkeleton headerLabel={transactionMTSkeletonHeaders} />
           }
         >
-          <TransactionTable
-            userRole={userRole}
+          <MTTransactionTable
             query={query}
             currentPage={currentPage}
             filter={filter}

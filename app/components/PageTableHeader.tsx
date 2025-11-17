@@ -44,6 +44,7 @@ import { Body } from "../api/report/sales/route";
 import { CiSearch } from "react-icons/ci";
 import { generateTransactionPDF } from "@/lib/reportUtils/transactionReport";
 import { MultiSelect } from "./multi-select";
+import MTTransactionFilter from "./transaction/MTTransactionFilter";
 
 interface PageTableHeaderProps {
   title: string;
@@ -57,6 +58,7 @@ interface PageTableHeaderProps {
   transactionExport?: boolean;
   hasDateFilter?: boolean;
   searchPlaceholder: string;
+  isMTTransactionFilter?: boolean;
 }
 
 const PageTableHeader: React.FC<PageTableHeaderProps> = ({
@@ -71,6 +73,7 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
   transactionExport,
   hasDateFilter,
   searchPlaceholder,
+  isMTTransactionFilter,
 }) => {
   const { data: session } = useSession();
   const [showModal, setShowModal] = useState(false);
@@ -421,6 +424,8 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
               <BatchFilter />
             ) : isArchiveFilter ? (
               <ArchiveFilter />
+            ) : isMTTransactionFilter ? (
+              <MTTransactionFilter />
             ) : (
               <AuditFilter />
             )}

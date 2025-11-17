@@ -1,4 +1,4 @@
-import { OrderType, Status } from "@prisma/client";
+import { MedTechRemarks, MedTechStatus, OrderType, Status } from "@prisma/client";
 import { clsx, type ClassValue } from "clsx"
 import { endOfDay, formatDistanceToNow, parseISO, startOfDay } from "date-fns";
 import { twMerge } from "tailwind-merge"
@@ -86,6 +86,46 @@ export const statusLabels: Record<string, string> = {
 //   REGULAR: "Regular",
 //   EMERGENCY: "Pay Later",
 // };
+
+export type MTTransactionFilter =
+  | "all"
+  | "pending_for_approval"
+  | "approved"
+  | "declined"
+  | "processing"
+  | "ready"
+  | "released"
+
+export const isMTFilterEnabled = (filters: MTTransactionFilter[]) => {
+  return filters.some(f =>
+    f === "all" ||
+    f === "pending_for_approval" ||
+    f === "approved" ||
+    f === "declined" ||
+    f === "processing" ||
+    f === "ready" ||
+    f === "released"
+  );
+};
+
+export const mapMTStatus = (filter: MTTransactionFilter) => {
+  switch (filter) {
+    case "pending_for_approval":
+      return { field: "status", value: MedTechStatus.pending_for_approval };
+    case "approved":
+      return { field: "status", value: MedTechStatus.approved };
+    case "declined":
+      return { field: "status", value: MedTechStatus.declined };
+    case "processing":
+      return { field: "remarks", value: MedTechRemarks.processing };
+    case "ready":
+      return { field: "remarks", value: MedTechRemarks.ready };
+    case "released":
+      return { field: "remarks", value: MedTechRemarks.released };
+    default:
+      return undefined;
+  }
+};
 
 export type TransactionFilter =
   | "all"
@@ -215,6 +255,19 @@ export const transactionSkeletonHeaders = [
   { key: "total", label: "Total Price" },
   { key: "type", label: "Type" },
   { key: "status", label: "Status" },
+];
+
+export const transactionMTSkeletonHeaders = [
+ 
+  { key: "number", label: "No." },
+  { key: "createdAt", label: "Created At" },
+  { key: "requestedBy", label: "Requested By" },
+  { key: "receivedBy", label: "Received By" },
+  { key: "approvedBy", label: "Approved By" },
+  { key: "quantity", label: "Quantity" },
+  { key: "status", label: "Status" },
+  { key: "remarks", label: "Remarks" },
+  
 ];
 
 export const dateFilter = (dateRange:{to: string, from: string}) => {

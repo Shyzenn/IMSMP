@@ -95,7 +95,7 @@ const MedTechRequestDetailsModal: React.FC<MedTechRequestDetailsModalProps> = ({
           <div className="flex justify-between items-center border-b-2 border-gray-100 pb-2 w-full">
             <div className="flex items-baseline justify-between w-full">
               <div className="flex flex-col gap-2">
-                <p className="text-lg font-semibold">
+                <p className="text-lg font-semibold text-start">
                   REQ-0{selectedRequest.id}
                 </p>
                 <p className="font-semibold">MedTech Request Details</p>
@@ -124,7 +124,7 @@ const MedTechRequestDetailsModal: React.FC<MedTechRequestDetailsModalProps> = ({
 
           {/* Request Info */}
           <div className="flex flex-col gap-2 pb-2">
-            <p className="font-semibold">
+            <p className="font-semibold  text-start">
               Created At:{" "}
               <span className="font-normal">
                 {new Date(selectedRequest.createdAt).toLocaleString("en-PH", {
@@ -133,7 +133,7 @@ const MedTechRequestDetailsModal: React.FC<MedTechRequestDetailsModalProps> = ({
               </span>
             </p>
 
-            <p className="font-semibold">
+            <p className="font-semibold  text-start">
               Remarks:{" "}
               <span className="font-normal">
                 {selectedRequest.remarks === "processing"
@@ -180,7 +180,7 @@ const MedTechRequestDetailsModal: React.FC<MedTechRequestDetailsModalProps> = ({
 
           {/* Notes */}
           {selectedRequest.notes && selectedRequest.notes?.length > 0 && (
-            <div className="border p-3 bg-slate-50 rounded-md shadow-sm">
+            <div className="border p-3 bg-slate-50 rounded-md shadow-sm  text-start">
               <p className="font-semibold mb-2">Notes:</p>
               <p className="text-gray-700">{selectedRequest.notes}</p>
             </div>
@@ -188,7 +188,7 @@ const MedTechRequestDetailsModal: React.FC<MedTechRequestDetailsModalProps> = ({
 
           {/* User Information */}
           <div className="border-t-2 pt-4 space-y-2">
-            <p className="font-semibold">
+            <p className="font-semibold  text-start">
               Requested By:{" "}
               <span className="font-normal">
                 {selectedRequest.requestedBy?.username
@@ -197,7 +197,7 @@ const MedTechRequestDetailsModal: React.FC<MedTechRequestDetailsModalProps> = ({
               </span>
             </p>
 
-            <p className="font-semibold">
+            <p className="font-semibold  text-start">
               Received By:{" "}
               <span className="font-normal">
                 {selectedRequest.receivedBy?.username
@@ -206,7 +206,7 @@ const MedTechRequestDetailsModal: React.FC<MedTechRequestDetailsModalProps> = ({
               </span>
             </p>
 
-            <p className="font-semibold">
+            <p className="font-semibold  text-start">
               Approved By:{" "}
               <span className="font-normal">
                 {selectedRequest.approvedBy?.username
