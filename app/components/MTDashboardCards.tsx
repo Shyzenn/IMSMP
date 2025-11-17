@@ -56,7 +56,7 @@ const MTDashboardCards = () => {
       icon: LuBadgeCheck,
       bgColor: "bg-green-50",
       textColor: "text-green-500",
-      link: "/medtech_transaction?page=1&filter=all&sort=createdAt&order=desc",
+      link: "/medtech_transaction?page=1&filter=approved&sort=createdAt&order=desc",
     },
     {
       title: "Total Declined Request",
@@ -64,7 +64,7 @@ const MTDashboardCards = () => {
       icon: LuCircleX,
       bgColor: "bg-red-50",
       textColor: "text-red-500",
-      link: "/medtech_transaction?page=1&filter=all&sort=createdAt&order=desc",
+      link: "/medtech_transaction?page=1&filter=declined&sort=createdAt&order=desc",
     },
     {
       title: "Total Released Request",
@@ -72,7 +72,7 @@ const MTDashboardCards = () => {
       icon: LuPackageCheck,
       bgColor: "bg-slate-50",
       textColor: "text-slate-500",
-      link: "/medtech_transaction?page=1&filter=for_payment&sort=createdAt&order=desc",
+      link: "/medtech_transaction?page=1&filter=released&sort=createdAt&order=desc",
     },
   ];
 
