@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useSession } from "next-auth/react";
 
 type ExportOption = "csv" | "pdf";
 
@@ -36,6 +37,9 @@ const WidgetHeader = ({
   reportType,
   userName,
 }: WidgetHeaderProps) => {
+  const { data: session } = useSession();
+  const userRole = session?.user.role;
+
   const handleExport = (format: ExportOption) => {
     if (format === "csv") {
       exportCSV();
@@ -198,21 +202,25 @@ const WidgetHeader = ({
           value={filter}
           onChange={(value) => setFilter(value)}
         />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="p-2 rounded-md hover:bg-gray-100">
-              <MoreVertical className="w-5 h-5" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleExport("csv")}>
-              Export as CSV
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleExport("pdf")}>
-              Export as PDF
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {(userRole === "Pharmacist_Staff" ||
+          userRole === "Manager" ||
+          userRole === "Cashier") && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-2 rounded-md hover:bg-gray-100">
+                <MoreVertical className="w-5 h-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport("csv")}>
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport("pdf")}>
+                Export as PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </div>
   );

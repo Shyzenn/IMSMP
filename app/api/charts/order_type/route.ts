@@ -24,10 +24,11 @@ export async function GET(req: Request) {
   }
 
   try {
+    // Fetch items from both paid and refunded orders
     const orderItems = await db.orderItem.findMany({
       where: {
         order: {
-          status: "paid",
+          status: { in: ["paid", "refunded"] },
           createdAt: { gte: fromDate },
         },
       },
@@ -39,7 +40,7 @@ export async function GET(req: Request) {
     const walkInItems = await db.walkInItem.findMany({
       where: {
         transaction: { 
-          status: "paid",
+          status: { in: ["paid", "refunded"] },
           createdAt: { gte: fromDate } 
         },
       },
@@ -48,22 +49,26 @@ export async function GET(req: Request) {
       },
     });
 
+    // Calculate Order Request revenue with refunded quantities
     const orderRequestRevenue = orderItems.reduce((sum, item) => {
-      return sum + item.quantity * Number(item.product.price);
+      const netQuantity = item.quantity - (item.refundedQuantity || 0);
+      return sum + netQuantity * Number(item.product.price);
     }, 0);
 
+    // Calculate Walk-In revenue with refunded quantities
     const walkInRevenue = walkInItems.reduce((sum, item) => {
-      return sum + item.quantity * Number(item.price);
+      const netQuantity = item.quantity - (item.refundedQuantity || 0);
+      return sum + netQuantity * Number(item.price);
     }, 0);
 
     const salesByOrderType = [
       {
         name: "Order Request",
-        revenue: orderRequestRevenue,
+        revenue: Math.max(0, orderRequestRevenue), // Ensure no negative values
       },
       {
         name: "Walk-in",
-        revenue: walkInRevenue,
+        revenue: Math.max(0, walkInRevenue), // Ensure no negative values
       },
     ].filter((item) => item.revenue > 0); 
 

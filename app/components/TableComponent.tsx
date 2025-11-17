@@ -32,6 +32,8 @@ function TableComponent<T extends Record<string, unknown>>({
       ? "/pharmacist_inventory/"
       : userRole === "Nurse"
       ? "/nurse_inventory/"
+      : userRole === "MedTech"
+      ? "/medtech_inventory/"
       : "/cashier_inventory";
 
   const reusableTalbe = () => (

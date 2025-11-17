@@ -4,7 +4,6 @@ import { subDays, startOfMonth, startOfYear } from "date-fns";
 import { auth } from "@/auth";
 
 export async function GET(req: Request) {
-
   const session = await auth();
 
   if (!session || !session.user?.id) {
@@ -25,11 +24,11 @@ export async function GET(req: Request) {
   }
 
   try {
-
-    const [paidOrders, paidWalkIns] = await Promise.all([
+    // Fetch both paid and refunded transactions
+    const [orderRequests, walkInTransactions] = await Promise.all([
       db.orderRequest.findMany({
         where: {
-          status: "paid",
+          status: { in: ["paid", "refunded"] },
           createdAt: {
             gte: fromDate,
           },
@@ -44,7 +43,7 @@ export async function GET(req: Request) {
       }),
       db.walkInTransaction.findMany({
         where: {
-          status: "paid",
+          status: { in: ["paid", "refunded"] },
           createdAt: {
             gte: fromDate,
           },
@@ -57,11 +56,12 @@ export async function GET(req: Request) {
           },
         },
       }),
-    ])
+    ]);
 
     const dailySalesMap = new Map<string, number>();
 
-    for (const order of paidOrders) {
+    // Process Order Requests
+    for (const order of orderRequests) {
       const dateStr = order.createdAt.toISOString().split("T")[0];
 
       const total = order.items.reduce((sum, item) => {
@@ -70,29 +70,39 @@ export async function GET(req: Request) {
             ? item.product.price
             : Number(item.product.price);
 
-        return sum + price * item.quantity;
+        // Calculate net quantity (total - refunded)
+        const netQuantity = item.quantity - (item.refundedQuantity || 0);
+
+        return sum + price * netQuantity;
       }, 0);
 
       dailySalesMap.set(dateStr, (dailySalesMap.get(dateStr) || 0) + total);
     }
 
+    // Process Walk-In Transactions
+    for (const walkIn of walkInTransactions) {
+      const dateStr = walkIn.createdAt.toISOString().split("T")[0];
 
-    for (const order of paidWalkIns) {
-      const dateStr = order.createdAt.toISOString().split("T")[0];
-
-      const total = order.items.reduce((sum, item) => {
+      const total = walkIn.items.reduce((sum, item) => {
         const price =
           typeof item.price === "number" ? item.price : Number(item.price);
 
-        return sum + price * item.quantity;
+        // Calculate net quantity (total - refunded)
+        const netQuantity = item.quantity - (item.refundedQuantity || 0);
+
+        return sum + price * netQuantity;
       }, 0);
 
       dailySalesMap.set(dateStr, (dailySalesMap.get(dateStr) || 0) + total);
     }
 
+    // Format the results
     const formatted = [...dailySalesMap.entries()]
       .sort(([a], [b]) => (a > b ? 1 : -1))
-      .map(([date, totalSales]) => ({ date, totalSales }));
+      .map(([date, totalSales]) => ({ 
+        date, 
+        totalSales: Math.max(0, totalSales) // Ensure no negative totals
+      }));
 
     return NextResponse.json(formatted);
   } catch (error) {

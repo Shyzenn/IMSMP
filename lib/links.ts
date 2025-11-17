@@ -43,7 +43,15 @@ export const managerLinks: Links[] = [
      
     ],
   },
-  { name: "Transaction", href: "/transaction", icon: GrTransaction },
+   {
+    name: "Transaction " ,
+    icon: GrTransaction,
+    subLinks: [
+      { name: "Order Request / Walk In", href: "/transaction/order_walkin" },
+      { name: "MedTech Request", href: "/transaction/medtech_transaction" },
+     
+    ],
+  },
   { name: "Audit Log", href: "/audit_log", icon: AiOutlineAudit },
 ];
 
@@ -63,7 +71,15 @@ export const pharmacistLinks = [
      
     ],
   },
-  { name: "Transaction", href: "/pharmacist_transaction", icon: GrTransaction },
+  {
+    name: "Transaction " ,
+    icon: GrTransaction,
+    subLinks: [
+      { name: "Order Request / Walk In", href: "/pharmacist_transaction/order_walkin" },
+      { name: "MedTech Request", href: "/pharmacist_transaction/medtech_transaction" },
+     
+    ],
+  },
 ]
 
 export const cashierLinks = [
