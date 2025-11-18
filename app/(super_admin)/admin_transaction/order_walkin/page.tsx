@@ -52,7 +52,6 @@ async function Transaction(props: {
       <PageTableHeader
         searchPlaceholder="Search customer name..."
         title="History"
-        transactionExport={true}
         hasDateFilter={true}
         isTransactionFilter={true}
       />

@@ -76,7 +76,7 @@ interface ReceiptItem {
 
 interface ReceiptData {
   header?: {
-    name: string;
+    name?: string;
     subtitle: string;
   };
   orderInfo: Record<string, string>;
@@ -92,7 +92,7 @@ const buildReceipt = (data: ReceiptData): string => {
   
   // Header
   const headerName = data.header?.name || "Macoleen's Pharmacy";
-  const headerSubtitle = data.header?.subtitle || "Order Receipt";
+  const headerSubtitle = data.header?.subtitle || "Order Details";
   receipt += headerName.padStart((RECEIPT_WIDTH + headerName.length) / 2) + "\n";
   receipt += headerSubtitle.padStart((RECEIPT_WIDTH + headerSubtitle.length) / 2) + "\n";
   receipt += "-".repeat(RECEIPT_WIDTH) + "\n";
@@ -250,6 +250,9 @@ export const handlePrint = async (
       footer: {
         requestedBy: selectedOrder.requestedBy,
       },
+      header: {
+        subtitle: "Order Request"
+      }
     };
     
     const receipt = buildReceipt(receiptData);
@@ -281,6 +284,9 @@ export const handleEmergencyPrint = async (
       footer: {
         requestedBy: orderData.sender.username,
       },
+      header:{
+        subtitle: "Order Request"
+      }
     };
     
     const receipt = buildReceipt(receiptData);
@@ -311,6 +317,9 @@ export const handleWalkInPrint = async (
       footer: {
         handledBy: selectedOrder.handledBy,
       },
+      header: {
+        subtitle: "Walk In Order"
+      }
     };
     
     const receipt = buildReceipt(receiptData);
