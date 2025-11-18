@@ -46,13 +46,18 @@ export async function PATCH(req: Request) {
 
     const newDateCode = format(releaseDate, "ddMMyyyy");
     const newBatchNumber = `${newDateCode}B${oldBatchSuffix}`;
+    function normalizeDate(date: Date) {
+      const d = new Date(date);
+      d.setHours(12, 0, 0, 0); 
+      return d;
+    }
 
     const updatedBatch = await db.productBatch.update({
       where: { id },
       data: {
         quantity,
-        releaseDate,
-        expiryDate,
+        releaseDate: normalizeDate(releaseDate),
+        expiryDate: normalizeDate(expiryDate),
         batchNumber: newBatchNumber, 
       },
       include: {

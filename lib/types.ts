@@ -159,10 +159,45 @@ export const editProductSchema = z.object({
 
 export type TEditProductSchema = z.infer<typeof editProductSchema>;
 
-const parseLocalDate = (dateString: string): Date => {
-  const [year, month, day] = dateString.split('-').map(Number);
-  return new Date(year, month - 1, day); 
+// Replenish Product
+function parseLocalDateString(str: string) {
+  // Accept only YYYY-MM-DD — prevent invalid parsing
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(str)) return undefined;
+
+  const [year, month, day] = str.split("-").map(Number);
+
+  // Convert using LOCAL timezone, not UTC
+  return new Date(year, month - 1, day, 12); // Set noon to avoid UTC shifting
+}
+
+const datePreprocess = (val: unknown) => {
+  if (!val) return undefined;
+
+  // If it's already a Date from Calendar
+  if (val instanceof Date) {
+    const d = new Date(val);
+    d.setHours(12, 0, 0, 0);
+    return d;
+  }
+
+  // If it's an ISO date string: "2025-11-19T16:00:00.000Z"
+  if (typeof val === "string" && val.includes("T")) {
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return undefined;
+
+    d.setHours(12, 0, 0, 0); 
+    return d;
+  }
+
+  // If it's a plain YYYY-MM-DD string (from JSON)
+  if (typeof val === "string") {
+    const parsed = parseLocalDateString(val);
+    return parsed;
+  }
+
+  return undefined;
 };
+
 
 // Edit Batch
 export const editBatchSchema = z.object({
@@ -174,45 +209,18 @@ export const editBatchSchema = z.object({
       .max(10000, "Quantity must not exceed 10,000"),
   ),
   releaseDate: z.preprocess(
-    (val) => {
-      if (!val) return undefined;
-      if (val instanceof Date) {
-        return isNaN(val.getTime()) ? undefined : val;
-      }
-      if (typeof val === "string") {
-        if (val.includes('T')) {
-          const date = new Date(val);
-          return isNaN(date.getTime()) ? undefined : date;
-        }
-        return parseLocalDate(val);
-      }
-      return undefined;
-    },
+    datePreprocess,
     z.date({ required_error: "Release Date is required" })
   ),
+
   expiryDate: z.preprocess(
-    (val) => {
-      if (!val) return undefined;
-      if (val instanceof Date) {
-        return isNaN(val.getTime()) ? undefined : val;
-      }
-      if (typeof val === "string") {
-        if (val.includes('T')) {
-          const date = new Date(val);
-          return isNaN(date.getTime()) ? undefined : date;
-        }
-        return parseLocalDate(val);
-      }
-      return undefined;
-    },
+    datePreprocess,
     z.date({ required_error: "Expiry Date is required" })
   ),
 });
 
 
 export type TEditBatchSchema = z.infer<typeof editBatchSchema>;
-
-// Replenish Product
 
 export const replenishProductSchema = z.object({
   productId: z.number(),
@@ -222,38 +230,13 @@ export const replenishProductSchema = z.object({
       .min(1, "Quantity must be 0 or higher")
       .max(10000, "Quantity must not exceed 10,000"),
   ),
-  releaseDate: z.preprocess(
-    (val) => {
-      if (!val) return undefined;
-      if (val instanceof Date) {
-        return isNaN(val.getTime()) ? undefined : val;
-      }
-      if (typeof val === "string") {
-        if (val.includes('T')) {
-          const date = new Date(val);
-          return isNaN(date.getTime()) ? undefined : date;
-        }
-        return parseLocalDate(val);
-      }
-      return undefined;
-    },
+ releaseDate: z.preprocess(
+    datePreprocess,
     z.date({ required_error: "Release Date is required" })
   ),
+
   expiryDate: z.preprocess(
-    (val) => {
-      if (!val) return undefined;
-      if (val instanceof Date) {
-        return isNaN(val.getTime()) ? undefined : val;
-      }
-      if (typeof val === "string") {
-        if (val.includes('T')) {
-          const date = new Date(val);
-          return isNaN(date.getTime()) ? undefined : date;
-        }
-        return parseLocalDate(val);
-      }
-      return undefined;
-    },
+    datePreprocess,
     z.date({ required_error: "Expiry Date is required" })
   ),
 });
