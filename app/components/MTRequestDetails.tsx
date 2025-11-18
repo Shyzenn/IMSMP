@@ -8,6 +8,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -25,6 +26,7 @@ export type RequestView = {
   approvedBy: { username: string } | null;
   notes?: string;
   quantity: number;
+  price: number;
   remarks?: "processing" | "ready" | "released";
   status: "pending_for_approval" | "approved" | "declined";
   createdAt: Date;
@@ -150,20 +152,30 @@ const MedTechRequestDetailsModal: React.FC<MedTechRequestDetailsModalProps> = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead className="text-center">Quantity</TableHead>
+                  <TableHead colSpan={2}>Product</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead className="text-right">Quantity</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {Array.isArray(selectedRequest?.itemDetails) &&
                 selectedRequest.itemDetails.length > 0 ? (
                   selectedRequest.itemDetails.map((item, index) => {
+                    const quantity = item.quantity;
+                    const price = item.price ?? 0;
+                    const amount = quantity * price;
+
                     return (
                       <TableRow key={index}>
-                        <TableCell>{capitalLetter(item.productName)}</TableCell>
-                        <TableCell className="text-center">
+                        <TableCell colSpan={2}>
+                          {capitalLetter(item.productName)}
+                        </TableCell>
+                        <TableCell>{`₱${item.price}`}</TableCell>
+                        <TableCell className="text-right">
                           {item.quantity}
                         </TableCell>
+                        <TableCell className="text-right">₱{amount}</TableCell>
                       </TableRow>
                     );
                   })
@@ -175,6 +187,21 @@ const MedTechRequestDetailsModal: React.FC<MedTechRequestDetailsModalProps> = ({
                   </TableRow>
                 )}
               </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={4}>Total</TableCell>
+                  <TableCell className="text-right">
+                    ₱
+                    {selectedRequest.itemDetails
+                      .reduce((total, item) => {
+                        const price = item.price ?? 0;
+
+                        return total + item.quantity * price;
+                      }, 0)
+                      .toFixed(2)}
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
             </Table>
           </div>
 

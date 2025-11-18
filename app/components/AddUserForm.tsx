@@ -125,17 +125,19 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
                     <SelectField
                       field={field}
                       label="Select User Type"
-                      disabled={session?.user.role === "SuperAdmin"}
-                      option={[
-                        { label: "Manager", value: "Manager" },
-                        { label: "Nurse", value: "Nurse" },
-                        {
-                          label: "Pharmacist Staff",
-                          value: "Pharmacist_Staff",
-                        },
-                        { label: "Cashier", value: "Cashier" },
-                        { label: "Med Tech", value: "MedTech" },
-                      ]}
+                      option={
+                        session?.user.role === "Manager"
+                          ? [
+                              { label: "Nurse", value: "Nurse" },
+                              {
+                                label: "Pharmacist Staff",
+                                value: "Pharmacist_Staff",
+                              },
+                              { label: "Cashier", value: "Cashier" },
+                              { label: "Med Tech", value: "MedTech" },
+                            ]
+                          : [{ label: "Manager", value: "Manager" }]
+                      }
                     />
                   )}
                 />

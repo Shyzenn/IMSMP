@@ -94,7 +94,7 @@ const InventoryByCategoryChart = () => {
         reportType="inventory by category"
       />
 
-      <div className="h-full p-4">
+      <div className="h-[325px] p-4">
         {inventoryData.length === 0 ? (
           <p className="text-center text-sm text-gray-500">
             No inventory data available.

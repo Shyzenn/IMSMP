@@ -193,7 +193,7 @@ const StaffNotificationBell = ({ userId, userRole }: NotificationBellProps) => {
   };
 
   return (
-    <div ref={bellRef} className="relative flex items-center mr-8">
+    <div ref={bellRef} className="relative flex items-center">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>

@@ -73,6 +73,7 @@ export default function EmergencyOrderModal() {
                     Product
                   </TableHead>
                   <TableHead>Quantity</TableHead>
+                  <TableHead>Price</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
               </TableHeader>
@@ -87,6 +88,7 @@ export default function EmergencyOrderModal() {
                       <TableRow key={index}>
                         <TableCell>{capitalLetter(item.productName)}</TableCell>
                         <TableCell colSpan={2}>{item.quantity}</TableCell>
+                        <TableCell>{item.price}</TableCell>
                         <TableCell className="text-right">
                           {`₱${subTotal.toFixed(2)}`}
                         </TableCell>
@@ -103,7 +105,7 @@ export default function EmergencyOrderModal() {
               </TableBody>
               <TableFooter>
                 <TableRow>
-                  <TableCell colSpan={3}>Total</TableCell>
+                  <TableCell colSpan={4}>Total</TableCell>
                   <TableCell className="text-right">
                     ₱
                     {order.products

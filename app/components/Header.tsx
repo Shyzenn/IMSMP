@@ -63,14 +63,13 @@ const Header = () => {
 
   return (
     <div className="fixed top-0 w-full bg-white mb-5 shadow-md z-20">
-      <div className="flex justify-between items-center px-4 lg:px-10 2xl:max-w-screen-3xl mx-auto">
-        <Link href={getLogoLink(userRole)}>
+      <div className="flex justify-between items-center px-4 lg:px-10 2xl:max-w-screen-3xl mx-auto w-full">
+        <Link href={getLogoLink(userRole)} className="hidden lg:block">
           <Image
             src={PharmacyIcon}
             alt="Macoleen's Pharmacy Icon"
             width={150}
             height={150}
-            className="hidden lg:block"
           />
         </Link>
 
@@ -82,7 +81,7 @@ const Header = () => {
           <HeaderLinks userRole={userRole} />
         )}
 
-        <div className="flex items-center relative">
+        <div className="flex items-center relative gap-2">
           {status === "authenticated" && (
             <>
               <div className="hidden md:block">

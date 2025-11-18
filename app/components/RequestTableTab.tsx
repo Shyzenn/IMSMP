@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import RecentRequestTable from "@/app/components/RecentRequestTable";
 import RecentMedTechRequestTable from "./RecentMTRequestTable";
 
-const RequestTableDropdown = ({ userRole }: { userRole?: string }) => {
+const RequestTableTab = ({ userRole }: { userRole?: string }) => {
   const [selectedTable, setSelectedTable] = useState<"order" | "medtech">(
     "order"
   );
@@ -47,4 +47,4 @@ const RequestTableDropdown = ({ userRole }: { userRole?: string }) => {
   );
 };
 
-export default RequestTableDropdown;
+export default RequestTableTab;

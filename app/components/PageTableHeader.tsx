@@ -45,6 +45,7 @@ import { CiSearch } from "react-icons/ci";
 import { generateTransactionPDF } from "@/lib/reportUtils/transactionReport";
 import { MultiSelect } from "./multi-select";
 import MTTransactionFilter from "./transaction/MTTransactionFilter";
+import { generateMedTechTransactionPDF } from "@/lib/reportUtils/medtechTransactionReport";
 
 interface PageTableHeaderProps {
   title: string;
@@ -59,6 +60,7 @@ interface PageTableHeaderProps {
   hasDateFilter?: boolean;
   searchPlaceholder: string;
   isMTTransactionFilter?: boolean;
+  medTechReport?: boolean;
 }
 
 const PageTableHeader: React.FC<PageTableHeaderProps> = ({
@@ -74,16 +76,18 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
   hasDateFilter,
   searchPlaceholder,
   isMTTransactionFilter,
+  medTechReport,
 }) => {
   const { data: session } = useSession();
   const [showModal, setShowModal] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [modalMessage, setModalMessage] = useState({
     title: "No Data Found",
-    description: "There are no products available for this report.",
+    description: "There are no data available for this report.",
   });
   const [showSalesReportModal, setShowSalesReportModal] = useState(false);
   const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [showMTTransactionModal, setShowMTTransactionModal] = useState(false);
 
   // Sales report state
   const [salesDateRange, setSalesDateRange] = useState<{
@@ -101,6 +105,22 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
   }>({});
   const [transactionSearchQuery, setTransactionSearchQuery] =
     useState<string>("");
+
+  // MedTech Transaction report state
+  const [medtechTransactionStatus, setMedtechTransactionStatus] = useState<
+    string[]
+  >([]);
+  const [medtechTransactionRemarks, setMedtechTransactionRemarks] = useState<
+    string[]
+  >([]);
+  const [medtechTransactionDateRange, setMedtechTransactionDateRange] =
+    useState<{
+      from?: Date;
+      to?: Date;
+    }>({});
+  const [medtechTransactionSearchQuery, setMedtechTransactionSearchQuery] =
+    useState<string>("");
+
   const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -395,6 +415,81 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
     }
   };
 
+  const handleMTTransactionExport = async () => {
+    setIsExporting(true);
+    try {
+      const payload: {
+        from?: string;
+        to?: string;
+        query?: string;
+        statuses?: string[];
+      } = {};
+
+      if (medtechTransactionDateRange.from) {
+        payload.from = format(medtechTransactionDateRange.from, "yyyy-MM-dd");
+      }
+      if (medtechTransactionDateRange.to) {
+        payload.to = format(medtechTransactionDateRange.to, "yyyy-MM-dd");
+      }
+      if (medtechTransactionSearchQuery.trim()) {
+        payload.query = medtechTransactionSearchQuery.trim();
+      }
+
+      // Combine status and remarks into a single statuses array
+      const combinedStatuses = [
+        ...medtechTransactionStatus,
+        ...medtechTransactionRemarks,
+      ];
+
+      if (combinedStatuses.length > 0) {
+        payload.statuses = combinedStatuses;
+      }
+
+      const response = await fetch("/api/report/medtech_transaction", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.status === 404) {
+        setModalMessage({
+          title: "No Data Found",
+          description:
+            "There are no MedTech transactions for the selected criteria.",
+        });
+        setShowModal(true);
+        setShowMTTransactionModal(false);
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error("Export failed");
+      }
+
+      const data = await response.json();
+      const username = session?.user?.username || "Unknown User";
+
+      generateMedTechTransactionPDF(data.transactions, data.meta, username);
+
+      setShowMTTransactionModal(false);
+      setMedtechTransactionDateRange({});
+      setMedtechTransactionSearchQuery("");
+      setMedtechTransactionStatus([]);
+      setMedtechTransactionRemarks([]);
+    } catch (error) {
+      console.error("Export error:", error);
+      setModalMessage({
+        title: "Export Failed",
+        description: "There was an error generating the PDF. Please try again.",
+      });
+      setShowModal(true);
+      setShowMTTransactionModal(false);
+    } finally {
+      setIsExporting(false);
+    }
+  };
   const handleDateChange = (range: { from?: Date; to?: Date }) => {
     const params = new URLSearchParams(searchParams.toString());
     if (range.from) params.set("from", format(range.from, "yyyy-MM-dd"));
@@ -407,15 +502,17 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
 
   return (
     <>
-      <div className="flex flex-col md:flex-row gap-4 w-full md:justify-between mb-4">
-        <div className="flex items-center gap-4">
-          <p className="text-2xl font-semibold">{title}</p>
+      <div className="flex flex-col lg:flex-row gap-4 w-full md:justify-between mb-4">
+        <div className="flex items-center gap-4 justify-center">
+          <p className="text-2xl font-semibold ">{title}</p>
         </div>
-        <div className="w-auto md:w-[10rem] lg:w-[30rem] border px-6 rounded-full flex items-center gap-2 bg-gray-50">
+
+        <div className="w-auto md:w-full lg:w-[15rem] xl:w-[30rem] border px-6 rounded-full flex items-center gap-2 bg-gray-50 ">
           <Search placeholder={searchPlaceholder} />
         </div>
-        <div className="flex gap-4 flex-col md:flex-row md:items-center md:justify-end">
-          <div className="flex gap-4">
+
+        <div className="flex gap-4 flex-col md:flex-row md:items-center md:justify-center">
+          <div className="flex flex-col gap-4 md:flex-row">
             {isProductFilter ? (
               <ProductFilter />
             ) : isTransactionFilter ? (
@@ -439,7 +536,7 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
                       <Button
                         variant="outline"
                         disabled={isExporting}
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 py-[22px]"
                       >
                         {isExporting ? "Exporting..." : "PDF Export"}
                         <MdOutlineFileDownload
@@ -492,6 +589,15 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
 
           <div className="flex justify-between md:gap-4 md:flex-row-reverse items-center">
             {hasDateFilter && <DateRangeFilter onChange={handleDateChange} />}
+
+            {medTechReport && (
+              <Button
+                className="bg-white border hover:bg-gray-100 text-gray-500 hover:text-black flex justify-between"
+                onClick={() => setShowMTTransactionModal(true)}
+              >
+                PDF Export
+              </Button>
+            )}
 
             {transactionExport && (
               <>
@@ -772,6 +878,140 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
               </Button>
               <Button
                 onClick={handleTransactionExport}
+                disabled={isExporting}
+                className="flex items-center gap-2 bg-buttonBgColor hover:bg-buttonHover"
+              >
+                {isExporting ? "Generating..." : "Generate Report"}
+                <MdOutlineFileDownload
+                  className={isExporting ? "animate-bounce" : ""}
+                />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showMTTransactionModal && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+          onClick={() => {
+            if (!isExporting) {
+              setShowMTTransactionModal(false);
+              setMedtechTransactionDateRange({});
+              setMedtechTransactionSearchQuery("");
+              setMedtechTransactionStatus([]);
+              setMedtechTransactionRemarks([]);
+              setSearchSuggestions([]);
+              setShowSuggestions(false);
+            }
+          }}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-semibold">
+              Generate MedTech Transaction Report
+            </h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Select a date range, status, remarks or search to include in the
+              report.
+            </p>
+
+            <div className="flex gap-4 mt-2 flex-col">
+              <MultiSelect
+                options={[
+                  {
+                    label: "Pending for Approval",
+                    value: "pending_for_approval",
+                  },
+                  { label: "Approved", value: "approved" },
+                  { label: "Declined", value: "declined" },
+                ]}
+                onValueChange={(selected) =>
+                  setMedtechTransactionStatus(selected)
+                }
+                value={medtechTransactionStatus}
+                placeholder="Select status..."
+                hideSelectAll
+              />
+
+              <MultiSelect
+                options={[
+                  { label: "Processing", value: "processing" },
+                  { label: "Ready", value: "ready" },
+                  { label: "Released", value: "released" },
+                ]}
+                onValueChange={(selected) =>
+                  setMedtechTransactionRemarks(selected)
+                }
+                value={medtechTransactionRemarks}
+                placeholder="Select remarks..."
+                hideSelectAll
+              />
+
+              <div className="flex justify-between">
+                <DateRangeFilter
+                  onChange={(range) => setMedtechTransactionDateRange(range)}
+                />
+
+                <div className="relative search-container">
+                  <div className="w-[13rem] border px-4 rounded-md flex items-center gap-2">
+                    <CiSearch className="text-xl text-gray-800 font-bold" />
+                    <input
+                      placeholder="Search by ID..."
+                      className="w-full py-2 outline-none text-sm pl-1"
+                      type="number"
+                      min={0}
+                      value={medtechTransactionSearchQuery}
+                      onChange={(e) =>
+                        setMedtechTransactionSearchQuery(e.target.value)
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* Dropdown suggestions */}
+                {showSuggestions && searchSuggestions.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                    {searchSuggestions.map((name, index) => (
+                      <button
+                        key={index}
+                        className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm transition-colors"
+                        onClick={() => handleSelectSuggestion(name)}
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {showNoResult && (
+                  <p className="text-sm text-gray-500 mt-1 italic">
+                    No results found for{" "}
+                    <span className="font-semibold">{`"${medtechTransactionSearchQuery}"`}</span>
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowMTTransactionModal(false);
+                  setMedtechTransactionDateRange({});
+                  setMedtechTransactionSearchQuery("");
+                  setMedtechTransactionStatus([]);
+                  setMedtechTransactionRemarks([]);
+                  setSearchSuggestions([]);
+                  setShowSuggestions(false);
+                }}
+                disabled={isExporting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleMTTransactionExport}
                 disabled={isExporting}
                 className="flex items-center gap-2 bg-buttonBgColor hover:bg-buttonHover"
               >

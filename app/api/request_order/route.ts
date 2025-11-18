@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     const session = await auth();
 
     if (!session || !session.user?.id) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 400 });
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const userId = session.user.id;
@@ -189,7 +189,7 @@ export async function GET(req: NextRequest) {
   const session = await auth();
 
   if (!session || !session.user?.id) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 400 });
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 }); 
   }
 
   try {

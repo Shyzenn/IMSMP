@@ -2,7 +2,7 @@ import AdminDashboardCards from "@/app/components/AdminDashboardCards";
 import DashboardAuditLog from "@/app/components/DashboardActivities";
 import DashboardHeader from "@/app/components/DashboardHeader";
 import ExpiryProducts from "@/app/components/ExpiryProducts";
-import RequestTableDropdown from "@/app/components/RequestTableDropDown";
+import RequestTableDropdown from "@/app/components/RequestTableTab";
 import SalesByCategory from "@/app/components/SalesByCategory";
 import SalesGraph from "@/app/components/SalesGraph";
 import TopSellingProducts from "@/app/components/TopSellingProductChart";

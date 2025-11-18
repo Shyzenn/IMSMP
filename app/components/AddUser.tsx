@@ -26,9 +26,6 @@ const AddUser = () => {
     reset,
   } = useForm<TSignUpSchema>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: {
-      role: session?.user.role === "SuperAdmin" ? "Manager" : undefined,
-    },
   });
 
   const mutation = useMutation({
@@ -101,7 +98,7 @@ const AddUser = () => {
         onClick={() => setIsOpen(true)}
         label={session?.user.role === "SuperAdmin" ? "Add Manager" : "Add User"}
         icon={<FiPlus className="text-lg" />}
-        className="px-8 flex items-center py-2 gap-2"
+        className="w-[10rem] md:w-auto md:px-8 justify-center flex items-center py-2 gap-2 "
       />
     </>
   );

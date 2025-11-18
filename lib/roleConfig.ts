@@ -7,7 +7,7 @@ export const roleConfig = {
       "/admin_transaction",
       "/audit_log",
       "/manager_settings",
-      "/admin_user_management",
+      "/user_management",
       "/archive"
     ],
   },

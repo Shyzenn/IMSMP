@@ -51,6 +51,7 @@ async function Transaction(props: {
         title="History"
         hasDateFilter={true}
         isMTTransactionFilter={true}
+        medTechReport={true}
       />
       <div className="mt-4">
         <Suspense

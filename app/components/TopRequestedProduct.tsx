@@ -86,7 +86,7 @@ const TopRequestedProducts = () => {
   };
 
   return (
-    <div className="bg-white w-full h-full rounded-md shadow-md flex flex-col">
+    <div className="bg-white w-full rounded-md shadow-md flex flex-col">
       <DateRangeSelector
         filter={filter}
         setFilter={setFilter}
@@ -98,7 +98,7 @@ const TopRequestedProducts = () => {
         reportType="requested"
       />
 
-      <div className="pb-4 w-full h-full flex flex-col items-center justify-center overflow-hidden">
+      <div className="pb-4 w-full flex h-[325px] flex-col items-center justify-center overflow-hidden">
         {data.length === 0 ? (
           <p className="text-center text-sm text-gray-500">
             No product requests available for this range.

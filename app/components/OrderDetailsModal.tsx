@@ -238,6 +238,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       Product
                     </TableHead>
                     <TableHead>Quantity</TableHead>
+                    <TableHead>Price</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -256,6 +257,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                               {capitalLetter(item.productName)}
                             </TableCell>
                             <TableCell colSpan={2}>{item.quantity}</TableCell>
+                            <TableCell>{item.price}</TableCell>
                             <TableCell className="text-right">
                               {`₱${subTotal.toFixed(2)}`}
                             </TableCell>
@@ -273,7 +275,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 </TableBody>
                 <TableFooter>
                   <TableRow>
-                    <TableCell colSpan={3}>Total</TableCell>
+                    <TableCell colSpan={4}>Total</TableCell>
                     <TableCell className="text-right">
                       ₱
                       {currentOrder.itemDetails

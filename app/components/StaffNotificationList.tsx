@@ -129,6 +129,7 @@ const StaffNotificationList = ({
           remarks: "processing" | "ready" | "released";
           notes: string;
           createdAt: string;
+          price: number;
           items: WalkInOrderItem[];
           requestedBy?: { username: string } | null;
           receivedBy?: { username: string } | null;
@@ -140,6 +141,7 @@ const StaffNotificationList = ({
           status: data.status,
           remarks: data.remarks,
           notes: data.notes,
+          price: data.price,
           quantity: data.items.reduce((sum, i) => sum + i.quantity, 0),
           createdAt: new Date(data.createdAt),
           requestedBy: data.requestedBy,
@@ -297,7 +299,7 @@ const StaffNotificationList = ({
   return (
     <>
       {dropdown && (
-        <div className="bg-white w-[380px] md:w-[400px] h-auto absolute shadow-lg z-20 top-11 md:-right-56 -right-60 rounded-md max-w-[500px] max-h-[90vh] overflow-auto">
+        <div className="bg-white w-[380px] md:w-[400px] h-auto absolute shadow-lg z-20 top-11 md:-right-56 -right-36 rounded-md max-w-[500px] max-h-[90vh] overflow-auto">
           {notifications.length === 0 ? (
             <p className="text-center p-10 text-gray-400">No Notifications</p>
           ) : (
