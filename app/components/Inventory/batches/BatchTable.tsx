@@ -19,7 +19,7 @@ export type BatchProps = {
 
 // Format date without timezone conversion
 const formatDateLocal = (date: Date) => {
-  return format(new Date(date), "MM/dd/yyyy");
+  return format(new Date(date), "dd/MM/yyyy");
 };
 
 export default async function BatchTable({

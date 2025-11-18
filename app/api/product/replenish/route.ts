@@ -53,13 +53,19 @@ export async function POST(req: Request) {
     const dateCode = format(releaseDate, "ddMMyyyy");
     const batchNumber = `${dateCode}B${paddedCount}`;
 
+    function normalizeDate(date: Date) {
+      const d = new Date(date);
+      d.setHours(12, 0, 0, 0); 
+      return d;
+    }
+
     const newBatch = await db.productBatch.create({
       data: {
         productId,
         batchNumber,
         quantity,
-        releaseDate,
-        expiryDate,
+        releaseDate: normalizeDate(releaseDate),
+        expiryDate:normalizeDate(expiryDate),
       },
     });
 

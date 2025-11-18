@@ -46,7 +46,7 @@ const AdminDashboardCards = () => {
       icon: TbCurrencyPeso,
       bgColor: "bg-blue-50",
       textColor: "text-blue-500",
-      link: "/cashier_transaction?page=1&filter=all&sort=createdAt&order=desc",
+      link: "/user_management",
     },
     {
       title: "Online User",
@@ -54,7 +54,7 @@ const AdminDashboardCards = () => {
       icon: PiChartLineUpLight,
       bgColor: "bg-orange-50",
       textColor: "text-orange-500",
-      link: "/cashier_transaction?page=1&filter=all&sort=createdAt&order=desc",
+      link: "/user_management",
     },
     {
       title: "Offline User",
@@ -62,7 +62,7 @@ const AdminDashboardCards = () => {
       icon: LuPackage,
       bgColor: "bg-green-50",
       textColor: "text-green-500",
-      link: "/cashier_transaction?page=1&filter=all&sort=createdAt&order=desc",
+      link: "/user_management",
     },
     {
       title: "Banned User",
@@ -70,7 +70,7 @@ const AdminDashboardCards = () => {
       icon: TbCreditCardPay,
       bgColor: "bg-red-50",
       textColor: "text-red-500",
-      link: "/cashier_transaction?page=1&filter=for_payment&sort=createdAt&order=desc",
+      link: "/user_management",
     },
   ];
 
