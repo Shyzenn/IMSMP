@@ -6,26 +6,31 @@ import { MdOutlineInventory2 } from "react-icons/md";
 import { GrTransaction } from "react-icons/gr";
 import { Links } from "./interfaces";
 
-export const nurseLinks = [
+export const adminLinks: Links[] = [
   {
     name: "Dashboard",
-    href: "/nurse_dashboard",
+    href: "/admin_dashboard",
     icon: RiDashboardHorizontalLine,
   },
- {
-    name: "Inventory " ,
+  {
+    name: "Inventory" ,
     icon: MdOutlineInventory2,
     subLinks: [
-      { name: "Products", href: "/nurse_inventory/products" },
-      { name: "Batches", href: "/nurse_inventory/batches" },
-      
+      { name: "Products", href: "/admin_inventory/products" },
+      { name: "Batches", href: "/admin_inventory/batches" },
+     
     ],
   },
-  {
-    name: "Transaction",
-    href: "/nurse_transaction",
+   {
+    name: "Transaction " ,
     icon: GrTransaction,
+    subLinks: [
+      { name: "Order Request / Walk In", href: "/admin_transaction/order_walkin" },
+      { name: "MedTech Request", href: "/admin_transaction/medtech_transaction" },
+     
+    ],
   },
+  { name: "Audit Log", href: "/admin_audit", icon: AiOutlineAudit },
 ];
 
 export const managerLinks: Links[] = [
@@ -35,7 +40,7 @@ export const managerLinks: Links[] = [
     icon: RiDashboardHorizontalLine,
   },
   {
-    name: "Inventory " ,
+    name: "Inventory" ,
     icon: MdOutlineInventory2,
     subLinks: [
       { name: "Products", href: "/inventory/products" },
@@ -55,6 +60,28 @@ export const managerLinks: Links[] = [
   { name: "Audit Log", href: "/audit_log", icon: AiOutlineAudit },
 ];
 
+export const nurseLinks = [
+  {
+    name: "Dashboard",
+    href: "/nurse_dashboard",
+    icon: RiDashboardHorizontalLine,
+  },
+ {
+    name: "Inventory" ,
+    icon: MdOutlineInventory2,
+    subLinks: [
+      { name: "Products", href: "/nurse_inventory/products" },
+      { name: "Batches", href: "/nurse_inventory/batches" },
+      
+    ],
+  },
+  {
+    name: "Transaction",
+    href: "/nurse_transaction",
+    icon: GrTransaction,
+  },
+];
+
 export const pharmacistLinks = [
   
   {
@@ -63,7 +90,7 @@ export const pharmacistLinks = [
     icon: RiDashboardHorizontalLine,
   },
   {
-    name: "Inventory " ,
+    name: "Inventory" ,
     icon: MdOutlineInventory2,
     subLinks: [
       { name: "Products", href: "/pharmacist_inventory/products" },
@@ -72,7 +99,7 @@ export const pharmacistLinks = [
     ],
   },
   {
-    name: "Transaction " ,
+    name: "Transaction" ,
     icon: GrTransaction,
     subLinks: [
       { name: "Order Request / Walk In", href: "/pharmacist_transaction/order_walkin" },
@@ -126,6 +153,8 @@ export function getLogoLink(role?: string) {
       return "/cashier_dashboard";
     case "MedTech":
       return "/medtech_dashboard";
+    case "SuperAdmin":
+      return "/admin_dashboard";  
     default:
       return "/"; 
   }

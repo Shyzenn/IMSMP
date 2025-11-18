@@ -204,7 +204,8 @@ const WidgetHeader = ({
         />
         {(userRole === "Pharmacist_Staff" ||
           userRole === "Manager" ||
-          userRole === "Cashier") && (
+          userRole === "Cashier" ||
+          userRole === "SuperAdmin") && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="p-2 rounded-md hover:bg-gray-100">

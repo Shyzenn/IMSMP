@@ -73,7 +73,8 @@ const ProfileDropdown = ({ session }: { session: Session | null }) => {
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          {session?.user.role === "Manager" && (
+          {(session?.user.role === "Manager" ||
+            session?.user.role === "SuperAdmin") && (
             <Link href={"/user_management"}>
               <DropdownMenuItem>
                 <FaUserGear className="text-gray-400" />

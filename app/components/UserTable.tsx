@@ -61,7 +61,7 @@ const UserTable = ({
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.firstName}</TableCell>
                 <TableCell>
-                  {user.middleName ? user.middleName : "Unknown"}
+                  {user.middleName ? user.middleName : "N/A"}
                 </TableCell>
                 <TableCell>{user.lastName}</TableCell>
                 <TableCell>{user.username}</TableCell>

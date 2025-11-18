@@ -18,6 +18,7 @@ interface SelectFieldProps<T extends FieldValues> {
   onChange?: (value: string) => void;
   defaultValue?: string;
   inputWidth?: string;
+  disabled?: boolean;
 }
 
 const SelectField = <T extends FieldValues>({
@@ -28,12 +29,14 @@ const SelectField = <T extends FieldValues>({
   onChange,
   defaultValue,
   inputWidth,
+  disabled,
 }: SelectFieldProps<T>) => {
   return (
     <Select
       value={field?.value || value || undefined}
       onValueChange={field?.onChange ?? onChange}
       defaultValue={defaultValue}
+      disabled={disabled}
     >
       <SelectTrigger className={`${inputWidth}`}>
         <SelectValue placeholder={label} />

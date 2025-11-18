@@ -17,28 +17,50 @@ export async function GET(request: NextRequest) {
     const safeQuery = query.toLowerCase().trim();
 
     let where: Prisma.UserWhereInput;
-
-    if (safeQuery) {
+      
+    if (session.user.role === "SuperAdmin") {
       where = {
-        AND: [
-          {
-            OR: [
-              { firstName: { contains: safeQuery } },
-              { lastName: { contains: safeQuery } },
-              { middleName: { contains: safeQuery } },
-              { username: { contains: safeQuery } },
-              { email: { contains: safeQuery } },
-            ],
-          },
-          {
-            role: { not: Role.SuperAdmin },
-          },
-        ],
+        role: Role.Manager,
+        ...(safeQuery && {
+          AND: [
+            {
+              OR: [
+                { firstName: { contains: safeQuery } },
+                { lastName: { contains: safeQuery } },
+                { middleName: { contains: safeQuery } },
+                { username: { contains: safeQuery } },
+                { email: { contains: safeQuery } },
+              ],
+            },
+          ],
+        }),
       };
-    } else {
+    }
+
+     else if (session.user.role === "Manager") {
       where = {
         role: { not: Role.SuperAdmin },
+        ...(safeQuery && {
+          AND: [
+            {
+              OR: [
+                { firstName: { contains: safeQuery } },
+                { lastName: { contains: safeQuery } },
+                { middleName: { contains: safeQuery } },
+                { username: { contains: safeQuery } },
+                { email: { contains: safeQuery } },
+              ],
+            },
+          ],
+        }),
       };
+    }
+
+   else {
+      return NextResponse.json(
+        { message: "Forbidden: You don't have permission" },
+        { status: 403 }
+      );
     }
 
     const users = await db.user.findMany({

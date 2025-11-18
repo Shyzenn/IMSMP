@@ -574,6 +574,12 @@ export const getAuditLogList = async (
       });
     }
 
+    conditions.push({
+      user: {
+        role: { not: "SuperAdmin" }
+      }
+    })
+
     // Entity type filters (support multiple)
     if (selectedFilters.length > 0 && !selectedFilters.includes("all")) {
       conditions.push({
@@ -637,6 +643,12 @@ export async function fetchAuditPages(
         ],
       });
     }
+
+    conditions.push({
+      user: {
+        role: { not: "SuperAdmin" }
+      }
+    })
 
     // Entity type filters (support multiple)
     if (selectedFilters.length > 0 && !selectedFilters.includes("all")) {

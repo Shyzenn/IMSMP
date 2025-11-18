@@ -88,11 +88,12 @@ const Header = () => {
               <div className="hidden md:block">
                 {userRole === "Pharmacist_Staff" && <WalkInOrder />}
               </div>
-
-              <StaffNotificationBell
-                userId={session?.user.id}
-                userRole={userRole}
-              />
+              {userRole !== "SuperAdmin" && (
+                <StaffNotificationBell
+                  userId={session?.user.id}
+                  userRole={userRole}
+                />
+              )}
             </>
           )}
 

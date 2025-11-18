@@ -46,7 +46,7 @@ const ManagerDashboardCards = ({ userRole }: { userRole?: string }) => {
 
       link: `/${
         userRole === "Manager" ? "transaction" : "pharmacist_transaction"
-      }?page=1&filter=all&sort=createdAt&order=desc`,
+      }/order_walkin?page=1&filter=all&sort=createdAt&order=desc`,
     },
     {
       title: "Low Stock",

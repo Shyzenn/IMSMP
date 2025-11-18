@@ -4,6 +4,7 @@ import {
   pharmacistLinks,
   nurseLinks,
   medTechLinks,
+  adminLinks,
 } from "@/lib/links";
 import { isActive } from "@/lib/utils";
 import Link from "next/link";
@@ -17,6 +18,7 @@ const roleLinksMap: Record<string, Links[]> = {
   Cashier: cashierLinks,
   Manager: managerLinks,
   MedTech: medTechLinks,
+  SuperAdmin: adminLinks,
 };
 
 const HeaderLinks = ({ userRole }: { userRole: string | null }) => {

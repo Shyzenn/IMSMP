@@ -90,6 +90,7 @@ export async function handleCredentialsSignIn({
     if (user.role === "Pharmacist_Staff") return { redirectUrl: "/pharmacist_dashboard" };
     if (user.role === "Cashier") return { redirectUrl: "/cashier_dashboard" };
     if (user.role === "MedTech") return { redirectUrl: "/medtech_dashboard" };
+    if (user.role === "SuperAdmin") return { redirectUrl: "/admin_dashboard" };
 
     return { message: "Login successful" };
   } catch (error) {

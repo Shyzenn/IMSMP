@@ -10,10 +10,12 @@ import AddButton from "./Button";
 import { FiPlus } from "react-icons/fi";
 import { registerUser } from "@/lib/action/add";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 
 const AddUser = () => {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
 
   const {
     register,
@@ -24,6 +26,9 @@ const AddUser = () => {
     reset,
   } = useForm<TSignUpSchema>({
     resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      role: session?.user.role === "SuperAdmin" ? "Manager" : undefined,
+    },
   });
 
   const mutation = useMutation({
@@ -94,7 +99,7 @@ const AddUser = () => {
       )}
       <AddButton
         onClick={() => setIsOpen(true)}
-        label="Add User"
+        label={session?.user.role === "SuperAdmin" ? "Add Manager" : "Add User"}
         icon={<FiPlus className="text-lg" />}
         className="px-8 flex items-center py-2 gap-2"
       />

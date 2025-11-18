@@ -34,7 +34,7 @@ export default async function AuditLogTable({
           <TableBody>
             {auditLogs.map((auditLog, i) => (
               <TableRow key={i}>
-                <TableCell>{`ORD-0${auditLog.id}`}</TableCell>
+                <TableCell>{`ADT-0${auditLog.id}`}</TableCell>
                 <TableCell>{auditLog.action}</TableCell>
                 <TableCell>{auditLog.description}</TableCell>
                 <TableCell>{formattedDateTime(auditLog.createdAt)}</TableCell>

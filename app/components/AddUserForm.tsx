@@ -16,6 +16,8 @@ import {
 import { TSignUpSchema } from "@/lib/types";
 import FormField from "./FormField";
 import SelectField from "./SelectField";
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
 
 interface AddUserFormProps {
   setIsOpen: (isOpen: boolean) => void;
@@ -38,10 +40,21 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
   isSubmitting,
   reset,
 }) => {
+  const { data: session } = useSession();
+
   const handleClose = () => {
     reset();
     setIsOpen(false);
   };
+
+  useEffect(() => {
+    if (session?.user.role === "SuperAdmin") {
+      reset((prev) => ({
+        ...prev,
+        role: "Manager",
+      }));
+    }
+  }, [session, reset]);
 
   return (
     <>
@@ -53,7 +66,9 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
         </div>
 
         <CardHeader>
-          <CardTitle className="text-center text-2xl">Add User</CardTitle>
+          <CardTitle className="text-center text-2xl">
+            {session?.user.role === "Manager" ? "Add User" : "Add Manager"}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -110,6 +125,7 @@ const AddUserForm: React.FC<AddUserFormProps> = ({
                     <SelectField
                       field={field}
                       label="Select User Type"
+                      disabled={session?.user.role === "SuperAdmin"}
                       option={[
                         { label: "Manager", value: "Manager" },
                         { label: "Nurse", value: "Nurse" },
