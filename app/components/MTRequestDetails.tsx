@@ -26,7 +26,7 @@ export type RequestView = {
   approvedBy: { username: string } | null;
   notes?: string;
   quantity: number;
-  price: number;
+  price?: number;
   remarks?: "processing" | "ready" | "released";
   status: "pending_for_approval" | "approved" | "declined";
   createdAt: Date;
