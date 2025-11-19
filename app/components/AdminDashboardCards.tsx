@@ -5,10 +5,10 @@ import DashboardCards from "./DashboardCards";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { CardSkeleton } from "./Skeleton";
-import { TbCurrencyPeso } from "react-icons/tb";
-import { PiChartLineUpLight } from "react-icons/pi";
-import { LuPackage } from "react-icons/lu";
-import { TbCreditCardPay } from "react-icons/tb";
+import { FaUsers } from "react-icons/fa";
+import { HiOutlineStatusOnline } from "react-icons/hi";
+import { HiOutlineStatusOffline } from "react-icons/hi";
+import { FaBan } from "react-icons/fa";
 
 type AdminCardsData = {
   totalUser: number;
@@ -43,7 +43,7 @@ const AdminDashboardCards = () => {
     {
       title: "Total User",
       value: totalUser,
-      icon: TbCurrencyPeso,
+      icon: FaUsers,
       bgColor: "bg-blue-50",
       textColor: "text-blue-500",
       link: "/user_management",
@@ -51,23 +51,23 @@ const AdminDashboardCards = () => {
     {
       title: "Online User",
       value: totalOnlineUser,
-      icon: PiChartLineUpLight,
-      bgColor: "bg-orange-50",
-      textColor: "text-orange-500",
-      link: "/user_management",
-    },
-    {
-      title: "Offline User",
-      value: totalOfflineUser,
-      icon: LuPackage,
+      icon: HiOutlineStatusOnline,
       bgColor: "bg-green-50",
       textColor: "text-green-500",
       link: "/user_management",
     },
     {
+      title: "Offline User",
+      value: totalOfflineUser,
+      icon: HiOutlineStatusOffline,
+      bgColor: "bg-slate-50",
+      textColor: "text-slate-500",
+      link: "/user_management",
+    },
+    {
       title: "Banned User",
       value: totalBanUser,
-      icon: TbCreditCardPay,
+      icon: FaBan,
       bgColor: "bg-red-50",
       textColor: "text-red-500",
       link: "/user_management",
