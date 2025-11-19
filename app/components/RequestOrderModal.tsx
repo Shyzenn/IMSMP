@@ -427,6 +427,7 @@ const RequestOrderModal = ({ close }: Props) => {
                         <div className="">
                           <Input
                             type="number"
+                            min={0}
                             placeholder="Enter Quantity"
                             {...register(
                               `products.${index}.quantity` as const,

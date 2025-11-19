@@ -459,6 +459,7 @@ const RequestOrderEdit = ({
                         <div className="">
                           <Input
                             type="number"
+                            min={1}
                             placeholder="Enter Quantity"
                             {...register(
                               `products.${index}.quantity` as const,

@@ -363,7 +363,7 @@ const WalkInOrder = () => {
                                     : ""
                                 }`}
                                 type="number"
-                                min={0}
+                                min={1}
                                 placeholder="Enter Quantity"
                                 {...register(
                                   `products.${index}.quantity` as const,
