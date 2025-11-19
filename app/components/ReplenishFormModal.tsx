@@ -70,6 +70,7 @@ const ReplenishFormModal = ({
                   {...register("quantity")}
                   id="quantity"
                   type="number"
+                  min={1}
                   className="mt-1"
                   placeholder="Enter Quantity"
                 />

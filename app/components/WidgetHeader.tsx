@@ -52,7 +52,7 @@ const WidgetHeader = ({
     if (reportType === "type")
       return { headerLabel: "Type", valueLabel: "Revenue" };
     if (reportType === "top selling product")
-      return { headerLabel: "Product", valueLabel: "Revenue" };
+      return { headerLabel: "Product", valueLabel: "Quantity" };
     if (reportType === "inventory by category") {
       return { headerLabel: "Category", valueLabel: "Item" };
     }

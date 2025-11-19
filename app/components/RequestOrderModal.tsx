@@ -246,6 +246,8 @@ const RequestOrderModal = ({ close }: Props) => {
                   <FormField label="Room#">
                     <Input
                       type="number"
+                      max={5}
+                      min={1}
                       autoComplete="off"
                       placeholder="Enter Room Number (Optional)"
                       {...register("room_number")}

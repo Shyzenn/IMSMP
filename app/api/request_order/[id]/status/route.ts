@@ -258,7 +258,7 @@ export async function PUT(
         });
 
         await pusherServer.trigger(
-          `private-user-${updatedOrder.userId}`,
+          `private-user-${pharmacist.id}`,
           "new-notification",
             {
                   id: notification.id,
