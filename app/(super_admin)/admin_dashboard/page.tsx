@@ -2,7 +2,7 @@ import AdminDashboardCards from "@/app/components/AdminDashboardCards";
 import DashboardAuditLog from "@/app/components/DashboardActivities";
 import DashboardHeader from "@/app/components/DashboardHeader";
 import ExpiryProducts from "@/app/components/ExpiryProducts";
-import RequestTableDropdown from "@/app/components/RequestTableTab";
+import RequestTableTab from "@/app/components/RequestTableTab";
 import SalesByCategory from "@/app/components/SalesByCategory";
 import SalesGraph from "@/app/components/SalesGraph";
 import TopSellingProducts from "@/app/components/TopSellingProductChart";
@@ -19,16 +19,16 @@ export default async function Dashboard() {
 
       <AdminDashboardCards />
 
-      <div className="h-auto lg:h-96 flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0 mb-24">
-        <div className="w-full lg:w-[70%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-[30rem]">
-          <RequestTableDropdown userRole={userRole} />
+      <div className="h-auto flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
+        <div className="w-full lg:w-[70%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-[27rem]">
+          <RequestTableTab userRole={userRole} />
         </div>
-        <div className="w-full lg:w-[30%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-[30rem]">
+        <div className="w-full lg:w-[30%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-[27rem]">
           <ExpiryProducts />
         </div>
       </div>
 
-      <div className="h-auto lg:h-[30rem] flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
+      <div className="h-auto flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
         <div className="bg-white lg:w-[40%] rounded-md shadow-md w-full">
           <DashboardAuditLog role="manager" />
         </div>
@@ -37,7 +37,7 @@ export default async function Dashboard() {
         </div>
       </div>
 
-      <div className="h-auto lg:h-[30rem] flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
+      <div className="h-auto flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
         <div className="w-full lg:w-[65%] h-full bg-white rounded-md shadow-md">
           <TopSellingProducts />
         </div>

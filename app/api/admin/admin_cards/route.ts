@@ -12,19 +12,19 @@ export async function GET(){
          }
 
          const totalUser = await db.user.count({
-            where: { role: {not : Role.SuperAdmin} }
+            where: { role: Role.Manager }
          })
 
          const totalOnlineUser = await db.user.count({
-            where: { isOnline : true, role: {not: Role.SuperAdmin}}
+            where: { isOnline : true, role: Role.Manager}
          })
 
          const totalOfflineUser = await db.user.count({
-            where: { isOnline: false, role: {not: Role.SuperAdmin}}
+            where: { isOnline: false, role: Role.Manager}
          })
 
          const totalBanUser = await db.user.count({
-            where : { status: "DISABLE" }
+            where : { status: "DISABLE",role: Role.Manager }
          })
 
          return NextResponse.json({ totalUser, totalOnlineUser, totalOfflineUser, totalBanUser }, { status: 200 })
