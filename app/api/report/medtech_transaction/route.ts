@@ -77,26 +77,28 @@ export async function POST(req: NextRequest) {
         requestedBy: true,
         receivedBy: true,
         approvedBy: true,
-        items: { 
-          include: { 
-            product: true 
-          } 
+        items: {
+          include: {
+            product: true,
+          },
         },
         orderRequests: {
           select: {
             id: true,
-            patient_name: true,
-            room_number: true,
+            patient: true,
             type: true,
-          }
-        }
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     });
 
     // --- Check if data exists ---
     if (medTechRequests.length === 0) {
-      return NextResponse.json({ error: "No transactions found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "No transactions found" },
+        { status: 404 }
+      );
     }
 
     // --- Format data ---
@@ -109,37 +111,41 @@ export async function POST(req: NextRequest) {
       remarks: tx.remarks,
       notes: tx.notes || "N/A",
       source: "MedTech Request" as const,
-      
+
       // Personnel
       requestedBy: tx.requestedBy?.username || "Unknown",
       receivedBy: tx.receivedBy?.username || "N/A",
       receivedAt: tx.receivedAt || null,
       approvedBy: tx.approvedBy?.username || "N/A",
       approvedAt: tx.approvedAt || null,
-      
+
       // Related order requests
-      relatedOrders: tx.orderRequests.map(order => ({
+      relatedOrders: tx.orderRequests.map((order) => ({
         id: order.id,
-        patientName: order.patient_name,
-        roomNumber: order.room_number,
+        patientName: order.patient.patientName,
+        roomNumber: order.patient.roomNumber,
         type: order.type,
       })),
-      
+
       // Items and total calculation
       itemDetails: tx.items.map((item) => ({
         productName: item.product?.product_name ?? "Unknown",
-        quantity: item.quantity,
+        quantity: item.quantityOrdered,
         price: item.product?.price?.toNumber() ?? 0,
       })),
-      
+
       total: tx.items.reduce(
-        (sum, item) => sum + item.quantity * (item.product?.price?.toNumber() ?? 0),
+        (sum, item) =>
+          sum +
+          Number(item.quantityOrdered) * (item.product?.price?.toNumber() ?? 0),
         0
       ),
     }));
 
     // --- Sort by creation date ---
-    formattedMedTech.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    formattedMedTech.sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    );
 
     const meta = {
       dateRange: { from: from || null, to: to || null },
@@ -154,6 +160,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ transactions: formattedMedTech, meta });
   } catch (error) {
     console.error("MedTech transaction report error:", error);
-    return NextResponse.json({ error: "Failed to generate report" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to generate report" },
+      { status: 500 }
+    );
   }
 }

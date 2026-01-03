@@ -1,6 +1,6 @@
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { toTitleCase } from "@/lib/utils";
-import EmptyTable from "../../EmptyTable";
+import EmptyTable from "../../ui/EmptyTable";
 import { getBatches } from "@/lib/action/get";
 import BatchesTableHeader from "./BatchesTableHeader";
 import BatchAction from "./BatchAction";
@@ -9,12 +9,22 @@ import { format } from "date-fns";
 
 export type BatchProps = {
   id: number;
-  product: { product_name: string };
+  product: {
+    productId: number;
+    product_name: string;
+    category: { id: number; name: string } | null;
+    genericName: string | null;
+    dosageForm: string | null;
+    strength: string | null;
+    price: number;
+  };
+  totalQuantity: number;
   batchNumber: string;
   quantity: number;
-  releaseDate: Date;
+  manufactureDate: Date;
   expiryDate: Date;
   status: string;
+  notes: string;
 };
 
 // Format date without timezone conversion
@@ -69,13 +79,15 @@ export default async function BatchTable({
                       : ""
                   }`}
                 >
-                  <TableCell>{batch.id}</TableCell>
+                  <TableCell>{`PRD-BCH-0${batch.id}`}</TableCell>
                   <TableCell>
                     {toTitleCase(batch.product.product_name)}
                   </TableCell>
                   <TableCell>{batch.batchNumber}</TableCell>
                   <TableCell>{batch.quantity}</TableCell>
-                  <TableCell>{formatDateLocal(batch.releaseDate)}</TableCell>
+                  <TableCell>
+                    {formatDateLocal(batch.manufactureDate)}
+                  </TableCell>
                   <TableCell>{formatDateLocal(batch.expiryDate)}</TableCell>
                   <TableCell>{batch.status}</TableCell>
                   {(userRole === "Manager" ||

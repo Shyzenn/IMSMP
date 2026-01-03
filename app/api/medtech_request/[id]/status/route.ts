@@ -79,24 +79,32 @@ export async function PUT(
         include: { sender: true },
       });
 
-     await pusherServer.trigger(`private-user-${user.id}`, "new-notification", {
+      await pusherServer.trigger(
+        `private-user-${user.id}`,
+        "new-notification",
+        {
           id: notification.id,
           title: notification.title,
           createdAt: notification.createdAt,
           type: notification.type,
           notes: orderWithItems?.notes || "",
-          sender: { username: notification.sender.username, role: notification.sender.role },
+          sender: {
+            username: notification.sender.username,
+            role: notification.sender.role,
+          },
           medTechRequestId: updatedOrder.id,
           submittedBy: notification.submittedBy,
-           role: notification.role,
+          role: notification.role,
           order: {
             id: updatedOrder.id,
-            products: orderWithItems?.items.map((item) => ({
-              productName: item.product.product_name,
-              quantity: item.quantity,
-            })) || [],
+            products:
+              orderWithItems?.items.map((item) => ({
+                productName: item.product.product_name,
+                quantity: item.quantityOrdered,
+              })) || [],
           },
-        });
+        }
+      );
     }
 
     await db.auditLog.create({
@@ -105,7 +113,9 @@ export async function PUT(
         action: "MedTech Remarks Update",
         entityType: "MedTechRequest",
         entityId: updatedOrder.id,
-        description: `Request ${updatedOrder.id} status as ${status.toUpperCase()} by ${session.user.username}`,
+        description: `Request ${
+          updatedOrder.id
+        } status as ${status.toUpperCase()} by ${session.user.username}`,
       },
     });
 
@@ -116,6 +126,9 @@ export async function PUT(
     });
   } catch (error) {
     console.error("Error updating remarks:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import Search from "../Search";
+import Search from "../ui/Search";
 import AuditFilter from "./AuditFilter";
 import { Button } from "@/components/ui/button";
-import { DateRangeFilter } from "../DateRangeFilter";
+import { DateRangeFilter } from "../ui/DateRangeFilter";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { MdOutlineFileDownload } from "react-icons/md";

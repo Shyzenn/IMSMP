@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { ProductCategory } from "@prisma/client";
-import TableFilterSelect from "../../TableFilterSelect";
+import TableFilterSelect from "../../ui/TableFilterSelect";
 
 const ProductFilter = () => {
   const { data: categories } = useQuery<ProductCategory[]>({

@@ -2,7 +2,7 @@ import { Table } from "@/components/ui/table";
 import { TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { getMTTransactionList } from "@/lib/action/get";
 import { formattedDateTime, toTitleCase } from "@/lib/utils";
-import EmptyTable from "../../EmptyTable";
+import EmptyTable from "../../ui/EmptyTable";
 import MTTransactionTableHeader from "./MTTransactionHeader";
 import MTTransactionAction from "./MTTransactionAction";
 

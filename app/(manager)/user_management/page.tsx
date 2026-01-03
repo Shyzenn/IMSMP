@@ -1,4 +1,4 @@
-import UserManagement from "@/app/components/UserManagement";
+import UserManagement from "@/app/components/user/UserManagement";
 import { Suspense } from "react";
 
 export default function Page() {

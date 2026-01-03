@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import "../globals.css";
-import Header from "../components/Header";
+import Header from "../components/header/Header";
 import { SidebarProvider } from "../(manager)/SidebarContext";
 import ReactQueryProvider from "./QueryClientProvider";
-import Sidebar from "../components/Sidebar";
 import { managerLinks } from "@/lib/links";
-import ModalPortal from "../components/OrderModalPortal";
+import ModalPortal from "../components/order/OrderModalPortal";
+import Sidebar from "../components/ui/Sidebar";
+import AuthSessionProvider from "../components/providers/SessionProvider";
 
 export const metadata: Metadata = {
   title: "Macoleen's Pharmacy",
@@ -18,18 +19,20 @@ export default function AdminLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ReactQueryProvider>
-      <div className={`antialiased bg-background bg-gray-100`}>
-        <SidebarProvider>
-          <Sidebar links={managerLinks} />
-          <Header />
+    <AuthSessionProvider>
+      <ReactQueryProvider>
+        <div className={`antialiased bg-background bg-gray-100`}>
+          <SidebarProvider>
+            <Sidebar links={managerLinks} />
+            <Header />
 
-          <div className="mx-auto w-full max-w-screen-3xl mt-24 px-4 md:px-6 lg:px-16">
-            {children}
-            <ModalPortal />
-          </div>
-        </SidebarProvider>
-      </div>
-    </ReactQueryProvider>
+            <div className="mx-auto w-full max-w-screen-3xl mt-24 px-4 md:px-6 lg:px-16">
+              {children}
+              <ModalPortal />
+            </div>
+          </SidebarProvider>
+        </div>
+      </ReactQueryProvider>
+    </AuthSessionProvider>
   );
 }

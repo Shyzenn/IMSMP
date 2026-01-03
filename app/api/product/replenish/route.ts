@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ errors: zodErrors }, { status: 400 });
     }
 
-    const { productId, quantity, releaseDate, expiryDate } = result.data;
+    const { productId, quantity, releaseDate, expiryDate, notes } = result.data;
 
     const product = await db.product.findUnique({
       where: { id: productId },
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
 
     function normalizeDate(date: Date) {
       const d = new Date(date);
-      d.setHours(12, 0, 0, 0); 
+      d.setHours(12, 0, 0, 0);
       return d;
     }
 
@@ -64,8 +64,9 @@ export async function POST(req: Request) {
         productId,
         batchNumber,
         quantity,
-        releaseDate: normalizeDate(releaseDate),
-        expiryDate:normalizeDate(expiryDate),
+        notes,
+        manufactureDate: normalizeDate(releaseDate),
+        expiryDate: normalizeDate(expiryDate),
       },
     });
 

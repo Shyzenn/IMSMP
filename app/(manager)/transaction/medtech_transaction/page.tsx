@@ -1,11 +1,11 @@
-import PageTableHeader from "@/app/components/PageTableHeader";
-import Pagination from "@/app/components/Pagination";
-import { TableRowSkeleton } from "@/app/components/Skeleton";
+import Pagination from "@/app/components/ui/Pagination";
+import { TableRowSkeleton } from "@/app/components/ui/Skeleton";
 import MTTransactionTable from "@/app/components/transaction/table/MTTable";
 import { fetchMTTransactionPages } from "@/lib/action/get";
 import { transactionMTSkeletonHeaders } from "@/lib/utils";
 import { redirect } from "next/navigation";
 import React, { Suspense } from "react";
+import PageTableHeader from "@/app/components/ui/PageTableHeader";
 
 async function Transaction(props: {
   searchParams: Promise<{

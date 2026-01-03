@@ -1,8 +1,8 @@
 "use client";
 
-import Search from "../Search";
+import Search from "../ui/Search";
 import TransactionFilter from "./TransactionFilter";
-import { DateRangeFilter } from "../DateRangeFilter";
+import { DateRangeFilter } from "../ui/DateRangeFilter";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const TransactionHeader = () => {

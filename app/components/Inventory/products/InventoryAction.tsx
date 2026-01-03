@@ -12,17 +12,20 @@ import { GiRecycle } from "react-icons/gi";
 import EditProductForm from "./EditProductForm";
 import { useModal } from "@/app/hooks/useModal";
 import { useState, useTransition } from "react";
-import ReplenishFormModal from "../../ReplenishFormModal";
+import ReplenishFormModal from "./ReplenishFormModal";
 import { ProductProps } from "./InventoryTable";
 import toast from "react-hot-toast";
 import { archiveProduct } from "@/lib/action/product";
-import ConfirmationModal from "../../ConfirmationModal";
+import ConfirmationModal from "../../ui/ConfirmationModal";
+import { IoMdEye } from "react-icons/io";
+import ProductDetailsModal from "./ProductDetailsModal";
 
 const Action = ({ product }: { product: ProductProps }) => {
   const { open, close, isOpen } = useModal();
 
   const [showReplenishModal, setShowReplenishModal] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [showProductDetailsModal, setShowProductDetailsModal] = useState(false);
 
   const [isPending, startTransition] = useTransition();
 
@@ -58,6 +61,17 @@ const Action = ({ product }: { product: ProductProps }) => {
 
       <div className="flex text-xl gap-2">
         <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button onClick={() => setShowProductDetailsModal(true)}>
+                <IoMdEye className="text-gray-500" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>View Product</p>
+            </TooltipContent>
+          </Tooltip>
+
           <Tooltip>
             <TooltipTrigger asChild>
               <button onClick={open}>
@@ -114,7 +128,16 @@ const Action = ({ product }: { product: ProductProps }) => {
       {showReplenishModal && (
         <ReplenishFormModal
           setShowReplenishModal={setShowReplenishModal}
-          productId={product.id}
+          product={product}
+        />
+      )}
+
+      {showProductDetailsModal && (
+        <ProductDetailsModal
+          open={open}
+          product={product}
+          setShowProductDetailsModal={setShowProductDetailsModal}
+          setShowReplenishModal={setShowReplenishModal}
         />
       )}
     </>

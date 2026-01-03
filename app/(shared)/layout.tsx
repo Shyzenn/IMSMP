@@ -1,7 +1,6 @@
 import { auth } from "@/auth";
-import Sidebar from "../components/Sidebar";
 import { SidebarProvider } from "../(manager)/SidebarContext";
-import Header from "../components/Header";
+import Header from "../components/header/Header";
 import ReactQueryProvider from "../(manager)/QueryClientProvider";
 import {
   managerLinks,
@@ -9,6 +8,7 @@ import {
   pharmacistLinks,
   cashierLinks,
 } from "@/lib/links";
+import Sidebar from "../components/ui/Sidebar";
 
 export default async function SharedLayout({
   children,

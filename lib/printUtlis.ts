@@ -1,5 +1,5 @@
-import { OrderView } from "@/app/components/transaction/table/TransactionAction";
-import { EmergencyOrderModalData, WalkInOrder } from "./interfaces";
+import { CartItem } from "@/app/components/walkin_pos/WalkInPOS";
+import { OrderView } from "./interfaces";
 
 const RECEIPT_WIDTH = 32;
 const PRODUCT_NAME_WIDTH = 18;
@@ -24,7 +24,7 @@ const toNumber = (val: unknown): number => {
     return Number.isFinite(n) ? n : 0;
   }
   if (typeof val === "bigint") return Number(val);
-  
+
   // Handle objects with numeric conversion methods
   if (typeof val === "object") {
     const obj = val as Record<string, unknown>;
@@ -36,7 +36,7 @@ const toNumber = (val: unknown): number => {
       return Number.isFinite(maybe) ? maybe : 0;
     }
   }
-  
+
   return 0;
 };
 
@@ -59,10 +59,7 @@ const wrapText = (text: string, width: number): string[] => {
 };
 
 const escapeHtml = (s: string): string =>
-  s
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
+  s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 
 // ============================================
 // Receipt Builder
@@ -85,105 +82,176 @@ interface ReceiptData {
     requestedBy?: string;
     handledBy?: string;
   };
+  summary?: {
+    subtotal?: number;
+    vatAmount?: number;
+    discountAmount?: number;
+    totalDue?: number;
+    amountTendered?: number;
+    change?: number;
+    isVatExempt?: boolean;
+  };
 }
 
 const buildReceipt = (data: ReceiptData): string => {
   let receipt = "";
-  
+
   // Header
   const headerName = data.header?.name || "Macoleen's Pharmacy";
   const headerSubtitle = data.header?.subtitle || "Order Details";
-  receipt += headerName.padStart((RECEIPT_WIDTH + headerName.length) / 2) + "\n";
-  receipt += headerSubtitle.padStart((RECEIPT_WIDTH + headerSubtitle.length) / 2) + "\n";
+  receipt +=
+    headerName.padStart((RECEIPT_WIDTH + headerName.length) / 2) + "\n";
+  receipt +=
+    headerSubtitle.padStart((RECEIPT_WIDTH + headerSubtitle.length) / 2) + "\n";
   receipt += "-".repeat(RECEIPT_WIDTH) + "\n";
-  
+
   // Order info
   for (const [key, value] of Object.entries(data.orderInfo)) {
     receipt += `${key}: ${value}\n`;
   }
   receipt += "-".repeat(RECEIPT_WIDTH) + "\n";
-  
+
   // Table headers
-  receipt += padRight("Product", PRODUCT_NAME_WIDTH) + 
-             padRight("Qty", QTY_WIDTH) + 
-             "Amount\n";
+  receipt +=
+    padRight("Product", PRODUCT_NAME_WIDTH) +
+    padRight("Qty", QTY_WIDTH) +
+    "Amount\n";
   receipt += "-".repeat(RECEIPT_WIDTH) + "\n";
-  
+
   // Items
   let runningTotal = 0;
-  
+
   for (const item of data.items) {
     const productLines = wrapText(item.productName, PRODUCT_NAME_WIDTH);
     const qtyNum = Number(item.quantity ?? 0) || 0;
     const priceNum = toNumber(item.price);
     const lineTotal = qtyNum * priceNum;
     runningTotal += lineTotal;
-    
+
     const qtyStr = padLeft(String(qtyNum), QTY_WIDTH);
     const lineTotalStr = `PHP${lineTotal.toFixed(2)}`;
     const pricePadded = padLeft(lineTotalStr, AMOUNT_WIDTH);
-    
+
     // First line with qty and price
-    receipt += padRight(productLines[0], PRODUCT_NAME_WIDTH) + 
-               qtyStr + 
-               pricePadded + "\n";
-    
+    receipt +=
+      padRight(productLines[0], PRODUCT_NAME_WIDTH) +
+      qtyStr +
+      pricePadded +
+      "\n";
+
     // Wrapped lines (if any)
     for (let i = 1; i < productLines.length; i++) {
       receipt += padRight(productLines[i], RECEIPT_WIDTH) + "\n";
     }
-    
-    // Item separator
-    receipt += "\n";
   }
-  
-  // Footer & total
+
+  // Summary section (if provided)
+  if (data.summary) {
+    receipt += "-".repeat(RECEIPT_WIDTH) + "\n";
+
+    if (data.summary.subtotal !== undefined) {
+      receipt +=
+        padLeft("Subtotal:", 22) +
+        padLeft(`PHP${data.summary.subtotal.toFixed(2)}`, AMOUNT_WIDTH) +
+        "\n";
+    }
+
+    if (data.summary.vatAmount !== undefined) {
+      const vatLabel = data.summary.isVatExempt
+        ? "VAT (Exempt):"
+        : "VAT (12%):";
+      receipt +=
+        padLeft(vatLabel, 22) +
+        padLeft(`PHP${data.summary.vatAmount.toFixed(2)}`, AMOUNT_WIDTH) +
+        "\n";
+    }
+
+    if (
+      data.summary.discountAmount !== undefined &&
+      data.summary.discountAmount > 0
+    ) {
+      receipt +=
+        padLeft("Discount:", 22) +
+        padLeft(`-PHP${data.summary.discountAmount.toFixed(2)}`, AMOUNT_WIDTH) +
+        "\n";
+    }
+
+    receipt += "-".repeat(RECEIPT_WIDTH) + "\n";
+
+    if (data.summary.totalDue !== undefined) {
+      receipt +=
+        padLeft("TOTAL DUE:", 22) +
+        padLeft(`PHP${data.summary.totalDue.toFixed(2)}`, AMOUNT_WIDTH) +
+        "\n";
+    }
+
+    if (data.summary.amountTendered !== undefined) {
+      receipt +=
+        padLeft("Amount Tendered:", 22) +
+        padLeft(`PHP${data.summary.amountTendered.toFixed(2)}`, AMOUNT_WIDTH) +
+        "\n";
+    }
+
+    if (data.summary.change !== undefined) {
+      receipt +=
+        padLeft("CHANGE:", 22) +
+        padLeft(`PHP${data.summary.change.toFixed(2)}`, AMOUNT_WIDTH) +
+        "\n";
+    }
+  } else {
+    // Footer & total (original format)
+    receipt += "-".repeat(RECEIPT_WIDTH) + "\n";
+    receipt +=
+      padLeft("TOTAL:", 22) +
+      padLeft(`PHP${runningTotal.toFixed(2)}`, AMOUNT_WIDTH) +
+      "\n";
+  }
+
   receipt += "-".repeat(RECEIPT_WIDTH) + "\n";
-  receipt += padLeft("TOTAL:", 22) + 
-             padLeft(`PHP${runningTotal.toFixed(2)}`, AMOUNT_WIDTH) + "\n";
-  receipt += "-".repeat(RECEIPT_WIDTH) + "\n";
-  
+
   if (data.footer.requestedBy) {
     receipt += `Requested By: ${data.footer.requestedBy}\n`;
   }
   if (data.footer.handledBy) {
     receipt += `Handled By: ${data.footer.handledBy}\n`;
   }
-  
-  // Extra spacing for tear-off
-  receipt += "\n\n\n\n\n\n\n\n";
-  
+
   return receipt;
 };
 
 // ============================================
 // Print Function
 // ============================================
-const printReceipt = (receipt: string, onPrintComplete?: () => void): boolean => {
+const printReceipt = (
+  receipt: string,
+  onPrintDialogClosed?: () => void
+): boolean => {
   try {
     const printWindow = window.open("", "printReceipt", "width=400,height=600");
     if (!printWindow) {
       console.error("Failed to open print window");
       return false;
     }
-    
+
     printWindow.document.write(`
       <html>
         <head>
           <title>Macoleen's Pharmacy Receipt</title>
           <style>
-            @page { margin: 0; }
+            @page { size: 80mm auto; margin: 0; }
             body {
               font-family: 'Courier New', monospace;
-              font-size: 12px;
-              line-height: 1.4;
+              font-size: 11px;
+              line-height: 1.2;
               white-space: pre;
               margin: 0;
-              padding: 0 8px 150px 8px;
+              padding: 8px;
+              width: 80mm;
+              max-width: 80mm;
             }
             pre {
               margin: 0;
-              line-height: 1.6;
+              line-height: 1.3;
             }
           </style>
         </head>
@@ -192,38 +260,28 @@ const printReceipt = (receipt: string, onPrintComplete?: () => void): boolean =>
         </body>
       </html>
     `);
-    
+
     printWindow.document.close();
-    
-    // Set up the afterprint event BEFORE calling print()
+
+    // After print dialog closes, trigger callback to show confirmation modal
     printWindow.onafterprint = () => {
-      // Close the print window
       printWindow.close();
-      
-      // Trigger callback after a short delay to ensure window is closed
+
+      // Small delay to ensure window is closed
       setTimeout(() => {
-        if (onPrintComplete) {
-          onPrintComplete();
+        if (onPrintDialogClosed) {
+          onPrintDialogClosed();
         }
       }, 300);
     };
-    
-    // Also handle if user closes window without printing
-    printWindow.onbeforeunload = () => {
-      setTimeout(() => {
-        if (onPrintComplete) {
-          onPrintComplete();
-        }
-      }, 300);
-    };
-    
+
     printWindow.focus();
-    
+
     // Wait for content to load before printing
     setTimeout(() => {
       printWindow.print();
     }, 250);
-    
+
     return true;
   } catch (error) {
     console.error("Print error:", error);
@@ -231,136 +289,100 @@ const printReceipt = (receipt: string, onPrintComplete?: () => void): boolean =>
   }
 };
 
-
-export const handlePrint = async (
-  selectedOrder: OrderView | null,
-  setIsConfirmOpen: React.Dispatch<React.SetStateAction<boolean>>
-): Promise<void> => {
-  if (!selectedOrder) return;
-  
+export const printOrderRequest = (
+  printData: OrderView,
+  subtotal: number,
+  onPrintDialogClosed?: () => void
+): boolean => {
   try {
     const receiptData: ReceiptData = {
       orderInfo: {
-        Patient: selectedOrder.patient_name ?? "Unknown",
-        Room: selectedOrder.roomNumber ?? "Unknown",
-        Date: new Date(selectedOrder.createdAt).toLocaleString("en-PH"),
-        Type: selectedOrder.type === "REGULAR" ? "Regular" : selectedOrder.type,
+        Patient: printData.patientDetails?.patientName || "Patient Customer",
+        Room: printData.patientDetails?.roomNumber?.toString() ?? "",
+        Date: new Date().toLocaleString("en-PH"),
+        Type: printData.type === "EMERGENCY" ? "Pay Later" : printData.type,
       },
-      items: selectedOrder.itemDetails,
+      items: printData.itemDetails.map((item) => ({
+        productName: item.productName,
+        quantity: item.quantityOrdered,
+        price: item.price,
+      })),
       footer: {
-        requestedBy: selectedOrder.requestedBy,
+        requestedBy: printData.requestedBy ?? "Unknown",
       },
       header: {
-        subtitle: "Order Request"
-      }
+        subtitle: "Order Request",
+      },
+      summary: {
+        subtotal: subtotal,
+      },
     };
-    
+
     const receipt = buildReceipt(receiptData);
-    
-    // Pass callback to show confirmation AFTER print completes
-    printReceipt(receipt, () => {
-      setIsConfirmOpen(true);
-    });
+    return printReceipt(receipt, onPrintDialogClosed);
   } catch (error) {
-    console.error("Error in handlePrint:", error);
+    console.error("Error in printOrderRequest:", error);
+    return false;
   }
 };
 
-export const handleEmergencyPrint = async (
-  orderData: EmergencyOrderModalData | null,
-  closeModal: () => void
-): Promise<void> => {
-  if (!orderData) return;
-  
-  try {
-    const receiptData: ReceiptData = {
-      orderInfo: {
-        Patient: orderData.order.patient_name,
-        Room: orderData.order.room_number,
-        Date: new Date(orderData.createdAt).toLocaleString("en-PH"),
-        Type: orderData.orderType === "EMERGENCY" ? "Pay Later" : orderData.orderType,
-      },
-      items: orderData.order.products,
-      footer: {
-        requestedBy: orderData.sender.username,
-      },
-      header:{
-        subtitle: "Order Request"
-      }
-    };
-    
-    const receipt = buildReceipt(receiptData);
-    const success = printReceipt(receipt);
-    
-    if (success) {
-      closeModal();
-    }
-  } catch (error) {
-    console.error("Error in handleEmergencyPrint:", error);
-  }
-};
+interface WalkInPaymentData {
+  customerName?: string;
+  cartItems: CartItem[];
+  subtotal: number;
+  requestedBy?: string;
+  vatAmount: number;
+  discountAmount: number;
+  totalDue: number;
+  amountTendered: number;
+  change: number;
+  discountType: string;
+  isVatExempt: boolean;
+  username: string;
+}
 
-export const handleWalkInPrint = async (
-  selectedOrder: WalkInOrder | null,
-  printWindow: Window
-): Promise<void> => {
-  if (!selectedOrder) return;
-  
+export const printWalkInReceipt = (
+  paymentData: WalkInPaymentData,
+  onPrintDialogClosed?: () => void
+): boolean => {
   try {
+    const formatProductName = (item: CartItem): string => {
+      const parts = [item.productName];
+      return parts.filter(Boolean).join(" ");
+    };
+
     const receiptData: ReceiptData = {
       orderInfo: {
-        Customer: selectedOrder.customer,
-        Date: new Date(selectedOrder.createdAt).toLocaleString("en-PH"),
+        Customer: paymentData.customerName || "Walk-in Customer",
+        Date: new Date().toLocaleString("en-PH"),
         Type: "Walk In",
       },
-      items: selectedOrder.itemDetails,
+      items: paymentData.cartItems.map((item) => ({
+        productName: formatProductName(item),
+        quantity: item.quantity,
+        price: item.price,
+      })),
       footer: {
-        handledBy: selectedOrder.handledBy,
+        handledBy: paymentData.username,
       },
       header: {
-        subtitle: "Walk In Order"
-      }
+        subtitle: "Sales Receipt",
+      },
+      summary: {
+        subtotal: paymentData.subtotal,
+        vatAmount: paymentData.vatAmount,
+        discountAmount: paymentData.discountAmount,
+        totalDue: paymentData.totalDue,
+        amountTendered: paymentData.amountTendered,
+        change: paymentData.change,
+        isVatExempt: paymentData.isVatExempt,
+      },
     };
-    
+
     const receipt = buildReceipt(receiptData);
-    
-    // Use provided window for walk-in
-    printWindow.document.open();
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Macoleen's Pharmacy Receipt</title>
-          <style>
-            @page { margin: 0; }
-            body {
-              font-family: 'Courier New', monospace;
-              font-size: 12px;
-              line-height: 1.4;
-              white-space: pre;
-              margin: 0;
-              padding: 0 8px 150px 8px;
-            }
-            pre {
-              margin: 0;
-              line-height: 1.6;
-            }
-          </style>
-        </head>
-        <body>
-          <pre>${escapeHtml(receipt)}</pre>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    
-    // Wait for content to load before printing
-    setTimeout(() => {
-      printWindow.print();
-      // Note: Don't close here - let the calling code handle cleanup via onafterprint
-    }, 250);
-    
+    return printReceipt(receipt, onPrintDialogClosed);
   } catch (error) {
-    console.error("Error in handleWalkInPrint:", error);
+    console.error("Error in printWalkInReceipt:", error);
+    return false;
   }
 };

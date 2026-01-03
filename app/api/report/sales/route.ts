@@ -28,6 +28,9 @@ export interface ReportSale {
     name: string;
   } | null;
   items: ReportItem[];
+  discount: number;
+  isVatExempt: boolean;
+  grandTotal: number;
 }
 
 export interface SalesFilterMeta {
@@ -37,13 +40,12 @@ export interface SalesFilterMeta {
 }
 
 export async function POST(req: Request) {
-
   const session = await auth();
 
   if (!session || !session.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
-  
+
   try {
     const body: Body = await req.json();
     const type = (body.type || "all").toLowerCase();
@@ -53,11 +55,11 @@ export async function POST(req: Request) {
     let to: Date | null = null;
 
     if (body.from) {
-      const [year, month, day] = body.from.split('-').map(Number);
+      const [year, month, day] = body.from.split("-").map(Number);
       from = new Date(year, month - 1, day);
     }
     if (body.to) {
-      const [year, month, day] = body.to.split('-').map(Number);
+      const [year, month, day] = body.to.split("-").map(Number);
       to = new Date(year, month - 1, day);
     }
 
@@ -76,7 +78,7 @@ export async function POST(req: Request) {
     // === ORDER REQUEST SALES ===
     if (type === "all" || type === "orderrequest") {
       const whereReq: Prisma.OrderRequestWhereInput = {
-        status: { in: ["paid", "refunded"] }
+        status: { in: ["paid", "refunded"] },
       };
       if (createdAtFilter) whereReq.createdAt = createdAtFilter;
 
@@ -86,23 +88,40 @@ export async function POST(req: Request) {
           items: {
             include: {
               product: {
-                include: { category: true }
-              }
-            }
+                include: { category: true },
+              },
+            },
+          },
+          payments: {
+            select: {
+              discountAmount: true,
+              discountType: true,
+            },
           },
           user: true,
         },
         orderBy: { createdAt: "asc" },
       });
 
-
       orders.forEach((order) => {
+        // Get payment info
+        const payment = order.payments?.[0];
+        const isVatExempt =
+          payment &&
+          (payment.discountType === "PWD" || payment.discountType === "SENIOR");
+        const discountAmount = payment
+          ? Number(payment.discountAmount || 0)
+          : 0;
+
         const items = order.items.map((item) => {
           const productName = item.product?.product_name ?? "Unknown";
           const categoryName = item.product?.category?.name ?? "Uncategorized";
-          const productPrice = item.product?.price ? Number(item.product.price) : 0;
-          
-          const netQuantity = item.quantity - (item.refundedQuantity || 0);
+          const productPrice = item.product?.price
+            ? Number(item.product.price)
+            : 0;
+
+          const netQuantity =
+            Number(item.quantityOrdered) - (Number(item.refundedQuantity) || 0);
           const total = productPrice * netQuantity;
 
           return {
@@ -115,6 +134,15 @@ export async function POST(req: Request) {
           };
         });
 
+        // Calculate order subtotal
+        const orderSubtotal = items.reduce((sum, item) => sum + item.total, 0);
+
+        // Calculate base amount (VAT-exclusive if exempt)
+        const baseAmount = isVatExempt ? orderSubtotal / 1.12 : orderSubtotal;
+
+        // Calculate grand total
+        const grandTotal = baseAmount - discountAmount;
+
         results.push({
           id: order.id,
           type: "Order Request",
@@ -126,9 +154,11 @@ export async function POST(req: Request) {
               }
             : null,
           items,
+          discount: discountAmount,
+          isVatExempt,
+          grandTotal,
         });
       });
-
     }
 
     // === WALK-IN SALES ===
@@ -144,23 +174,37 @@ export async function POST(req: Request) {
           items: {
             include: {
               product: {
-                include: { category: true }
-              }
-            }
+                include: { category: true },
+              },
+            },
+          },
+          payments: {
+            select: {
+              discountAmount: true,
+              discountType: true,
+            },
           },
           user: true,
         },
         orderBy: { createdAt: "asc" },
       });
 
-
       walkins.forEach((txn) => {
+        // Get payment info
+        const payment = txn.payments?.[0];
+        const isVatExempt =
+          payment &&
+          (payment.discountType === "PWD" || payment.discountType === "SENIOR");
+        const discountAmount = payment
+          ? Number(payment.discountAmount || 0)
+          : 0;
+
         const items = txn.items.map((item) => {
           const productName = item.product?.product_name ?? "Unknown";
           const categoryName = item.product?.category?.name ?? "Uncategorized";
-          
+
           const productPrice = item.price ? Number(item.price) : 0;
-          
+
           const netQuantity = item.quantity - (item.refundedQuantity || 0);
           const total = productPrice * netQuantity;
 
@@ -174,6 +218,15 @@ export async function POST(req: Request) {
           };
         });
 
+        // Calculate transaction subtotal
+        const txnSubtotal = items.reduce((sum, item) => sum + item.total, 0);
+
+        // Calculate base amount (VAT-exclusive if exempt)
+        const baseAmount = isVatExempt ? txnSubtotal / 1.12 : txnSubtotal;
+
+        // Calculate grand total
+        const grandTotal = baseAmount - discountAmount;
+
         results.push({
           id: txn.id,
           type: "Walk-In",
@@ -185,11 +238,12 @@ export async function POST(req: Request) {
               }
             : null,
           items,
+          discount: discountAmount,
+          isVatExempt,
+          grandTotal,
         });
       });
-
     }
-
 
     if (results.length === 0) {
       return NextResponse.json({ message: "No data found" }, { status: 404 });

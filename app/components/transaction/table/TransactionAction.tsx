@@ -5,45 +5,16 @@ import { RiRefund2Line } from "react-icons/ri";
 import { useModal } from "@/app/hooks/useModal";
 import { useOrderModal } from "@/lib/store/useOrderModal";
 import { useEmergencyModal } from "@/lib/store/emergency-modal";
-import { CombinedTransaction } from "@/lib/action/get";
-import { EmergencyOrderModalData, OrderItem } from "@/lib/interfaces";
 import { useTransition } from "react";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
-import ConfirmationModal from "../../ConfirmationModal";
-import ActionButton from "../../ActionButton";
+import ConfirmationModal from "../../ui/ConfirmationModal";
+import ActionButton from "../../ui/ActionButton";
 import { useRefundStore } from "@/lib/store/useRefundStore";
-import RefundDetails from "../../RefundDetails";
+import RefundDetails from "../RefundDetails";
+import { OrderView } from "@/lib/interfaces";
 
-export type OrderView = {
-  type: "REGULAR" | "EMERGENCY" | "Walk In" | "Pay Later";
-  id: number | string;
-  requestedBy?: string;
-  receivedBy?: string;
-  processedBy: string;
-  refundedAt?: Date;
-  refundedBy?: string;
-  refundedById?: string;
-  refundedReason?: string | null;
-  customer: string;
-  patient_name?: string;
-  roomNumber?: string;
-  notes?: string;
-  quantity: number;
-  price: number;
-  total: number;
-  remarks?: "preparing" | "prepared" | "dispensed";
-  status: "pending" | "for_payment" | "paid" | "canceled" | "refunded";
-  createdAt: Date;
-  source: "Walk In" | "Request Order";
-  itemDetails: OrderItem[];
-};
-
-const TransactionAction = ({
-  transaction,
-}: {
-  transaction: CombinedTransaction;
-}) => {
+const TransactionAction = ({ transaction }: { transaction: OrderView }) => {
   const { openModal } = useOrderModal();
   const { openModal: openEmergencyModal } = useEmergencyModal();
   const { open, isOpen, close } = useModal();
@@ -51,83 +22,22 @@ const TransactionAction = ({
   const { data: session } = useSession();
   const { setTransaction, refundItems } = useRefundStore();
 
-  const handleViewClick = async (transaction: CombinedTransaction) => {
+  const handleViewClick = async (transaction: OrderView) => {
     if (!transaction?.id) return;
 
     if (transaction.type === "EMERGENCY") {
-      const payLaterData: EmergencyOrderModalData = {
-        id: transaction.id,
-        orderType: transaction.type,
-        order: {
-          id: transaction.id,
-          patient_name: transaction.patient_name ?? "Unknown",
-          room_number: transaction.roomNumber?.toString() ?? "Unknown",
-          status: (["pending", "for_payment", "paid", "canceled"].includes(
-            transaction.status
-          )
-            ? transaction.status
-            : "pending") as EmergencyOrderModalData["order"]["status"],
-          products: transaction.itemDetails.map((item) => ({
-            productName: item.productName ?? "Unknown",
-            quantity: item.quantity,
-            price: item.price ?? 0,
-          })),
-        },
-        createdAt: new Date(transaction.createdAt),
-        notes: transaction.notes ?? "",
-        sender: {
-          username: transaction.requestedBy ?? "Unknown",
-        },
-      };
-      openEmergencyModal(payLaterData);
+      openEmergencyModal(transaction);
       return;
     }
 
     if (transaction.type === "REGULAR" || transaction.type === "Walk In") {
-      const orderView: OrderView = {
-        id: `ORD-${transaction.id}`,
-        type: transaction.type ?? "REGULAR",
-        requestedBy: transaction.requestedBy ?? "Unknown",
-        receivedBy: transaction.receivedBy ?? "Unknown",
-        processedBy: transaction.processedBy ?? "Unknown",
-        customer: transaction.customer ?? "Unknown",
-        patient_name: transaction.patient_name ?? "Unknown",
-        roomNumber: transaction.roomNumber?.toString() ?? "N/A",
-        notes: transaction.notes ?? "",
-        quantity: transaction?.itemDetails.reduce(
-          (sum, i) => sum + i.quantity,
-          0
-        ),
-        price: transaction.itemDetails?.reduce(
-          (sum, i) => sum + (i.price ?? 0),
-          0
-        ),
-        total: transaction.itemDetails?.reduce(
-          (sum, i) => sum + i.quantity * (i.price ?? 0),
-          0
-        ),
-        status: transaction.status as OrderView["status"],
-        createdAt: new Date(transaction.createdAt),
-        source: transaction.source,
-        refundedAt: transaction.refundedAt,
-        refundedById: transaction.refundedById,
-        refundedBy: transaction.refundedBy,
-        refundedReason: transaction.refundedReason,
-        itemDetails: transaction.itemDetails.map((i) => ({
-          productName: i.productName ?? "Unknown",
-          quantity: i.quantity,
-          price: i.price ?? 0,
-        })),
-      };
-
-      openModal(orderView);
+      openModal(transaction);
     }
   };
 
   const handleRefund = async (reason?: string) => {
     startTransition(async () => {
       try {
-        // Validate reason before processing
         const sanitizedReason = reason?.trim().replace(/\s+/g, " ") || "";
 
         if (!sanitizedReason || sanitizedReason.length < 5) {
@@ -137,8 +47,13 @@ const TransactionAction = ({
           return;
         }
 
-        // Filter items to refund (quantity > 0)
-        const itemsToRefund = refundItems.filter((item) => item.quantity > 0);
+        // Filter items to refund (quantity > 0) and map to API shape
+        const itemsToRefund = refundItems
+          .filter((item) => item.quantity > 0)
+          .map((item) => ({
+            productName: item.productName,
+            quantity: item.quantity,
+          }));
 
         if (itemsToRefund.length === 0) {
           toast.error("Please select at least one item to refund", {
@@ -147,26 +62,15 @@ const TransactionAction = ({
           return;
         }
 
-        // Determine the correct API endpoint based on transaction source
-        const endpoint =
-          transaction.source === "Walk In"
-            ? `/api/walkin_order/${transaction.id}/refund`
-            : `/api/request_order/${transaction.id}/status`;
-
-        console.log("Sending refund request:", {
-          // Debug log
-          itemsToRefund,
-          reason: sanitizedReason,
-          endpoint,
-        });
+        // Unified API endpoint
+        const endpoint = `/api/refunds/${
+          transaction.type === "Walk In" ? "walkin" : "order"
+        }/${transaction.id}`;
 
         const response = await fetch(endpoint, {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            status: "refunded",
             reason: sanitizedReason,
             items: itemsToRefund,
           }),
@@ -175,19 +79,18 @@ const TransactionAction = ({
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.message || "Failed to refund transaction");
+          throw new Error(data.error || "Failed to refund transaction");
         }
 
         toast.success(
-          transaction.source === "Walk In"
+          transaction.type === "Walk In"
             ? "Walk-in transaction refunded successfully ✅"
             : "Order refunded successfully ✅",
           { duration: 5000 }
         );
 
         close();
-
-        // Refresh the page to show updated data
+        // Refresh page or trigger a refetch
         window.location.reload();
       } catch (error) {
         console.error("Error refunding transaction:", error);
@@ -202,7 +105,7 @@ const TransactionAction = ({
   };
 
   const getRefundTitle = () => {
-    if (transaction.source === "Walk In") {
+    if (transaction.type === "Walk In") {
       return `Refund Walk-In Transaction (ORD-0${transaction.id})`;
     }
     return `Refund Order (ORD-${transaction.id})`;
@@ -210,7 +113,7 @@ const TransactionAction = ({
 
   const getRefundDescription = () => {
     return `Are you sure you want to refund this ${
-      transaction.source === "Walk In" ? "walk-in transaction" : "order"
+      transaction.type === "Walk In" ? "walk-in transaction" : "order"
     }? This action cannot be undone and will restore the inventory.`;
   };
 

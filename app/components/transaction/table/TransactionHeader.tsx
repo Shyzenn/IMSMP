@@ -4,7 +4,7 @@ import { TableHead } from "@/components/ui/table";
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 import { LuArrowDownUp } from "react-icons/lu";
-import ReusableTableHeader from "../../ReusabaleTableHeader";
+import ReusableTableHeader from "../../ui/ReusabaleTableHeader";
 
 const TransactionTableHeader = ({ userRole }: { userRole: string }) => {
   const searchParams = useSearchParams();

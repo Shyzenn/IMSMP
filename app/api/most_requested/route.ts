@@ -4,70 +4,68 @@ import { subDays, startOfMonth, startOfYear } from "date-fns";
 import { auth } from "@/auth";
 
 export async function GET(req: Request) {
+  const session = await auth();
 
-    const session = await auth();
-  
-    if (!session || !session.user?.id) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-  
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
 
   try {
-    const url = new URL(req.url);
-    const filter = url.searchParams.get("filter");
+    const { searchParams } = new URL(req.url);
+    const filter = searchParams.get("filter");
 
-    let dateFilter: Date | undefined;
+    let fromDate: Date | undefined;
 
-    if (filter === "Last 7 Days") {
-      dateFilter = subDays(new Date(), 7);
-    } else if (filter === "This Month") {
-      dateFilter = startOfMonth(new Date());
-    } else if (filter === "This Year") {
-      dateFilter = startOfYear(new Date());
-    }
+    if (filter === "Last 7 Days") fromDate = subDays(new Date(), 6);
+    else if (filter === "This Month") fromDate = startOfMonth(new Date());
+    else if (filter === "This Year") fromDate = startOfYear(new Date());
 
-    const topProducts = await db.orderItem.groupBy({
-      by: ["productId"],
-      _sum: { quantity: true },
-      where: dateFilter
-        ? {
-            order: {
-              createdAt: {
-                gte: dateFilter,
-              },
-            },
-          }
-        : undefined,
-      orderBy: {
-        _sum: {
-          quantity: "desc",
+    const orderItems = await db.orderItem.findMany({
+      where: {
+        order: {
+          status: { in: ["paid", "refunded"] },
+          ...(fromDate && { createdAt: { gte: fromDate } }),
         },
       },
-      take: 5,
+      include: {
+        product: true,
+      },
     });
 
-    const detailedTopProducts = await Promise.all(
-      topProducts.map(async (item) => {
-        const product = await db.product.findUnique({
-          where: { id: item.productId },
-        });
+    const productMap: Record<
+      string,
+      { id: number; name: string; quantity: number }
+    > = {};
 
-        return {
-          id: product?.id,
-          name: product?.product_name,
-          totalRequested: item._sum?.quantity ?? 0,
+    for (const item of orderItems) {
+      const ordered = item.quantityOrdered.toNumber();
+      const refunded = item.refundedQuantity?.toNumber() || 0;
+      const netQuantity = ordered - refunded;
+
+      if (netQuantity <= 0) continue;
+
+      const productId = item.product.id;
+
+      if (!productMap[productId]) {
+        productMap[productId] = {
+          id: productId,
+          name: item.product.product_name,
+          quantity: 0,
         };
-      })
-    );
+      }
 
-    return NextResponse.json(detailedTopProducts, { status: 200 });
+      productMap[productId].quantity += netQuantity;
+    }
+
+    const topRequested = Object.values(productMap)
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 5);
+
+    return NextResponse.json(topRequested, { status: 200 });
   } catch (error) {
     console.error("Error fetching top requested products:", error);
     return NextResponse.json(
-      {
-        message: "Failed to fetch top requested products",
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
+      { message: "Failed to fetch top requested products" },
       { status: 500 }
     );
   }

@@ -33,17 +33,17 @@ model User {
   OrderRequest      OrderRequest[]      @relation("RequestedBy")
   WalkInTransaction WalkInTransaction[]
 
-  ReceivedOrders         OrderRequest[]      @relation("ReceivedBy")
-  ProcessedOrders        OrderRequest[]      @relation("ProcessedBy")
-  RefundedByOrderRequest OrderRequest[]      @relation("RefundedBy")
-  RefundedByWalkIn       WalkInTransaction[] @relation("RefundedBy")
+  ReceivedOrders  OrderRequest[] @relation("ReceivedBy")
+  PreparedOrders  OrderRequest[] @relation("PreparedBy")
+  DispensedOrders OrderRequest[] @relation("DispensedBy")
 
-  ProcessedWalkinOrders WalkInTransaction[] @relation("ProcessedBy")
+  paymentsProcessed Payment[] @relation("PaymentProcessedBy")
+  refundsProcessed  Refund[]  @relation("RefundProcessedBy")
 
   Product  Product[]
   AuditLog AuditLog[]
   lastSeen DateTime   @default(now()) @updatedAt
-  isOnline Boolean    @default(false) 
+  isOnline Boolean    @default(false)
 
   SentNotification     Notification[] @relation("SentNotification")
   ReceivedNotification Notification[] @relation("ReceivedNotification")
@@ -87,12 +87,23 @@ model AuditLog {
 
 model Product {
   id           Int      @id @default(autoincrement())
-  product_name String   @unique
-  price        Decimal  @default(0.00)
+  product_name String
   status       String   @default("ACTIVE") // ACTIVE | ARCHIVED
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  categoryId Int?
+  category   ProductCategory? @relation(fields: [categoryId], references: [id])
+
+  genericName          String?
+  manufacturer         String?
+  description          String? @db.Text
+  strength             String? // e.g., "500mg", "100 units/ml"
+  dosageForm           String? // tablet, capsule, powder, solution, suspension, etc.
+  requiresPrescription Boolean @default(false)
+  price Decimal @db.Decimal(10, 2)
+  minimumStockAlert Decimal @default(6)
+  
   archivedById   String?
   archivedByUser User?     @relation("ArchivedProducts", fields: [archivedById], references: [id])
   archiveAt      DateTime?
@@ -108,8 +119,6 @@ model Product {
   userId String?
   user   User?   @relation(fields: [userId], references: [id])
 
-  categoryId Int?
-  category   ProductCategory? @relation(fields: [categoryId], references: [id])
 }
 
 model ProductBatch {
@@ -122,11 +131,12 @@ model ProductBatch {
   archivedById   String?
   archivedByUser User?     @relation("ArchivedBatches", fields: [archivedById], references: [id])
 
-  batchNumber String
-  quantity    Int      @default(0)
-  releaseDate DateTime
-  expiryDate  DateTime
-  type        String   @default("ACTIVE") // ACTIVE | EXPIRING | EXPIRED | CONSUMED | ARCHIVED
+  batchNumber     String
+  quantity        Int      @default(0)
+  manufactureDate DateTime
+  expiryDate      DateTime
+  type            String   @default("ACTIVE") // ACTIVE | EXPIRING | EXPIRED | CONSUMED | ARCHIVED
+  notes           String?  @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -175,8 +185,11 @@ model MedTechRequest {
 }
 
 model MedTechRequestItem {
-  id               Int            @id @default(autoincrement())
-  quantity         Int            @default(1)
+  id Int @id @default(autoincrement())
+
+  quantityOrdered Decimal 
+  totalPrice Decimal 
+
   medTechRequest   MedTechRequest @relation(fields: [medTechRequestId], references: [id], onDelete: Cascade)
   medTechRequestId Int
   product          Product        @relation(fields: [productId], references: [id])
@@ -195,20 +208,94 @@ enum MedTechRemarks {
   released
 }
 
-model OrderRequest {
-  id           Int      @id @default(autoincrement())
-  room_number  String?
-  patient_name String?
-  status       Status
-  remarks      Remarks  @default(preparing)
-  notes        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+model Patient {
+  id            String  @id @default(cuid())
+  patientNumber Int     @unique @default(autoincrement())
+  patientName   String
+  roomNumber    Int?
+  contactNumber String?
 
-  refundedAt   DateTime?
-  refundedBy   User?     @relation("RefundedBy", fields: [refundedById], references: [id])
-  refundedById String?
-  refundReason String?
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  orderRequest OrderRequest[]
+
+  @@index([patientName])
+}
+
+enum DiscountType {
+  NONE
+  SENIOR
+  PWD
+  CUSTOM
+}
+
+model Payment {
+  id Int @id @default(autoincrement())
+
+  orderRequest   OrderRequest? @relation(fields: [orderRequestId], references: [id], onDelete: Cascade)
+  orderRequestId Int?
+
+  walkInOrder   WalkInTransaction? @relation(fields: [walkInOrderId], references: [id], onDelete: Cascade)
+  walkInOrderId Int?
+
+  subTotal        Decimal @db.Decimal(10,2) // before discount, VAT-inclusive
+  discountAmount  Decimal @default(0) @db.Decimal(10,2)
+  discountPercent Decimal @default(0) @db.Decimal(5,2)
+  discountType  DiscountType  @default(NONE)
+
+  vatRate      Decimal @default(12) @db.Decimal(5,2)
+  vatAmount    Decimal @db.Decimal(10,2)
+  vatExempt    Decimal @default(0) @db.Decimal(10,2)
+  zeroRated    Decimal @default(0) @db.Decimal(10,2)
+
+  amountDue        Decimal @db.Decimal(10,2) // final payable
+  amountTendered   Decimal @db.Decimal(10,2)
+  change           Decimal @default(0) @db.Decimal(10,2)
+
+  processedBy   User   @relation("PaymentProcessedBy", fields: [processedById], references: [id])
+  processedById String
+
+  createdAt DateTime @default(now())
+
+  @@index([orderRequestId])
+  @@index([walkInOrderId])
+}
+
+model Refund {
+  id Int @id @default(autoincrement())
+
+  orderRequest   OrderRequest? @relation(fields: [orderRequestId], references: [id], onDelete: Cascade)
+  orderRequestId Int?
+
+  walkInOrder   WalkInTransaction? @relation(fields: [walkInOrderId], references: [id], onDelete: Cascade)
+  walkInOrderId Int?
+
+  refundAmount Decimal @db.Decimal(10, 2)
+  refundReason String
+
+  refundedBy   User   @relation("RefundProcessedBy", fields: [refundedById], references: [id])
+  refundedById String
+
+  refundedAt DateTime @default(now())
+
+  @@index([orderRequestId])
+  @@index([walkInOrderId])
+}
+
+model OrderRequest {
+  id Int @id @default(autoincrement())
+
+  patient   Patient @relation(fields: [patientId], references: [id])
+  patientId String
+
+  status    Status
+  remarks   Remarks  @default(preparing)
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  totalAmount Decimal
 
   type OrderType @default(REGULAR)
 
@@ -228,12 +315,18 @@ model OrderRequest {
   receivedBy   User?   @relation("ReceivedBy", fields: [receivedById], references: [id])
   receivedById String?
 
-  processedBy   User?   @relation("ProcessedBy", fields: [processedById], references: [id])
-  processedById String?
-
   receivedAt  DateTime?
-  processedAt DateTime?
 
+  preparedBy    User?   @relation("PreparedBy", fields: [preparedById], references: [id])
+  preparedById  String?
+  dispensedBy   User?   @relation("DispensedBy", fields: [dispensedById], references: [id])
+  dispensedById String?
+
+  preparedAt  DateTime?
+  dispensedAt DateTime?
+
+  refunds      Refund[]
+  payments     Payment[]
   items        OrderItem[]
   Notification Notification[]
 }
@@ -251,12 +344,15 @@ enum OrderType {
 
 model OrderItem {
   id               Int          @id @default(autoincrement())
-  quantity         Int          @default(1)
-  refundedQuantity Int          @default(0)
+  refundedQuantity Decimal
   order            OrderRequest @relation(fields: [orderId], references: [id])
   orderId          Int
   product          Product      @relation(fields: [productId], references: [id])
   productId        Int
+
+  quantityOrdered Decimal 
+  price           Decimal @db.Decimal(10, 2)
+  totalPrice Decimal 
 }
 
 model WalkInTransaction {
@@ -266,13 +362,8 @@ model WalkInTransaction {
   updatedAt     DateTime @updatedAt
   status        Status
 
-  processedBy   User?   @relation("ProcessedBy", fields: [processedById], references: [id])
-  processedById String?
-
-  refundedAt   DateTime?
-  refundedBy   User?     @relation("RefundedBy", fields: [refundedById], references: [id])
-  refundedById String?
-  refundReason String?
+  payments Payment[]
+  refunds  Refund[]
 
   items        WalkInItem[]
   totalAmount  Decimal        @default(0.00)

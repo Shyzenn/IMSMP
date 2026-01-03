@@ -1,5 +1,5 @@
 import React from "react";
-import TableFilterSelect from "../TableFilterSelect";
+import TableFilterSelect from "../ui/TableFilterSelect";
 
 const AuditFilter = () => {
   return (

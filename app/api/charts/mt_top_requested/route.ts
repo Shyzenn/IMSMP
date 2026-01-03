@@ -4,7 +4,6 @@ import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
   try {
-    
     const { searchParams } = new URL(req.url);
     const filter = searchParams.get("filter") || "This Month";
 
@@ -28,7 +27,7 @@ export async function GET(req: Request) {
     // Group order items by productId
     const orderItems = await db.medTechRequestItem.groupBy({
       by: ["productId"],
-      _sum: { quantity: true },
+      _sum: { quantityOrdered: true },
       where: {
         medTechRequest: {
           createdAt: {
@@ -58,9 +57,9 @@ export async function GET(req: Request) {
     const result = orderItems
       .map((o) => ({
         product: productMap[o.productId] ?? "Unknown",
-        quantity: o._sum.quantity ?? 0,
+        quantity: o._sum.quantityOrdered ?? 0,
       }))
-      .sort((a, b) => b.quantity - a.quantity)
+      .sort((a, b) => Number(b.quantity) - Number(a.quantity))
       .slice(0, 7);
 
     return NextResponse.json(result);

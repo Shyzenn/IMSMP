@@ -2,7 +2,7 @@
 
 import { TableHead } from "@/components/ui/table";
 import React from "react";
-import ReusableTableHeader from "../../ReusabaleTableHeader";
+import ReusableTableHeader from "../../ui/ReusabaleTableHeader";
 
 const MTTransactionTableHeader = () => {
   return (

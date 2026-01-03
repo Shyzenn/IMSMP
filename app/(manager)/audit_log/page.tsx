@@ -1,7 +1,7 @@
 import Header from "@/app/components/auditLog/Header";
 import AuditLogTable from "@/app/components/auditLog/table/Data";
-import Pagination from "@/app/components/Pagination";
-import { TableRowSkeleton } from "@/app/components/Skeleton";
+import Pagination from "@/app/components/ui/Pagination";
+import { TableRowSkeleton } from "@/app/components/ui/Skeleton";
 import { fetchAuditPages } from "@/lib/action/get";
 import React, { Suspense } from "react";
 

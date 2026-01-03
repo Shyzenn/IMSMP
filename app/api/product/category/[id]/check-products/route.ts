@@ -13,7 +13,6 @@ export async function GET(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
   
-
   try {
     const { id } = await context.params;
     const categoryId = Number(id);

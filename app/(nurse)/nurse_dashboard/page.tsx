@@ -1,12 +1,12 @@
-import NurseCards from "@/app/components/NurseCards";
 import { auth } from "@/auth";
-import ExpiryProducts from "@/app/components/ExpiryProducts";
-import InventoryByCategoryChart from "@/app/components/InventoryByCategoryChart";
-import OrderTypePieChart from "@/app/components/OrderTypeChart";
-import TopRequestedProducts from "@/app/components/TopRequestedProduct";
-import DashboardAuditLog from "@/app/components/DashboardActivities";
-import DashboardHeader from "@/app/components/DashboardHeader";
-import RecentRequestTable from "@/app/components/RecentRequestTable";
+import RecentRequestTable from "@/app/components/request_order/RecentRequestTable";
+import DashboardHeader from "@/app/components/dashboard/DashboardHeader";
+import NurseCards from "@/app/components/dashboard/NurseCards";
+import ExpiryProducts from "@/app/components/dashboard/ExpiryProducts";
+import DashboardAuditLog from "@/app/components/dashboard/DashboardActivities";
+import InventoryByCategoryChart from "@/app/components/dashboard/InventoryByCategoryChart";
+import Top5RequestedProducts from "@/app/components/dashboard/Top5RequestedProduct";
+import SalesByOrderTypePie from "@/app/components/dashboard/SalesByCategory";
 
 export default async function Dashboard() {
   const session = await auth();
@@ -17,29 +17,29 @@ export default async function Dashboard() {
 
       <NurseCards />
       <div className="h-auto lg:h-96 flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
-        <div className="w-full lg:w-[70%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-96">
+        <div className="w-full lg:w-[70%] bg-white rounded-md shadow-md overflow-hidden flex flex-col">
           <RecentRequestTable userRole={userRole} />
         </div>
-        <div className="w-full lg:w-[30%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-96">
+        <div className="w-full lg:w-[30%] bg-white rounded-md shadow-md overflow-hidden flex flex-col">
           <ExpiryProducts />
         </div>
       </div>
 
       <div className="h-auto lg:h-[30rem] flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
-        <div className="bg-white lg:w-[40%] rounded-md shadow-md w-full">
+        <div className="bg-white lg:w-[40%] rounded-md shadow-md w-full h-full">
           <DashboardAuditLog role="nurse" />
         </div>
-        <div className="w-full lg:w-[60%] h-auto">
+        <div className="w-full lg:w-[60%] h-full">
           <InventoryByCategoryChart />
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
-        <div className="w-full lg:w-[65%] bg-white rounded-md shadow-md">
-          <TopRequestedProducts />
+      <div className="h-auto lg:h-[30rem] flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
+        <div className="bg-white lg:w-[65%] rounded-md shadow-md w-full h-full">
+          <Top5RequestedProducts />
         </div>
-        <div className="bg-white w-full lg:w-[35%] rounded-md shadow-md">
-          <OrderTypePieChart />
+        <div className="bg-white w-full lg:w-[35%] rounded-md shadow-md h-full">
+          <SalesByOrderTypePie />
         </div>
       </div>
     </div>

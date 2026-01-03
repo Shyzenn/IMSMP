@@ -18,7 +18,10 @@ export async function PATCH(
     const orderId = parseInt(id.replace(/^ORD-/, ""), 10);
 
     if (isNaN(orderId)) {
-      return NextResponse.json({ message: "Invalid order ID" }, { status: 400 });
+      return NextResponse.json(
+        { message: "Invalid order ID" },
+        { status: 400 }
+      );
     }
 
     const body = await req.json();
@@ -32,7 +35,8 @@ export async function PATCH(
       return NextResponse.json({ errors: zodErrors }, { status: 400 });
     }
 
-    const { room_number, patient_name, status, products, notes } = result.data;
+    const { roomNumber, patientName, status, products, notes, contactNumber } =
+      result.data;
 
     // 1️Fetch the existing order and its items
     const existingOrder = await db.orderRequest.findUnique({
@@ -52,99 +56,166 @@ export async function PATCH(
       return NextResponse.json({ message: "Order not found" }, { status: 404 });
     }
 
-    // Adjust stock if status = for_payment
-    if (status === "for_payment" || status === "paid") {
-      for (const oldItem of existingOrder.items) {
-        const productName = oldItem.product.product_name;
-        const matchingNewItem = products.find(
-          (p) => p.productId === productName
-        );
-
-        const latestBatch = await db.productBatch.findFirst({
-          where: {
-            productId: oldItem.product.id,
-            type: "ACTIVE",
-          },
-          orderBy: {
-            releaseDate: "desc",
-          },
-        });
-
-        if (!latestBatch) continue;
-
-        // Product removed → restore all
-        if (!matchingNewItem) {
-          await db.productBatch.update({
-            where: { id: latestBatch.id },
-            data: { quantity: { increment: oldItem.quantity } },
-          });
-        } else if (matchingNewItem.quantity !== oldItem.quantity) {
-          const diff = matchingNewItem.quantity - oldItem.quantity;
-
-          if (diff > 0) {
-            // Increased → deduct stock
-            await db.productBatch.update({
-              where: { id: latestBatch.id },
-              data: { quantity: { decrement: diff } },
-            });
-          } else if (diff < 0) {
-            // Decreased → add back stock
-            await db.productBatch.update({
-              where: { id: latestBatch.id },
-              data: { quantity: { increment: Math.abs(diff) } },
-            });
-          }
-        }
-      }
-
-      // Check if new products were added
-      for (const newItem of products) {
-        const existing = existingOrder.items.find(
-          (item) => item.product.product_name === newItem.productId
-        );
-        if (!existing) {
-          const product = await db.product.findUnique({
-            where: { product_name: newItem.productId },
-            include: { batches: true },
-          });
-
-          if (!product) continue;
+    const updatedOrder = await db.$transaction(async (tx) => {
+      // Adjust stock if status = for_payment
+      if (status === "for_payment" || status === "paid") {
+        for (const oldItem of existingOrder.items) {
+          const matchingNewItem = products.find(
+            (p) => p.productId === oldItem.product.id
+          );
 
           const latestBatch = await db.productBatch.findFirst({
-            where: { productId: product.id, type: "ACTIVE" },
-            orderBy: { releaseDate: "desc" },
+            where: {
+              productId: oldItem.product.id,
+              type: "ACTIVE",
+            },
+            orderBy: {
+              manufactureDate: "desc",
+            },
           });
 
-          if (latestBatch) {
+          if (!latestBatch) continue;
+
+          // Product removed → restore all
+          if (!matchingNewItem) {
             await db.productBatch.update({
               where: { id: latestBatch.id },
-              data: { quantity: { decrement: newItem.quantity } },
+              data: {
+                quantity: { increment: oldItem.quantityOrdered.toNumber() },
+              },
             });
+          } else if (
+            matchingNewItem.quantityOrdered !==
+            oldItem.quantityOrdered.toNumber()
+          ) {
+            const diff =
+              matchingNewItem.quantityOrdered -
+              oldItem.quantityOrdered.toNumber();
+
+            if (diff > 0) {
+              // Increased → deduct stock
+              await db.productBatch.update({
+                where: { id: latestBatch.id },
+                data: { quantity: { decrement: diff } },
+              });
+            } else if (diff < 0) {
+              // Decreased → add back stock
+              await db.productBatch.update({
+                where: { id: latestBatch.id },
+                data: { quantity: { increment: Math.abs(diff) } },
+              });
+            }
+          }
+        }
+
+        // Check if new products were added
+        for (const newItem of products) {
+          const existing = existingOrder.items.find(
+            (item) => item.product.id === newItem.productId
+          );
+          if (!existing) {
+            const product = await db.product.findUnique({
+              where: { id: newItem.productId },
+              include: { batches: true },
+            });
+
+            if (!product) continue;
+
+            const latestBatch = await db.productBatch.findFirst({
+              where: { productId: product.id, type: "ACTIVE" },
+              orderBy: { manufactureDate: "desc" },
+            });
+
+            if (latestBatch) {
+              await db.productBatch.update({
+                where: { id: latestBatch.id },
+                data: { quantity: { decrement: newItem.quantityOrdered } },
+              });
+            }
           }
         }
       }
-    }
+      // 1. update patient name
+      let patient = await tx.patient.findUnique({
+        where: { id: existingOrder.patientId },
+      });
 
-    const updatedOrder = await db.orderRequest.update({
-      where: { id: orderId },
-      data: {
-        room_number,
-        patient_name,
-        ...(status && { status }),
-        notes,
-        items: {
-          deleteMany: {},
-          create: products.map((product) => ({
-            quantity: product.quantity,
-            product: {
-              connect: { product_name: product.productId },
-            },
-          })),
+      if (!patient) {
+        // Create new patient
+        patient = await tx.patient.create({
+          data: {
+            patientName: patientName.trim(),
+            roomNumber: roomNumber ?? null,
+            contactNumber: contactNumber,
+          },
+        });
+      } else {
+        // Update patient room number & name
+        patient = await tx.patient.update({
+          where: { id: patient.id },
+          data: {
+            patientName: patientName.trim(),
+            roomNumber: roomNumber ?? null,
+            contactNumber: contactNumber,
+          },
+        });
+      }
+
+      let totalAmount = 0;
+
+      for (const p of products) {
+        const product = await tx.product.findUnique({
+          where: { id: p.productId },
+          select: { price: true },
+        });
+
+        if (!product || product.price == null) {
+          throw new Error("Product price not found");
+        }
+
+        totalAmount += Number(product.price) * p.quantityOrdered;
+      }
+
+      // 2. Create order
+      return await tx.orderRequest.update({
+        where: { id: orderId },
+        data: {
+          status,
+          patientId: patient.id,
+          totalAmount,
+          notes,
+          items: {
+            deleteMany: {},
+            create: await Promise.all(
+              products.map(async (p) => {
+                const product = await tx.product.findUnique({
+                  where: { id: p.productId },
+                  select: { price: true },
+                });
+
+                if (!product || product.price == null) {
+                  throw new Error("Product price not found");
+                }
+
+                const price = product.price;
+                const totalPrice = Number(price) * p.quantityOrdered;
+
+                return {
+                  refundedQuantity: 0,
+                  quantityOrdered: p.quantityOrdered,
+                  price,
+                  totalPrice,
+                  product: { connect: { id: p.productId } },
+                };
+              })
+            ),
+          },
         },
-      },
-      include: {
-        items: { include: { product: true } },
-      },
+        include: {
+          items: { include: { product: true } },
+          patient: true,
+        },
+      });
     });
 
     // Log the edit
@@ -154,7 +225,11 @@ export async function PATCH(
         action: "Edited",
         entityType: "OrderRequest",
         entityId: updatedOrder.id,
-        description: `User ${session.user.username} (${session.user.role}) edited an order for patient "${patient_name}" in room ${room_number}.`,
+        description: `User ${session.user.username} (${
+          session.user.role
+        }) edited an order for patient "${patientName}" in room ${
+          roomNumber || "N/A"
+        }.`,
       },
     });
 

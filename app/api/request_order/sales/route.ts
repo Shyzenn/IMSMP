@@ -6,7 +6,7 @@ import { auth } from "@/auth";
 export async function GET(req: Request) {
   const session = await auth();
 
-  if (!session || !session.user?.id) {
+  if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
@@ -15,44 +15,33 @@ export async function GET(req: Request) {
 
   let fromDate = new Date();
 
-  if (filter === "Last 7 Days") {
-    fromDate = subDays(new Date(), 6);
-  } else if (filter === "This Month") {
-    fromDate = startOfMonth(new Date());
-  } else if (filter === "This Year") {
-    fromDate = startOfYear(new Date());
-  }
+  if (filter === "Last 7 Days") fromDate = subDays(new Date(), 6);
+  else if (filter === "This Month") fromDate = startOfMonth(new Date());
+  else if (filter === "This Year") fromDate = startOfYear(new Date());
 
   try {
-    // Fetch both paid and refunded transactions
-    const [orderRequests, walkInTransactions] = await Promise.all([
+    const [orderRequests, walkIns] = await Promise.all([
       db.orderRequest.findMany({
         where: {
           status: { in: ["paid", "refunded"] },
-          createdAt: {
-            gte: fromDate,
-          },
+          createdAt: { gte: fromDate },
         },
         include: {
-          items: {
-            include: {
-              product: true,
-            },
+          items: { include: { product: true } },
+          payments: {
+            select: { discountAmount: true, discountType: true },
           },
         },
       }),
       db.walkInTransaction.findMany({
         where: {
           status: { in: ["paid", "refunded"] },
-          createdAt: {
-            gte: fromDate,
-          },
+          createdAt: { gte: fromDate },
         },
         include: {
-          items: {
-            include: {
-              product: true,
-            },
+          items: { include: { product: true } },
+          payments: {
+            select: { discountAmount: true, discountType: true },
           },
         },
       }),
@@ -60,48 +49,67 @@ export async function GET(req: Request) {
 
     const dailySalesMap = new Map<string, number>();
 
-    // Process Order Requests
+    // -------- ORDER REQUESTS --------
     for (const order of orderRequests) {
-      const dateStr = order.createdAt.toISOString().split("T")[0];
+      const date = order.createdAt.toISOString().split("T")[0];
 
-      const total = order.items.reduce((sum, item) => {
-        const price =
-          typeof item.product.price === "number"
-            ? item.product.price
-            : Number(item.product.price);
-
-        // Calculate net quantity (total - refunded)
-        const netQuantity = item.quantity - (item.refundedQuantity || 0);
-
-        return sum + price * netQuantity;
+      const itemsTotal = order.items.reduce((sum, item) => {
+        const price = Number(item.product.price) || 0;
+        const ordered = item.quantityOrdered.toNumber();
+        const refunded = item.refundedQuantity?.toNumber() || 0;
+        return sum + price * Math.max(0, ordered - refunded);
       }, 0);
 
-      dailySalesMap.set(dateStr, (dailySalesMap.get(dateStr) || 0) + total);
+      const payment = order.payments?.[0];
+      const isVatExempt =
+        payment &&
+        (payment.discountType === "PWD" || payment.discountType === "SENIOR");
+
+      const baseAmount = isVatExempt ? itemsTotal / 1.12 : itemsTotal;
+
+      const discount = order.payments?.reduce(
+        (sum, p) => sum + Number(p.discountAmount || 0),
+        0
+      );
+
+      const total = Math.max(0, baseAmount - (discount || 0));
+
+      dailySalesMap.set(date, (dailySalesMap.get(date) || 0) + total);
     }
 
-    // Process Walk-In Transactions
-    for (const walkIn of walkInTransactions) {
-      const dateStr = walkIn.createdAt.toISOString().split("T")[0];
+    // -------- WALK-IN TRANSACTIONS --------
+    for (const txn of walkIns) {
+      const date = txn.createdAt.toISOString().split("T")[0];
 
-      const total = walkIn.items.reduce((sum, item) => {
-        const price =
-          typeof item.price === "number" ? item.price : Number(item.price);
-
-        // Calculate net quantity (total - refunded)
-        const netQuantity = item.quantity - (item.refundedQuantity || 0);
-
-        return sum + price * netQuantity;
+      const itemsTotal = txn.items.reduce((sum, item) => {
+        const price = Number(item.price) || 0;
+        const qty = item.quantity;
+        const refunded = item.refundedQuantity || 0;
+        return sum + price * Math.max(0, qty - refunded);
       }, 0);
 
-      dailySalesMap.set(dateStr, (dailySalesMap.get(dateStr) || 0) + total);
+      const payment = txn.payments?.[0];
+      const isVatExempt =
+        payment &&
+        (payment.discountType === "PWD" || payment.discountType === "SENIOR");
+
+      const baseAmount = isVatExempt ? itemsTotal / 1.12 : itemsTotal;
+
+      const discount = txn.payments?.reduce(
+        (sum, p) => sum + Number(p.discountAmount || 0),
+        0
+      );
+
+      const total = Math.max(0, baseAmount - (discount || 0));
+
+      dailySalesMap.set(date, (dailySalesMap.get(date) || 0) + total);
     }
 
-    // Format the results
     const formatted = [...dailySalesMap.entries()]
-      .sort(([a], [b]) => (a > b ? 1 : -1))
-      .map(([date, totalSales]) => ({ 
-        date, 
-        totalSales: Math.max(0, totalSales) // Ensure no negative totals
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, totalSales]) => ({
+        date,
+        totalSales,
       }));
 
     return NextResponse.json(formatted);

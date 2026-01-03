@@ -1,13 +1,81 @@
-import { MedTechRemarks, MedTechStatus, OrderType, Status } from "@prisma/client";
-import { clsx, type ClassValue } from "clsx"
+import {
+  MedTechRemarks,
+  MedTechStatus,
+  OrderType,
+  Status,
+} from "@prisma/client";
+import { clsx, type ClassValue } from "clsx";
 import { endOfDay, formatDistanceToNow, parseISO, startOfDay } from "date-fns";
-import { twMerge } from "tailwind-merge"
+import { twMerge } from "tailwind-merge";
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+export function DiscountTypeFormat(type: string | undefined) {
+  switch (type) {
+    case "PWD":
+      return "PWD";
+    case "SENIOR":
+      return "Senior";
+    case "CUSTOM":
+      return "Custom";
+    case "NONE":
+      return "None";
+    default:
+      return type;
+  }
 }
 
+export function getInitials(fullName: string) {
+  const parts = fullName.trim().split(" ");
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+export function stringToDarkColor(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 40%, 45%)`;
+}
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+export const formatPackageType = (type: string) => {
+  if (!type) return "";
+
+  switch (type.toLowerCase()) {
+    case "iv_bag":
+      return "IV Bag";
+    case "iv_solution":
+      return "IV Solution";
+    case "g":
+      return "Gram";
+    case "ml":
+      return "mL";
+    default:
+      // Replace underscores with spaces and capitalize each word
+      return type
+        .replace(/_/g, " ")
+        .split(" ")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+  }
+};
+
+export const unitsMeasuredByAmount: string[] = [
+  "ml",
+  "gram",
+  "mg",
+  "liter",
+  "piece",
+];
+
 export function toTitleCase(name: string) {
+  if (!name) return "";
+
   return name
     .toLowerCase()
     .split(" ")
@@ -18,13 +86,13 @@ export function toTitleCase(name: string) {
 
 export function capitalLetter(str: string | null) {
   if (!str) return "";
- return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
 export function formattedDate(dateInput?: string | number | Date | null) {
   const d = new Date(dateInput ?? Date.now());
   if (isNaN(d.getTime())) return "Invalid Date";
-  return d.toLocaleDateString("en-US", {
+  return d.toLocaleDateString("en-PH", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -79,7 +147,7 @@ export const statusLabels: Record<string, string> = {
   canceled: "Cancelled",
   paid: "Paid",
   pending: "Pending",
-  refunded: "Refunded"
+  refunded: "Refunded",
 };
 
 // export const typeLabels = {
@@ -94,17 +162,18 @@ export type MTTransactionFilter =
   | "declined"
   | "processing"
   | "ready"
-  | "released"
+  | "released";
 
 export const isMTFilterEnabled = (filters: MTTransactionFilter[]) => {
-  return filters.some(f =>
-    f === "all" ||
-    f === "pending_for_approval" ||
-    f === "approved" ||
-    f === "declined" ||
-    f === "processing" ||
-    f === "ready" ||
-    f === "released"
+  return filters.some(
+    (f) =>
+      f === "all" ||
+      f === "pending_for_approval" ||
+      f === "approved" ||
+      f === "declined" ||
+      f === "processing" ||
+      f === "ready" ||
+      f === "released"
   );
 };
 
@@ -140,22 +209,23 @@ export type TransactionFilter =
   | "refunded";
 
 export const isWalkInFilterEnabled = (filters: TransactionFilter[]) => {
-  return filters.some(f => 
-    f === "all" || f === "paid" || f === "walk_in" || f === "refunded"
+  return filters.some(
+    (f) => f === "all" || f === "paid" || f === "walk_in" || f === "refunded"
   );
 };
 
 export const isRequestOrderFilterEnabled = (filters: TransactionFilter[]) => {
-  return filters.some(f =>
-    f === "all" ||
-    f === "regular" ||
-    f === "emergency" ||
-    f === "paid" ||
-    f === "pending" ||
-    f === "for_payment" ||
-    f === "request_order" ||
-    f === "canceled" ||
-    f === "refunded"
+  return filters.some(
+    (f) =>
+      f === "all" ||
+      f === "regular" ||
+      f === "emergency" ||
+      f === "paid" ||
+      f === "pending" ||
+      f === "for_payment" ||
+      f === "request_order" ||
+      f === "canceled" ||
+      f === "refunded"
   );
 };
 
@@ -181,14 +251,14 @@ export const mapStatus = (filter: TransactionFilter) => {
 };
 
 export const pageTitles: Record<string, string> = {
-    "/dashboard": "Dashboard",
-    "/inventory": "Inventory",
-    "/transaction": "Transaction",
-    "/add-product": "Add New Product",
-    "/order": "Order",
-    "/settings": "Settings",
-    "/request-order": "Request Order",
-  };
+  "/dashboard": "Dashboard",
+  "/inventory": "Inventory",
+  "/transaction": "Transaction",
+  "/add-product": "Add New Product",
+  "/order": "Order",
+  "/settings": "Settings",
+  "/request-order": "Request Order",
+};
 
 export const generatePagination = (currentPage: number, totalPages: number) => {
   // If the total number of pages is 7 or less,
@@ -231,7 +301,7 @@ export const archiveSkeletonHeaders = [
   { key: "no.", label: "No." },
   { key: "product", label: "Product" },
   { key: "Category/Batch/Room", label: "Category / Batch / Room" },
-  { key: "quantity", label: "Quantity"},
+  { key: "quantity", label: "Quantity" },
   { key: "releaseDate", label: "Release Date" },
   { key: "expiryDate", label: "Expiry Date" },
   { key: "archiveAt", label: "Archived At" },
@@ -258,7 +328,6 @@ export const transactionSkeletonHeaders = [
 ];
 
 export const transactionMTSkeletonHeaders = [
- 
   { key: "number", label: "No." },
   { key: "createdAt", label: "Created At" },
   { key: "requestedBy", label: "Requested By" },
@@ -267,29 +336,28 @@ export const transactionMTSkeletonHeaders = [
   { key: "quantity", label: "Quantity" },
   { key: "status", label: "Status" },
   { key: "remarks", label: "Remarks" },
-  
 ];
 
-export const dateFilter = (dateRange:{to: string, from: string}) => {
-    let startDate: Date | undefined;
-    let endDate: Date | undefined;
-  
-    if (dateRange?.from) {
-      startDate = startOfDay(parseISO(dateRange.from));
-    }
-    if (dateRange?.to) {
-      endDate = endOfDay(parseISO(dateRange.to));
-    }
-  
-     const dateFilter =
-      startDate || endDate
-        ? {
-            createdAt: {
-              ...(startDate ? { gte: startDate } : {}),
-              ...(endDate ? { lte: endDate } : {}),
-            },
-          }
-        : undefined;
+export const dateFilter = (dateRange: { to: string; from: string }) => {
+  let startDate: Date | undefined;
+  let endDate: Date | undefined;
 
-    return dateFilter
-}
+  if (dateRange?.from) {
+    startDate = startOfDay(parseISO(dateRange.from));
+  }
+  if (dateRange?.to) {
+    endDate = endOfDay(parseISO(dateRange.to));
+  }
+
+  const dateFilter =
+    startDate || endDate
+      ? {
+          createdAt: {
+            ...(startDate ? { gte: startDate } : {}),
+            ...(endDate ? { lte: endDate } : {}),
+          },
+        }
+      : undefined;
+
+  return dateFilter;
+};

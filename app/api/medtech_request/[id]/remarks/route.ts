@@ -12,19 +12,25 @@ type UpdateRemarksData = {
   approvedAt?: Date;
 };
 
-export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function PUT(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
     const session = await auth();
-    if (!session?.user?.id) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    if (!session?.user?.id)
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     const userId = session.user.id;
 
     const { id } = await context.params;
     const numericId = parseInt(id.replace("REQ-", ""));
-    if (!numericId) return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
+    if (!numericId)
+      return NextResponse.json({ message: "Invalid ID" }, { status: 400 });
 
     const { remarks } = await req.json();
     const validRemarks = ["processing", "ready", "released"] as const;
-    if (!validRemarks.includes(remarks)) return NextResponse.json({ error: "Invalid remarks" }, { status: 400 });
+    if (!validRemarks.includes(remarks))
+      return NextResponse.json({ error: "Invalid remarks" }, { status: 400 });
 
     const updateData: UpdateRemarksData = { remarks };
 
@@ -57,21 +63,31 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
       });
 
       for (const item of requestItems) {
-        let remainingQty = item.quantity;
+        let remainingQty = Number(item.quantityOrdered);
 
         const batches = await db.productBatch.findMany({
-          where: { productId: item.productId, quantity: { gt: 0 }, type: "ACTIVE" },
+          where: {
+            productId: item.productId,
+            quantity: { gt: 0 },
+            type: "ACTIVE",
+          },
           orderBy: { expiryDate: "asc" },
         });
 
         for (const batch of batches) {
           if (remainingQty <= 0) break;
           const deduct = Math.min(batch.quantity, remainingQty);
-          await db.productBatch.update({ where: { id: batch.id }, data: { quantity: { decrement: deduct } } });
+          await db.productBatch.update({
+            where: { id: batch.id },
+            data: { quantity: { decrement: deduct } },
+          });
           remainingQty -= deduct;
         }
 
-        if (remainingQty > 0) throw new Error(`Insufficient stock for product ${item.product.product_name}`);
+        if (remainingQty > 0)
+          throw new Error(
+            `Insufficient stock for product ${item.product.product_name}`
+          );
       }
     }
 
@@ -93,24 +109,32 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
           include: { sender: true },
         });
 
-        await pusherServer.trigger(`private-user-${medTech.id}`, "new-notification", {
-          id: notification.id,
-          title: notification.title,
-          createdAt: notification.createdAt,
-          type: notification.type,
-          notes: orderWithItems?.notes || "",
-          sender: { username: notification.sender.username, role: notification.sender.role },
-          medTechRequestId: updatedOrder.id,
-          submittedBy: notification.submittedBy,
-           role: notification.role,
-          order: {
-            id: updatedOrder.id,
-            products: orderWithItems?.items.map((item) => ({
-              productName: item.product.product_name,
-              quantity: item.quantity,
-            })) || [],
-          },
-        });
+        await pusherServer.trigger(
+          `private-user-${medTech.id}`,
+          "new-notification",
+          {
+            id: notification.id,
+            title: notification.title,
+            createdAt: notification.createdAt,
+            type: notification.type,
+            notes: orderWithItems?.notes || "",
+            sender: {
+              username: notification.sender.username,
+              role: notification.sender.role,
+            },
+            medTechRequestId: updatedOrder.id,
+            submittedBy: notification.submittedBy,
+            role: notification.role,
+            order: {
+              id: updatedOrder.id,
+              products:
+                orderWithItems?.items.map((item) => ({
+                  productName: item.product.product_name,
+                  quantity: item.quantityOrdered,
+                })) || [],
+            },
+          }
+        );
       }
     }
 
@@ -131,24 +155,32 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
           include: { sender: true },
         });
 
-       await pusherServer.trigger(`private-user-${manager.id}`, "new-notification", {
-          id: notification.id,
-          title: notification.title,
-          createdAt: notification.createdAt,
-          type: notification.type,
-          notes: orderWithItems?.notes || "",
-          sender: { username: notification.sender.username, role: notification.sender.role },
-          medTechRequestId: updatedOrder.id,
-          submittedBy: notification.submittedBy,
-           role: notification.role,
-          order: {
-            id: updatedOrder.id,
-            products: orderWithItems?.items.map((item) => ({
-              productName: item.product.product_name,
-              quantity: item.quantity,
-            })) || [],
-          },
-        });
+        await pusherServer.trigger(
+          `private-user-${manager.id}`,
+          "new-notification",
+          {
+            id: notification.id,
+            title: notification.title,
+            createdAt: notification.createdAt,
+            type: notification.type,
+            notes: orderWithItems?.notes || "",
+            sender: {
+              username: notification.sender.username,
+              role: notification.sender.role,
+            },
+            medTechRequestId: updatedOrder.id,
+            submittedBy: notification.submittedBy,
+            role: notification.role,
+            order: {
+              id: updatedOrder.id,
+              products:
+                orderWithItems?.items.map((item) => ({
+                  productName: item.product.product_name,
+                  quantity: item.quantityOrdered,
+                })) || [],
+            },
+          }
+        );
       }
     }
 
@@ -158,13 +190,22 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
         action: "Remarks Update",
         entityType: "OrderRequest",
         entityId: numericId,
-        description: `Request ${numericId} marked as ${remarks.toUpperCase()} by ${session.user.username}`,
+        description: `Request ${numericId} marked as ${remarks.toUpperCase()} by ${
+          session.user.username
+        }`,
       },
     });
 
-    return NextResponse.json({ success: true, message: `Request marked as ${remarks}`, data: updatedOrder });
+    return NextResponse.json({
+      success: true,
+      message: `Request marked as ${remarks}`,
+      data: updatedOrder,
+    });
   } catch (error) {
     console.error("Error updating remarks:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

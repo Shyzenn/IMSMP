@@ -1,13 +1,15 @@
 import { db } from "@/lib/db";
-import {  NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
 import { editMedTechRequestSchema } from "@/lib/types";
 import { NotificationType } from "@prisma/client";
 import { pusherServer } from "@/lib/pusher/server";
 
-export async function PATCH(  req: Request,
-  context: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
     const session = await auth();
 
@@ -17,7 +19,7 @@ export async function PATCH(  req: Request,
 
     const body = await req.json();
     const result = editMedTechRequestSchema.safeParse(body);
-        const { id } = await context.params;
+    const { id } = await context.params;
     const requestId = parseInt(id.replace(/^ORD-/, ""), 10);
 
     if (!result.success) {
@@ -46,7 +48,10 @@ export async function PATCH(  req: Request,
     });
 
     if (!existingRequest) {
-      return NextResponse.json({ message: "Request not found" }, { status: 404 });
+      return NextResponse.json(
+        { message: "Request not found" },
+        { status: 404 }
+      );
     }
 
     // Adjust stock if remarks === released
@@ -63,7 +68,7 @@ export async function PATCH(  req: Request,
             type: "ACTIVE",
           },
           orderBy: {
-            releaseDate: "desc",
+            manufactureDate: "desc",
           },
         });
 
@@ -73,10 +78,13 @@ export async function PATCH(  req: Request,
         if (!matchingNewItem) {
           await db.productBatch.update({
             where: { id: latestBatch.id },
-            data: { quantity: { increment: oldItem.quantity } },
+            data: { quantity: { increment: Number(oldItem.quantityOrdered) } },
           });
-        } else if (matchingNewItem.quantity !== oldItem.quantity) {
-          const diff = matchingNewItem.quantity - oldItem.quantity;
+        } else if (
+          matchingNewItem.quantity !== Number(oldItem.quantityOrdered)
+        ) {
+          const diff =
+            matchingNewItem.quantity - Number(oldItem.quantityOrdered);
 
           if (diff > 0) {
             // Increased → deduct stock
@@ -101,7 +109,7 @@ export async function PATCH(  req: Request,
         );
         if (!existing) {
           const product = await db.product.findUnique({
-            where: { product_name: newItem.productId },
+            where: { id: Number(newItem.productId) },
             include: { batches: true },
           });
 
@@ -109,7 +117,7 @@ export async function PATCH(  req: Request,
 
           const latestBatch = await db.productBatch.findFirst({
             where: { productId: product.id, type: "ACTIVE" },
-            orderBy: { releaseDate: "desc" },
+            orderBy: { manufactureDate: "desc" },
           });
 
           if (latestBatch) {
@@ -131,9 +139,10 @@ export async function PATCH(  req: Request,
         items: {
           deleteMany: {},
           create: products.map((product) => ({
-            quantity: product.quantity,
+            quantityOrdered: product.quantity,
+            totalPrice: 2,
             product: {
-              connect: { product_name: product.productId },
+              connect: { id: Number(product.productId) },
             },
           })),
         },
@@ -142,7 +151,7 @@ export async function PATCH(  req: Request,
         items: { include: { product: true } },
       },
     });
-    
+
     await db.auditLog.create({
       data: {
         userId: session.user.id,
@@ -155,7 +164,7 @@ export async function PATCH(  req: Request,
 
     // Send notification to all Managers
     const managers = await db.user.findMany({
-      where: { role: "Manager" }
+      where: { role: "Manager" },
     });
 
     for (const manager of managers) {
@@ -193,7 +202,7 @@ export async function PATCH(  req: Request,
             id: updatedOrder.id,
             products: updatedOrder.items.map((item) => ({
               productName: item.product.product_name,
-              quantity: item.quantity,
+              quantity: item.quantityOrdered,
             })),
           },
         }
@@ -202,10 +211,13 @@ export async function PATCH(  req: Request,
 
     console.log("MedTech request successfully updated:", updatedOrder);
 
-    return NextResponse.json({ success: true, orderId: updatedOrder .id });
+    return NextResponse.json({ success: true, orderId: updatedOrder.id });
   } catch (error) {
     if (error instanceof Error) {
-      console.error("Error in POST /api/medtech_request/[id]/update:", error.message);
+      console.error(
+        "Error in POST /api/medtech_request/[id]/update:",
+        error.message
+      );
       return NextResponse.json(
         { message: "Failed to create request order", error: error.message },
         { status: 500 }

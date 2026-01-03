@@ -4,13 +4,11 @@ import { startOfMonth, startOfYear, subDays } from "date-fns";
 import { auth } from "@/auth";
 
 export async function GET(req: Request) {
+  const session = await auth();
 
-    const session = await auth();
-  
-    if (!session || !session.user?.id) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-  
+  if (!session || !session.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
 
   const { searchParams } = new URL(req.url);
   const filter = searchParams.get("filter") || "This Month";
@@ -54,7 +52,7 @@ export async function GET(req: Request) {
 
     for (const item of orderItems) {
       const name = item.product.category?.name || "Uncategorized";
-      const revenue = item.quantity * Number(item.product.price);
+      const revenue = Number(item.quantityOrdered) * Number(item.product.price);
       categoryMap[name] = categoryMap[name] || { revenue: 0, name };
       categoryMap[name].revenue += revenue;
     }

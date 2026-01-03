@@ -12,7 +12,7 @@ import { changePasswordSchema, TChangePasswordSchema } from "@/lib/types";
 import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
 import LoadingButton from "@/components/loading-button";
 import MacoleenLogo from "@/public/macoleens_logo.png";
-import PasswordSuccessModal from "../components/PasswordSuccessModal";
+import PasswordSuccessModal from "../components/user/PasswordSuccessModal";
 import { signOut } from "next-auth/react";
 
 const ChangePassword = () => {

@@ -1,10 +1,10 @@
 import { create } from "zustand";
-import { EmergencyOrderModalData } from "../interfaces";
+import { OrderView } from "../interfaces";
 
 interface EmergencyModalState {
   isOpen: boolean;
-  orderData: EmergencyOrderModalData | null;
-  openModal: (data: EmergencyOrderModalData) => void;
+  orderData: OrderView | null;
+  openModal: (data: OrderView) => void;
   closeModal: () => void;
 }
 
@@ -20,4 +20,3 @@ export const useEmergencyModal = create<EmergencyModalState>((set) => ({
     set({ isOpen: false, orderData: null });
   },
 }));
-

@@ -1,6 +1,6 @@
 import { addMedTechRequestSchema } from "@/lib/types";
 import { db } from "@/lib/db";
-import {  NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { MedTechStatus, NotificationType, Prisma } from "@prisma/client";
 import { pusherServer } from "@/lib/pusher/server";
@@ -28,8 +28,7 @@ export async function POST(req: Request) {
 
     const { products, notes } = result.data;
 
-    
-    const newRequest  = await db.medTechRequest.create({
+    const newRequest = await db.medTechRequest.create({
       data: {
         requestedById: userId,
         status: "pending_for_approval",
@@ -37,9 +36,10 @@ export async function POST(req: Request) {
         notes,
         items: {
           create: products.map((product) => ({
-            quantity: product.quantity,
+            quantityOrdered: product.quantity,
+            totalPrice: 0,
             product: {
-              connect: { product_name: product.productId },
+              connect: { id: Number(product.productId) },
             },
           })),
         },
@@ -51,11 +51,11 @@ export async function POST(req: Request) {
 
     // Send notification to the Pharmacist Staff
     const pharmacists = await db.user.findMany({
-      where: { role: "Pharmacist_Staff" }
+      where: { role: "Pharmacist_Staff" },
     });
 
     for (const pharmacist of pharmacists) {
-     const notification = await db.notification.create({
+      const notification = await db.notification.create({
         data: {
           title: "New request for medtech",
           type: NotificationType.MEDTECH_REQUEST,
@@ -89,8 +89,8 @@ export async function POST(req: Request) {
             id: newRequest.id,
             products: newRequest.items.map((item) => ({
               productName: item.product.product_name,
-              quantity: item.quantity,
-            })), 
+              quantity: item.quantityOrdered,
+            })),
           },
         }
       );
@@ -98,7 +98,7 @@ export async function POST(req: Request) {
 
     // Send notification to the Manager
     const managers = await db.user.findMany({
-      where: { role: "Manager" }
+      where: { role: "Manager" },
     });
 
     for (const manager of managers) {
@@ -123,7 +123,7 @@ export async function POST(req: Request) {
           title: notification.title,
           createdAt: notification.createdAt,
           type: notification.type,
-          notes: newRequest .notes || "",
+          notes: newRequest.notes || "",
           read: false,
           sender: {
             username: notification.sender.username,
@@ -136,13 +136,13 @@ export async function POST(req: Request) {
             id: newRequest.id,
             products: newRequest.items.map((item) => ({
               productName: item.product.product_name,
-              quantity: item.quantity,
-            })), 
+              quantity: item.quantityOrdered,
+            })),
           },
         }
       );
     }
-    
+
     await db.auditLog.create({
       data: {
         userId: session.user.id,
@@ -153,9 +153,12 @@ export async function POST(req: Request) {
       },
     });
 
-    console.log("MedTech request and notifications successfully created:", newRequest);
+    console.log(
+      "MedTech request and notifications successfully created:",
+      newRequest
+    );
 
-    return NextResponse.json({ success: true, orderId: newRequest .id });
+    return NextResponse.json({ success: true, orderId: newRequest.id });
   } catch (error) {
     if (error instanceof Error) {
       console.error("Error in POST /api/medtech_request:", error.message);
@@ -201,14 +204,14 @@ export async function GET(req: Request) {
       db.medTechRequest.findMany({
         where: whereClause,
         include: {
-          items: { 
-            include: { 
-              product: true 
-            } 
+          items: {
+            include: {
+              product: true,
+            },
           },
-        receivedBy: true,
-        approvedBy: true,
-        requestedBy:true,
+          receivedBy: true,
+          approvedBy: true,
+          requestedBy: true,
         },
         orderBy: { createdAt: "desc" },
         skip,
@@ -228,7 +231,7 @@ export async function GET(req: Request) {
       createdAt: req.createdAt,
       itemDetails: req.items.map((i) => ({
         productName: i.product.product_name,
-        quantity: i.quantity,
+        quantity: i.quantityOrdered,
         price: i.product.price || 0,
       })),
     }));
@@ -241,7 +244,6 @@ export async function GET(req: Request) {
       totalPages,
       currentPage: page,
     });
-    
   } catch (error) {
     console.error("Error fetching MedTech requests:", error);
     return NextResponse.json(

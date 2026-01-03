@@ -3,7 +3,7 @@ import { TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { getTransactionList } from "@/lib/action/get";
 import { formattedDateTime, statusLabels, toTitleCase } from "@/lib/utils";
 import TransactionTableHeader from "./TransactionHeader";
-import EmptyTable from "../../EmptyTable";
+import EmptyTable from "../../ui/EmptyTable";
 import TransactionAction from "./TransactionAction";
 
 const TransactionTable = async ({
@@ -42,14 +42,24 @@ const TransactionTable = async ({
           <TransactionTableHeader userRole={userRole} />
           <TableBody>
             {transactions.map((transaction) => (
-              <TableRow key={`${transaction.source}-${transaction.id}`}>
-                <TableCell>{`ORD-0${transaction.id}`}</TableCell>
-                <TableCell>{toTitleCase(transaction.customer)}</TableCell>
+              <TableRow key={`${transaction.type}-${transaction.id}`}>
+                <TableCell>{`${transaction.id}`}</TableCell>
+                <TableCell>
+                  {toTitleCase(
+                    transaction.patientDetails?.patientName
+                      ? transaction.patientDetails?.patientName
+                      : transaction?.customer
+                      ? transaction?.customer
+                      : "Unknown"
+                  )}
+                </TableCell>
                 <TableCell>
                   {formattedDateTime(transaction.createdAt)}
                 </TableCell>
                 <TableCell>{transaction.quantity}</TableCell>
-                <TableCell>{`₱${transaction.total.toFixed(2)}`}</TableCell>
+                <TableCell>{`₱${transaction.paymentDetails?.[0].amountDue.toFixed(
+                  2
+                )}`}</TableCell>
                 <TableCell>{transaction.source}</TableCell>
                 <TableCell>
                   {transaction.type === "REGULAR"

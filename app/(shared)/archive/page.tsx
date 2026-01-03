@@ -1,7 +1,7 @@
 import ArchiveTable from "@/app/components/archive/ArchiveTable";
-import PageTableHeader from "@/app/components/PageTableHeader";
-import Pagination from "@/app/components/Pagination";
-import { TableRowSkeleton } from "@/app/components/Skeleton";
+import PageTableHeader from "@/app/components/ui/PageTableHeader";
+import Pagination from "@/app/components/ui/Pagination";
+import { TableRowSkeleton } from "@/app/components/ui/Skeleton";
 import { fetchArchivePages } from "@/lib/action/get";
 import { archiveSkeletonHeaders } from "@/lib/utils";
 import React, { Suspense } from "react";

@@ -1,7 +1,7 @@
 import React from "react";
-import TableFilterSelect from "../TableFilterSelect";
+import TableFilterSelect from "../ui/TableFilterSelect";
 
-const BatchFilter = () => {
+const ArchiveFilter = () => {
   return (
     <TableFilterSelect
       staticOptions={[
@@ -14,4 +14,4 @@ const BatchFilter = () => {
   );
 };
 
-export default BatchFilter;
+export default ArchiveFilter;

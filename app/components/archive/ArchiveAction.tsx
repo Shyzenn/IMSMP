@@ -5,9 +5,9 @@ import { restoreBatch, restoreProduct } from "@/lib/action/product";
 import toast from "react-hot-toast";
 import { LuArchiveRestore } from "react-icons/lu";
 import { restoreOrderRequest } from "@/lib/action/order_request";
-import ConfirmationModal from "../ConfirmationModal";
+import ConfirmationModal from "../ui/ConfirmationModal";
 import { useModal } from "@/app/hooks/useModal";
-import ActionButton from "../ActionButton";
+import ActionButton from "../ui/ActionButton";
 
 type ArchiveActionProps = {
   item: {

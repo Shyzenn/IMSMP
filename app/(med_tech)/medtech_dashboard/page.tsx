@@ -1,9 +1,9 @@
-import DashboardHeader from "@/app/components/DashboardHeader";
-import ExpiryProducts from "@/app/components/ExpiryProducts";
-import MTDashboardCards from "@/app/components/MTDashboardCards";
-import MTTopRequestedProducts from "@/app/components/MTTopRequestedProduct";
-import RecentMedTechRequestTable from "@/app/components/RecentMTRequestTable";
-import SalesGraph from "@/app/components/SalesGraph";
+import DashboardHeader from "@/app/components/dashboard/DashboardHeader";
+import ExpiryProducts from "@/app/components/dashboard/ExpiryProducts";
+import SalesGraph from "@/app/components/dashboard/SalesGraph";
+import MTDashboardCards from "@/app/components/medtech/MTDashboardCards";
+import MTTopRequestedProducts from "@/app/components/medtech/MTTopRequestedProduct";
+import RecentMedTechRequestTable from "@/app/components/medtech/RecentMTRequestTable";
 import { auth } from "@/auth";
 
 export default async function Dashboard() {

@@ -1,7 +1,7 @@
 import BatchTable from "@/app/components/Inventory/batches/BatchTable";
-import PageTableHeader from "@/app/components/PageTableHeader";
-import Pagination from "@/app/components/Pagination";
-import { TableRowSkeleton } from "@/app/components/Skeleton";
+import PageTableHeader from "@/app/components/ui/PageTableHeader";
+import Pagination from "@/app/components/ui/Pagination";
+import { TableRowSkeleton } from "@/app/components/ui/Skeleton";
 import { fetchBatchPages } from "@/lib/action/get";
 import { inventorySkeletonHeaders } from "@/lib/utils";
 import { redirect } from "next/navigation";

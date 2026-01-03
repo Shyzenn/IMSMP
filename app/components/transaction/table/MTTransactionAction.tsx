@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import ActionButton from "../../ActionButton";
+import ActionButton from "../../ui/ActionButton";
 import { MTTransaction } from "@/lib/action/get";
 import { IoMdEye } from "react-icons/io";
 import MedTechRequestDetailsModal, {
   RequestView,
-} from "../../MTRequestDetails";
+} from "../../medtech/MTRequestDetails";
 
 interface MTTransactionActionProps {
   transaction: MTTransaction;
@@ -44,7 +44,7 @@ const MTTransactionAction = ({ transaction }: MTTransactionActionProps) => {
       createdAt: new Date(transaction.createdAt),
       itemDetails: transaction.itemDetails.map((item) => ({
         productName: item.productName ?? "Unknown",
-        quantity: item.quantity,
+        quantityOrdered: item.quantityOrdered,
         price: item.price ?? 0,
       })),
     };

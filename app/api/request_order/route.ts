@@ -1,7 +1,7 @@
 import { addRequestOrderSchema } from "@/lib/types";
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
-import  {  toTitleCase } from "@/lib/utils";
+import { toTitleCase } from "@/lib/utils";
 import { auth } from "@/auth";
 import { $Enums, NotificationType } from "@prisma/client";
 import { pusherServer } from "@/lib/pusher/server";
@@ -27,31 +27,95 @@ export async function POST(req: Request) {
       return NextResponse.json({ errors: zodErrors }, { status: 400 });
     }
 
-    const { room_number, patient_name, status, products, type, notes, remarks } = result.data;
+    const {
+      roomNumber,
+      patientName,
+      status,
+      products,
+      type,
+      notes,
+      remarks,
+      contactNumber,
+    } = result.data;
 
-    const formattedName = toTitleCase(patient_name)
+    const patientNameNormalized = toTitleCase(patientName.trim());
 
-    const newOrder = await db.orderRequest.create({
-      data: {
-        room_number,
-        patient_name: formattedName,
-        status,
-        userId,
-        type,
-        remarks,
-        notes,
-        items: {
-          create: products.map((product) => ({
-            quantity: product.quantity,
-            product: {
-              connect: { product_name: product.productId },
-            },
-          })),
+    const newOrder = await db.$transaction(async (tx) => {
+      // 1. Find or create patient
+      let patient = await tx.patient.findFirst({
+        where: {
+          patientName: {
+            equals: patientNameNormalized,
+          },
         },
-      },
-      include: {
-        items: { include: { product: true } },
-      },
+      });
+
+      if (!patient) {
+        patient = await tx.patient.create({
+          data: {
+            patientName: patientNameNormalized,
+            roomNumber: roomNumber ?? null,
+            contactNumber: contactNumber ?? null,
+          },
+        });
+      }
+
+      let totalAmount = 0;
+
+      for (const p of products) {
+        const product = await tx.product.findUnique({
+          where: { id: p.productId },
+          select: { price: true },
+        });
+
+        if (!product || product.price == null) {
+          throw new Error("Product price not found");
+        }
+
+        totalAmount += Number(product.price) * p.quantityOrdered;
+      }
+
+      // 2. Create order
+      return await tx.orderRequest.create({
+        data: {
+          status,
+          userId,
+          type,
+          remarks,
+          totalAmount,
+          notes,
+          patientId: patient.id,
+          items: {
+            create: await Promise.all(
+              products.map(async (p) => {
+                const product = await tx.product.findUnique({
+                  where: { id: p.productId },
+                  select: { price: true },
+                });
+
+                if (!product || product.price == null) {
+                  throw new Error("Product price not found");
+                }
+
+                const price = product.price;
+                const totalPrice = Number(price) * p.quantityOrdered;
+
+                return {
+                  refundedQuantity: 0,
+                  quantityOrdered: p.quantityOrdered,
+                  price,
+                  totalPrice,
+                  product: { connect: { id: p.productId } },
+                };
+              })
+            ),
+          },
+        },
+        include: {
+          items: { include: { product: true } },
+          patient: true,
+        },
+      });
     });
 
     if (type === "EMERGENCY") {
@@ -73,7 +137,7 @@ export async function POST(req: Request) {
 
         if (!dbProduct) continue;
 
-        let remainingQty = item.quantity;
+        let remainingQty = item.quantityOrdered.toNumber();
 
         for (const batch of dbProduct.batches) {
           if (remainingQty <= 0) break;
@@ -96,31 +160,32 @@ export async function POST(req: Request) {
 
     // Send notification to the Pharmacist Staff
     const pharmacists = await db.user.findMany({
-      where: { role: "Pharmacist_Staff" }
+      where: { role: "Pharmacist_Staff" },
     });
 
-    const notificationData = newOrder.type === "EMERGENCY" 
-      ? {
-          title: "Pay Later Order Request!",
-          type: NotificationType.EMERGENCY_ORDER,
-        }
-      : {
-          title: "New order request",
-          type: NotificationType.ORDER_REQUEST,
-        };
+    const notificationData =
+      newOrder.type === "EMERGENCY"
+        ? {
+            title: "Pay Later Order Request!",
+            type: NotificationType.EMERGENCY_ORDER,
+          }
+        : {
+            title: "New order request",
+            type: NotificationType.ORDER_REQUEST,
+          };
 
     for (const pharmacist of pharmacists) {
       const notification = await db.notification.create({
         data: {
           title: notificationData.title,
-          type: notificationData.type,
           senderId: session.user.id,
           recipientId: pharmacist.id,
           orderId: newOrder.id,
-          patientName: patient_name,
-          roomNumber: room_number,
-          submittedBy: session.user.username,
-          role: session.user.role,
+          type: notificationData.type,
+          patientName: newOrder.patient.patientName ?? "",
+          roomNumber: newOrder.patient.roomNumber?.toString() ?? "",
+          submittedBy: session.user.username ?? "",
+          role: session.user.role ?? "",
         },
         include: { sender: true },
       });
@@ -140,27 +205,35 @@ export async function POST(req: Request) {
             username: notification.sender.username,
             role: notification.sender.role,
           },
-         order: {
-          id: newOrder.id,
-          patient_name: patient_name,
-          room_number: room_number,
-          products: newOrder.items.map((item) => ({
-            productName: item.product.product_name,
-            quantity: item.quantity,
-            price: item.product.price
-          })), 
-        },
+          submittedBy: notification.submittedBy,
+          role: notification.role,
+          patientName: notification.patientName,
+          roomNumber: notification.roomNumber,
+          order: {
+            id: newOrder.id,
+            patientName: newOrder.patient.patientName ?? "",
+            roomNumber: newOrder.patient.roomNumber?.toString() ?? "",
+            products: newOrder.items.map((item) => ({
+              productName: item.product.product_name,
+            })),
+          },
         }
       );
     }
-    
+
     await db.auditLog.create({
       data: {
         userId: session.user.id,
         action: "Requested",
         entityType: "OrderRequest",
         entityId: newOrder.id,
-        description: `User ${session.user.username} (${session.user.role}) created an order (${type === "EMERGENCY" ? "Pay Later" : "Regular"}) for patient "${patient_name}" in room ${room_number} with ${products.length} item(s).`,
+        description: `User ${session.user.username} (${
+          session.user.role
+        }) created an order (${
+          type === "EMERGENCY" ? "Pay Later" : "Regular"
+        }) for patient "${patientName}" in room ${roomNumber} with ${
+          products.length
+        } item(s).`,
       },
     });
 
@@ -185,11 +258,10 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: NextRequest) {
-
   const session = await auth();
 
   if (!session || !session.user?.id) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 }); 
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -197,13 +269,19 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "5", 10);
     const filter = searchParams.get("filter") || "all";
-    const validStatuses: $Enums.Status[] = ["pending", "for_payment", "paid", "canceled", "refunded"];
+    const validStatuses: $Enums.Status[] = [
+      "pending",
+      "for_payment",
+      "paid",
+      "canceled",
+      "refunded",
+    ];
     const whereClause = {
-        isArchived: false, 
-        ...(validStatuses.includes(filter.toLowerCase() as $Enums.Status)
-          ? { status: filter.toLowerCase() as $Enums.Status }
-          : {}),
-      };
+      isArchived: false,
+      ...(validStatuses.includes(filter.toLowerCase() as $Enums.Status)
+        ? { status: filter.toLowerCase() as $Enums.Status }
+        : {}),
+    };
 
     const [orders, total] = await Promise.all([
       db.orderRequest.findMany({
@@ -212,7 +290,14 @@ export async function GET(req: NextRequest) {
           items: { include: { product: true } },
           user: true,
           receivedBy: true,
-          processedBy: true,
+          preparedBy: true,
+          dispensedBy: true,
+          patient: true,
+          payments: {
+            include: {
+              processedBy: true,
+            },
+          },
         },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,
@@ -222,8 +307,6 @@ export async function GET(req: NextRequest) {
     ]);
 
     const formattedOrders = orders.map((order) => {
-      const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
-
       return {
         id: order.id,
         requestedBy: order.user?.username
@@ -232,24 +315,48 @@ export async function GET(req: NextRequest) {
         receivedBy: order.receivedBy?.username
           ? toTitleCase(order.receivedBy.username)
           : "Unknown",
-        processedBy: order.processedBy?.username
-          ? toTitleCase(order.processedBy.username)
+        preparedBy: order.preparedBy?.username
+          ? toTitleCase(order.preparedBy.username)
           : "Unknown",
-        patient_name: order.patient_name
-          ? toTitleCase(order.patient_name)
+        dispensedBy: order.dispensedBy?.username
+          ? toTitleCase(order.dispensedBy.username)
           : "Unknown",
-        room_number: order.room_number,
+
+        preparedAt: order.preparedAt,
+        dispensedAt: order.dispensedAt,
+        receivedAt: order.receivedAt,
+        patientName: order.patient.patientName,
+
+        paymentDetails: order.payments.map((payment) => ({
+          processedBy: { username: payment.processedBy.username },
+          processedAt: payment.createdAt,
+          amountDue: Number(payment.amountDue),
+          discountAmount: Number(payment.discountAmount),
+          discountType: payment.discountType,
+          discountPercent: Number(payment.discountPercent),
+        })),
+
+        patientDetails: {
+          patientName: order.patient.patientName,
+          roomNumber: order.patient.roomNumber ?? undefined,
+          contactNumber: order.patient.contactNumber ?? undefined,
+          patientNumber: order.patient.patientNumber ?? undefined,
+        },
+
         archiveReason: order.archiveReason,
         createdAt: order.createdAt,
         status: order.status,
         remarks: order.remarks,
         type: order.type,
         notes: order.notes,
-        items: `${totalItems} item${totalItems !== 1 ? "s" : ""}`,
+        products: order.items.length,
+
         itemDetails: order.items.map((item) => ({
           productName: item.product.product_name,
-          quantity: item.quantity,
+          quantityOrdered: item.quantityOrdered,
           price: item.product.price,
+          dosageForm: item.product.dosageForm,
+          strength: item.product.strength,
         })),
       };
     });

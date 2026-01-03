@@ -1,4 +1,4 @@
-import { RequestView } from "@/app/components/MTRequestDetails";
+import { RequestView } from "@/app/components/medtech/MTRequestDetails";
 import { create } from "zustand";
 
 interface RequestModalState {

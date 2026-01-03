@@ -20,14 +20,19 @@ export async function GET(req: NextRequest) {
     const [patientNames, customerNames] = await Promise.all([
       db.orderRequest.findMany({
         where: {
-          patient_name: {
-            contains: query,
+          patient: {
+            patientName: {
+              contains: query,
+            },
           },
         },
         select: {
-          patient_name: true,
+          patient: {
+            select: {
+              patientName: true,
+            },
+          },
         },
-        distinct: ['patient_name'],
         take: 10,
       }),
       db.walkInTransaction.findMany({
@@ -39,25 +44,23 @@ export async function GET(req: NextRequest) {
         select: {
           customer_name: true,
         },
-        distinct: ['customer_name'],
+        distinct: ["customer_name"],
         take: 10,
       }),
     ]);
 
     // Combine and deduplicate results
     const combinedNames = new Set<string>();
-    
-    patientNames.forEach(p => {
-      if (p.patient_name) combinedNames.add(p.patient_name);
+
+    patientNames.forEach((p) => {
+      if (p.patient.patientName) combinedNames.add(p.patient.patientName);
     });
-    
-    customerNames.forEach(c => {
+
+    customerNames.forEach((c) => {
       if (c.customer_name) combinedNames.add(c.customer_name);
     });
 
-    const results = Array.from(combinedNames)
-      .sort()
-      .slice(0, 10);
+    const results = Array.from(combinedNames).sort().slice(0, 10);
 
     return NextResponse.json({ results });
   } catch (error) {

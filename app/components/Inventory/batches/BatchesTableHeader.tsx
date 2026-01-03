@@ -3,7 +3,7 @@
 import { TableHead } from "@/components/ui/table";
 import React from "react";
 import { useSession } from "next-auth/react";
-import ReusableTableHeader from "../../ReusabaleTableHeader";
+import ReusableTableHeader from "../../ui/ReusabaleTableHeader";
 
 const BatchesTableHeader = () => {
   const { data: session } = useSession();

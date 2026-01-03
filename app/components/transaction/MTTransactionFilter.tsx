@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import TableFilterSelect from "../TableFilterSelect";
+import TableFilterSelect from "../ui/TableFilterSelect";
 
 const MTTransactionFilter = () => {
   return (

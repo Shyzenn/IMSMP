@@ -2,7 +2,7 @@
 
 import { TableHead } from "@/components/ui/table";
 import React from "react";
-import ReusableTableHeader from "../../ReusabaleTableHeader";
+import ReusableTableHeader from "../../ui/ReusabaleTableHeader";
 
 const InventoryTableHeader = ({ hasAction }: { hasAction: boolean }) => {
   return (
@@ -10,6 +10,8 @@ const InventoryTableHeader = ({ hasAction }: { hasAction: boolean }) => {
       headers={[
         { key: "number", label: "No.", sortable: false },
         { key: "product_name", label: "Product", sortable: true },
+        { key: "strength", label: "Strength", sortable: false },
+        { key: "dosageForm", label: "Dosage Form", sortable: false },
         { key: "totalQuantity", label: "Quantity(Total)", sortable: true },
         { key: "price", label: "Price", sortable: true },
         { key: "createdAt", label: "Created At", sortable: true },

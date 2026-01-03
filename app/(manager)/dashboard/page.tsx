@@ -1,11 +1,11 @@
-import DashboardAuditLog from "@/app/components/DashboardActivities";
-import DashboardHeader from "@/app/components/DashboardHeader";
-import ExpiryProducts from "@/app/components/ExpiryProducts";
-import ManagerDashboardCards from "@/app/components/ManagerDashboardCards";
-import RequestTableTab from "@/app/components/RequestTableTab";
-import SalesByCategory from "@/app/components/SalesByCategory";
-import SalesGraph from "@/app/components/SalesGraph";
-import TopSellingProducts from "@/app/components/TopSellingProductChart";
+import DashboardAuditLog from "@/app/components/dashboard/DashboardActivities";
+import DashboardHeader from "@/app/components/dashboard/DashboardHeader";
+import ExpiryProducts from "@/app/components/dashboard/ExpiryProducts";
+import ManagerDashboardCards from "@/app/components/dashboard/ManagerDashboardCards";
+import SalesByOrderTypePie from "@/app/components/dashboard/SalesByCategory";
+import SalesGraph from "@/app/components/dashboard/SalesGraph";
+import TopSellingProducts from "@/app/components/dashboard/TopSellingProductChart";
+import RequestTableTab from "@/app/components/request_order/RequestTableTab";
 import { auth } from "@/auth";
 
 export default async function Dashboard() {
@@ -42,7 +42,7 @@ export default async function Dashboard() {
           <TopSellingProducts />
         </div>
         <div className="bg-white w-full lg:w-[35%] rounded-md shadow-md">
-          <SalesByCategory />
+          <SalesByOrderTypePie />
         </div>
       </div>
     </div>

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import "../globals.css";
-import Header from "../components/Header";
+import Header from "../components/header/Header";
 import { SidebarProvider } from "../(manager)/SidebarContext";
 import ReactQueryProvider from "./QueryClientProvider";
-import Sidebar from "../components/Sidebar";
 import { nurseLinks } from "@/lib/links";
-import ModalPortal from "../components/OrderModalPortal";
+import ModalPortal from "../components/order/OrderModalPortal";
+import Sidebar from "../components/ui/Sidebar";
 
 export const metadata: Metadata = {
   title: "Macoleen's Pharmacy",

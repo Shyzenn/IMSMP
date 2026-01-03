@@ -1,0 +1,150 @@
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { TableComponentProps } from "@/lib/interfaces";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+
+function TableComponent<T extends Record<string, unknown>>({
+  largeContainer,
+  columns,
+  data,
+  onRowClick,
+  title,
+  interactiveRows,
+  noDataMessage,
+  colorCodeExpiry = false,
+  filter,
+  linkCell,
+}: TableComponentProps<T>) {
+  const { data: session } = useSession();
+  const userRole = session?.user.role;
+
+  const batchBasePath =
+    userRole === "Manager"
+      ? "/inventory/"
+      : userRole === "Pharmacist_Staff"
+      ? "/pharmacist_inventory/"
+      : userRole === "Nurse"
+      ? "/nurse_inventory/"
+      : userRole === "MedTech"
+      ? "/medtech_inventory/"
+      : "/cashier_inventory";
+
+  const reusableTalbe = () => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          {columns.map((column) => (
+            <TableHead
+              key={column.accessor}
+              className={column.align === "right" ? "text-right" : "text-left"}
+            >
+              {column.label}
+            </TableHead>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data.length === 0 ? (
+          <TableRow>
+            <TableCell
+              colSpan={columns.length}
+              className="text-center py-4 text-gray-500"
+            >
+              {noDataMessage || "No Data Available"}
+            </TableCell>
+          </TableRow>
+        ) : (
+          data.map((row, i) => {
+            const expiry = new Date(row.expiryDate as string);
+            const today = new Date();
+            const diffInDays = Math.ceil(
+              (expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+            );
+
+            let rowColor = "";
+            if (diffInDays <= 7) {
+              rowColor = "bg-red-50";
+            } else if (diffInDays <= 14) {
+              rowColor = "bg-orange-50";
+            } else if (diffInDays <= 21) {
+              rowColor = "bg-yellow-50";
+            }
+
+            return (
+              <TableRow key={i} className={colorCodeExpiry ? rowColor : ""}>
+                {columns.map((column) => (
+                  <TableCell
+                    key={column.accessor}
+                    className={`text-xs ${
+                      column.align === "right" ? "text-right" : "text-left"
+                    } ${
+                      interactiveRows && userRole !== "Manager"
+                        ? ""
+                        : "cursor-pointer"
+                    }`}
+                    onClick={() => {
+                      if (userRole === "Manager") {
+                        onRowClick?.(row);
+                      }
+                    }}
+                  >
+                    {linkCell ? (
+                      <Link
+                        href={`${batchBasePath}batches?query=${
+                          row[column.accessor]
+                        }&page=1&filter=all&sort=expiry_date&order=asc`}
+                      >
+                        {column.render
+                          ? column.render(row)
+                          : String(row[column.accessor])}
+                      </Link>
+                    ) : (
+                      <>
+                        {column.render
+                          ? column.render(row)
+                          : String(row[column.accessor])}
+                      </>
+                    )}
+                  </TableCell>
+                ))}
+              </TableRow>
+            );
+          })
+        )}
+      </TableBody>
+    </Table>
+  );
+
+  return (
+    <>
+      <div className="flex items-center justify-between p-2">
+        <p className="text-lg font-semibold">{title}</p>
+        {filter && <div>{filter}</div>}
+      </div>
+      {largeContainer ? (
+        <div className="overflow-x-auto md:max-w-full">
+          <div
+            className={` ${
+              userRole === "Cashier" || userRole === "Nurse"
+                ? "min-w-[850px]"
+                : "min-w-[800px]"
+            } ${userRole === "Pharmacist_Staff" ? "min-w-[950px]" : ""}`}
+          >
+            {reusableTalbe()}
+          </div>
+        </div>
+      ) : (
+        reusableTalbe()
+      )}
+    </>
+  );
+}
+
+export default TableComponent;

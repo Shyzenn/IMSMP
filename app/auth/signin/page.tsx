@@ -13,7 +13,7 @@ import Image from "next/image";
 import MacoleenLogo from "@/public/macoleens_logo.png";
 import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
-import ForgotPasswordModal from "@/app/components/ForgotPasswordModal";
+import ForgotPasswordModal from "@/app/components/user/ForgotPasswordModal";
 import { useRouter } from "next/navigation";
 
 const Login = () => {

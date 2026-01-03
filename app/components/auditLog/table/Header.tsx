@@ -1,5 +1,5 @@
 import React from "react";
-import ReusableTableHeader from "../../ReusabaleTableHeader";
+import ReusableTableHeader from "../../ui/ReusabaleTableHeader";
 
 const sortableTableHeaders = [
   { key: "id", label: "Log ID" },

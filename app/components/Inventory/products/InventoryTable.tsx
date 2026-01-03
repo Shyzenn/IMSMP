@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { formattedDateTime, toTitleCase } from "@/lib/utils";
+import { formatPackageType, formattedDateTime, toTitleCase } from "@/lib/utils";
 import { IconType } from "react-icons/lib";
-import EmptyTable from "../../EmptyTable";
+import EmptyTable from "../../ui/EmptyTable";
 import { getProductList } from "@/lib/action/get";
 import Action from "./InventoryAction";
 import InventoryTableHeader from "./InventoryTableHeader";
@@ -11,15 +11,22 @@ import { auth } from "@/auth";
 export interface ProductProps {
   id: number;
   product_name: string;
+  genericName: string | null;
+  manufacturer: string | null;
+  description: string | null;
+  requiresPrescription: boolean;
+  strength: string | null;
+  dosageForm: string | null;
   category: string;
   totalQuantity: number;
   price: number;
+  minimumStockAlert: number;
   expiringSoonCount: number;
   totalBatches: number;
   createdAt: Date;
   icon?: IconType[];
   batchQuantity: number[];
-  status: "ACTIVE" | "ARCHIVED";
+  status: "ACTIVE" | "ARCHIVED" | "EXPIRING";
   archiveReason: string | null;
 }
 
@@ -71,6 +78,12 @@ export default async function InventoryTable({
                 >
                   <TableCell>{`PRD-0${product.id}`}</TableCell>
                   <TableCell>{toTitleCase(product.product_name)}</TableCell>
+                  <TableCell>{product.strength}</TableCell>
+                  <TableCell>
+                    {product.dosageForm
+                      ? formatPackageType(product.dosageForm)
+                      : "N/A"}
+                  </TableCell>
                   <TableCell>{product.totalQuantity}</TableCell>
                   <TableCell>{`₱${Number(product.price).toFixed(
                     2

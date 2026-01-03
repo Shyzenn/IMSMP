@@ -3,7 +3,6 @@ import { db } from "@/lib/db";
 import { auth } from "@/auth";
 
 export async function GET() {
-
   const session = await auth();
 
   if (!session || !session.user?.id) {
@@ -13,7 +12,10 @@ export async function GET() {
   try {
     const [requestOrders, walkinOrders] = await Promise.all([
       db.orderRequest.findMany({
-        include: { items: { include: { product: true } } },
+        include: {
+          items: { include: { product: true } },
+          patient: { select: { patientName: true } },
+        },
       }),
       db.walkInTransaction.findMany({
         include: { items: { include: { product: true } } },
@@ -32,12 +34,18 @@ export async function GET() {
       })),
       ...requestOrders.map((tx) => ({
         id: `REQ-${tx.id}`,
-        customer: tx.patient_name ?? "Unknown",
+        customer: tx.patient.patientName ?? "Unknown",
         createdAt: tx.createdAt,
         source: "Request Order",
-        quantity: tx.items.reduce((sum, item) => sum + item.quantity, 0),
+        quantity: tx.items.reduce(
+          (sum, item) => sum + Number(item.quantityOrdered),
+          0
+        ),
         total: tx.items.reduce(
-          (sum, item) => sum + item.quantity * (item.product?.price?.toNumber?.() ?? 0),
+          (sum, item) =>
+            sum +
+            Number(item.quantityOrdered) *
+              (item.product?.price?.toNumber?.() ?? 0),
           0
         ),
         status: tx.status,
@@ -47,6 +55,9 @@ export async function GET() {
     return NextResponse.json(formatted);
   } catch (error) {
     console.error("Transaction Export API error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

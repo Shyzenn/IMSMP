@@ -18,17 +18,18 @@ export async function GET(req: NextRequest) {
 
     const patientRecords = await db.orderRequest.findMany({
       where: {
-        patient_name: {
-          contains: query,
+        patient: {
+          patientName: {
+            contains: query,
+          },
         },
       },
       select: {
-        patient_name: true,
-        room_number: true,
+        patient: true,
         createdAt: true,
       },
       orderBy: {
-        createdAt: "desc", 
+        createdAt: "desc",
       },
       take: 20,
     });
@@ -36,15 +37,21 @@ export async function GET(req: NextRequest) {
     // Use a Map to ensure distinct patient names
     const distinctPatients = new Map<string, number>();
     for (const p of patientRecords) {
-      if (p.patient_name && !distinctPatients.has(p.patient_name)) {
-        distinctPatients.set(p.patient_name, Number(p.room_number));
+      if (
+        p.patient.patientName &&
+        !distinctPatients.has(p.patient.patientName)
+      ) {
+        distinctPatients.set(
+          p.patient.patientName,
+          Number(p.patient.roomNumber)
+        );
       }
     }
 
     const results = Array.from(distinctPatients.entries()).map(
-      ([patient_name, room_number]) => ({
-        patient_name,
-        room_number,
+      ([patientName, roomNumber]) => ({
+        patientName,
+        roomNumber,
       })
     );
 

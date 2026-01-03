@@ -3,7 +3,7 @@ import { formattedDate, formattedDateTime, toTitleCase } from "@/lib/utils";
 import { getArchive } from "@/lib/action/get";
 import ArchiveTableHeader from "./ArchiveTableHeader";
 import { auth } from "@/auth";
-import EmptyTable from "../EmptyTable";
+import EmptyTable from "../ui/EmptyTable";
 import ArchiveAction from "./ArchiveAction";
 
 export default async function ArchiveTable({

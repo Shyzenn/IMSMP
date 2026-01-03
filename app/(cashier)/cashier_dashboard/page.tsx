@@ -1,14 +1,13 @@
-import CashierDashboardCards from "@/app/components/CashierDashboardCards";
-import DashboardHeader from "@/app/components/DashboardHeader";
-import RecentRequestTable from "@/app/components/RecentRequestTable";
-import SalesByCategory from "@/app/components/SalesByCategory";
-import SalesGraph from "@/app/components/SalesGraph";
-import TopSellingProducts from "@/app/components/TopSellingProductChart";
+import CashierDashboardCards from "@/app/components/dashboard/CashierDashboardCards";
+import DashboardHeader from "@/app/components/dashboard/DashboardHeader";
+import SalesByOrderTypePie from "@/app/components/dashboard/SalesByCategory";
+import SalesGraph from "@/app/components/dashboard/SalesGraph";
+import TopSellingProducts from "@/app/components/dashboard/TopSellingProductChart";
+import { PatientsOrderList } from "@/app/components/order/PatientsOrderList";
 import { auth } from "@/auth";
 
 export default async function Dashboard() {
   const session = await auth();
-  const userRole = session?.user.role;
   const username = session?.user.username;
 
   return (
@@ -16,12 +15,12 @@ export default async function Dashboard() {
       <DashboardHeader session={session} />
       <CashierDashboardCards />
 
-      <div className="h-auto lg:h-96 flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
-        <div className="w-full lg:w-[70%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-96">
-          <RecentRequestTable userRole={userRole} />
+      <div className="h-[33rem] flex flex-col lg:flex-row gap-x-4 w-full gap-y-6 lg:gap-y-0">
+        <div className="w-full h-full lg:w-[70%] bg-white rounded-md shadow-md overflow-hidden flex flex-col">
+          <PatientsOrderList />
         </div>
-        <div className="w-full lg:w-[30%] bg-white rounded-md shadow-md overflow-hidden flex flex-col h-96">
-          <SalesByCategory />
+        <div className="w-full h-full lg:w-[30%] bg-white rounded-md shadow-md overflow-hidden flex flex-col">
+          <SalesByOrderTypePie />
         </div>
       </div>
 

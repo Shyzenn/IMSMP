@@ -22,31 +22,37 @@ export async function GET() {
       },
       order: {
         select: {
-          id: true,                
-          patient_name: true,
-          room_number: true,
+          id: true,
+          patient: {
+            select: {
+              patientName: true,
+              roomNumber: true,
+            },
+          },
         },
       },
       walkInOrder: {
-        select : {
+        select: {
           id: true,
-          customer_name: true
-        }
+          customer_name: true,
+        },
       },
       medTechRequest: {
         select: {
-          id: true
-        }
-      }
+          id: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
     },
-    take:20
+    take: 20,
   });
 
-    const formattedNotifications = notifications.map((notif) => ({
+  const formattedNotifications = notifications.map((notif) => ({
     ...notif,
+    patientName: notif.patientName || notif.order?.patient?.patientName || "",
+    roomNumber: notif.roomNumber || notif.order?.patient?.roomNumber || null,
     medTechRequestId: notif.medTechRequest?.id || null,
     walkInOrderId: notif.walkInOrder?.id || null,
   }));

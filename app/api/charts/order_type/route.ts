@@ -6,73 +6,98 @@ import { auth } from "@/auth";
 export async function GET(req: Request) {
   const session = await auth();
 
-  if (!session || !session.user?.id) {
+  if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
-  
+
   const { searchParams } = new URL(req.url);
   const filter = searchParams.get("filter") || "This Month";
 
   let fromDate = new Date();
 
-  if (filter === "Last 7 Days") {
-    fromDate = subDays(new Date(), 6);
-  } else if (filter === "This Month") {
-    fromDate = startOfMonth(new Date());
-  } else if (filter === "This Year") {
-    fromDate = startOfYear(new Date());
-  }
+  if (filter === "Last 7 Days") fromDate = subDays(new Date(), 6);
+  else if (filter === "This Month") fromDate = startOfMonth(new Date());
+  else if (filter === "This Year") fromDate = startOfYear(new Date());
 
   try {
-    // Fetch items from both paid and refunded orders
-    const orderItems = await db.orderItem.findMany({
-      where: {
-        order: {
+    const [orders, walkIns] = await Promise.all([
+      db.orderRequest.findMany({
+        where: {
           status: { in: ["paid", "refunded"] },
           createdAt: { gte: fromDate },
         },
-      },
-      include: {
-        product: true,
-      },
-    });
-
-    const walkInItems = await db.walkInItem.findMany({
-      where: {
-        transaction: { 
-          status: { in: ["paid", "refunded"] },
-          createdAt: { gte: fromDate } 
+        include: {
+          items: { include: { product: true } },
+          payments: true,
         },
-      },
-      include: {
-        product: true,
-      },
-    });
+      }),
+      db.walkInTransaction.findMany({
+        where: {
+          status: { in: ["paid", "refunded"] },
+          createdAt: { gte: fromDate },
+        },
+        include: {
+          items: true,
+          payments: true,
+        },
+      }),
+    ]);
 
-    // Calculate Order Request revenue with refunded quantities
-    const orderRequestRevenue = orderItems.reduce((sum, item) => {
-      const netQuantity = item.quantity - (item.refundedQuantity || 0);
-      return sum + netQuantity * Number(item.product.price);
-    }, 0);
+    let orderRequestRevenue = 0;
+    let walkInRevenue = 0;
 
-    // Calculate Walk-In revenue with refunded quantities
-    const walkInRevenue = walkInItems.reduce((sum, item) => {
-      const netQuantity = item.quantity - (item.refundedQuantity || 0);
-      return sum + netQuantity * Number(item.price);
-    }, 0);
+    // ---------- ORDER REQUESTS ----------
+    for (const order of orders) {
+      const itemsTotal = order.items.reduce((sum, item) => {
+        const ordered = item.quantityOrdered.toNumber();
+        const refunded = item.refundedQuantity?.toNumber() || 0;
+        return (
+          sum + Number(item.product.price) * Math.max(0, ordered - refunded)
+        );
+      }, 0);
 
-    const salesByOrderType = [
-      {
-        name: "Order Request",
-        revenue: Math.max(0, orderRequestRevenue), // Ensure no negative values
-      },
-      {
-        name: "Walk-in",
-        revenue: Math.max(0, walkInRevenue), // Ensure no negative values
-      },
-    ].filter((item) => item.revenue > 0); 
+      const payment = order.payments?.[0];
+      const isVatExempt =
+        payment?.discountType === "PWD" || payment?.discountType === "SENIOR";
 
-    return NextResponse.json(salesByOrderType);
+      const baseAmount = isVatExempt ? itemsTotal / 1.12 : itemsTotal;
+
+      const discount = order.payments?.reduce(
+        (s, p) => s + Number(p.discountAmount || 0),
+        0
+      );
+
+      orderRequestRevenue += Math.max(0, baseAmount - discount);
+    }
+
+    // ---------- WALK-IN ----------
+    for (const txn of walkIns) {
+      const itemsTotal = txn.items.reduce((sum, item) => {
+        return (
+          sum +
+          Number(item.price) *
+            Math.max(0, item.quantity - (item.refundedQuantity || 0))
+        );
+      }, 0);
+
+      const payment = txn.payments?.[0];
+      const isVatExempt =
+        payment?.discountType === "PWD" || payment?.discountType === "SENIOR";
+
+      const baseAmount = isVatExempt ? itemsTotal / 1.12 : itemsTotal;
+
+      const discount = txn.payments?.reduce(
+        (s, p) => s + Number(p.discountAmount || 0),
+        0
+      );
+
+      walkInRevenue += Math.max(0, baseAmount - discount);
+    }
+
+    return NextResponse.json([
+      { name: "Order Request", revenue: orderRequestRevenue },
+      { name: "Walk-in", revenue: walkInRevenue },
+    ]);
   } catch (error) {
     console.error("Error fetching sales by order type:", error);
     return NextResponse.json(

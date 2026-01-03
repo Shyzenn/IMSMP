@@ -1,5 +1,5 @@
-import { OrderView } from "@/app/components/transaction/table/TransactionAction";
 import { create } from "zustand";
+import { OrderView } from "../interfaces";
 
 interface OrderModalState {
   isOpen: boolean;

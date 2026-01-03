@@ -1,10 +1,10 @@
-import DashboardHeader from "@/app/components/DashboardHeader";
-import ExpiryProducts from "@/app/components/ExpiryProducts";
-import ManagerDashboardCards from "@/app/components/ManagerDashboardCards";
-import SalesByCategory from "@/app/components/SalesByCategory";
-import TopSellingProducts from "@/app/components/TopSellingProductChart";
+import DashboardHeader from "@/app/components/dashboard/DashboardHeader";
+import ExpiryProducts from "@/app/components/dashboard/ExpiryProducts";
+import ManagerDashboardCards from "@/app/components/dashboard/ManagerDashboardCards";
+import SalesByOrderTypePie from "@/app/components/dashboard/SalesByCategory";
+import TopSellingProducts from "@/app/components/dashboard/TopSellingProductChart";
+import RequestTableTab from "@/app/components/request_order/RequestTableTab";
 import { auth } from "@/auth";
-import RequestTableTab from "@/app/components/RequestTableTab";
 
 export default async function Dashboard() {
   const session = await auth();
@@ -27,7 +27,7 @@ export default async function Dashboard() {
           <TopSellingProducts />
         </div>
         <div className="bg-white w-full lg:w-[35%] rounded-md shadow-md">
-          <SalesByCategory />
+          <SalesByOrderTypePie />
         </div>
       </div>
     </div>

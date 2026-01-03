@@ -5,8 +5,9 @@ import bcrypt from "bcryptjs";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  basePath: "/api/auth",
   pages: {
-    signIn: "/auth/signin", 
+    signIn: "/auth/signin",
     error: "/unauthorized",
   },
 
@@ -17,8 +18,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
       credentials: {
-        email: { label: "Email", type: "email", placeholder: "example@email.com" },
-        password: { label: "Password", type: "password", placeholder: "password" },
+        email: {
+          label: "Email",
+          type: "email",
+          placeholder: "example@email.com",
+        },
+        password: {
+          label: "Password",
+          type: "password",
+          placeholder: "password",
+        },
       },
       async authorize(credentials) {
         if (

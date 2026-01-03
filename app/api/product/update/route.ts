@@ -1,25 +1,50 @@
-import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { editProductSchema } from "@/lib/types";
 import { NextResponse } from "next/server";
+import { editProductSchema } from "@/lib/types";
+import { auth } from "@/auth";
+import { toTitleCase } from "@/lib/utils";
 
-// update new product
+// update product
 export async function PATCH(req: Request) {
   try {
+    const session = await auth();
 
-     const session = await auth()
-
-     if (!session || !session.user?.id) {
+    if (!session || !session.user?.id) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = session.user.id; 
+    const userId = session.user.id;
 
     const body = await req.json();
-    const { productId, product_name, category, price } = body;
 
-    // Validate input using Zod schema
-   const result = editProductSchema.safeParse({ productId, product_name, category, price });
+    const {
+      productId,
+      product_name,
+      category,
+      price,
+      genericName,
+      manufacturer,
+      description,
+      strength,
+      dosageForm,
+      requiresPrescription,
+      minimumStockAlert,
+    } = body;
+
+    // Validate input
+    const result = editProductSchema.safeParse({
+      productId,
+      product_name,
+      category,
+      price,
+      genericName,
+      manufacturer,
+      description,
+      strength,
+      dosageForm,
+      requiresPrescription,
+      minimumStockAlert,
+    });
     if (!result.success) {
       const zodErrors: Record<string, string> = {};
       result.error.issues.forEach((issue) => {
@@ -28,8 +53,10 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ errors: zodErrors }, { status: 400 });
     }
 
+    // Normalize category name
     const normalizedCategory = category.trim().toLowerCase();
 
+    // Find category by normalized name
     const categoryRecord = await db.productCategory.findFirst({
       where: {
         name: normalizedCategory,
@@ -44,30 +71,57 @@ export async function PATCH(req: Request) {
     }
 
     const existingProduct = await db.product.findFirst({
-      where: { 
-        product_name: product_name.trim(), 
-        NOT: {id: productId} 
+      where: {
+        product_name: {
+          equals: product_name.trim(),
+        },
+        ...(strength
+          ? {
+              strength: {
+                equals: strength.trim(),
+              },
+            }
+          : {
+              OR: [{ strength: null }, { strength: "" }],
+            }),
+        id: {
+          not: productId,
+        },
       },
     });
 
     if (existingProduct) {
-        return NextResponse.json({
-            errors: {
-            product_name: "Product name is already exists.",
-            },
-        }, { status: 400 });
+      return NextResponse.json(
+        {
+          errors: {
+            product_name: strength
+              ? `Product "${product_name}" with strength "${strength}" already exists.`
+              : `Product "${product_name}" already exists.`,
+          },
+        },
+        { status: 400 }
+      );
     }
 
-    // Update a new product in the database
+    const normalizedName = toTitleCase(product_name.trim());
+
+    // Edit product
     const editProduct = await db.product.update({
       where: {
         id: productId,
       },
       data: {
-        product_name: product_name.trim(),
-        price,
-        userId: session.user.id,
+        product_name: normalizedName,
         categoryId: categoryRecord.id,
+        price,
+        genericName: toTitleCase(genericName.trim()),
+        manufacturer,
+        description,
+        strength,
+        dosageForm,
+        requiresPrescription: requiresPrescription || false,
+        minimumStockAlert,
+        userId: session.user.id,
       },
     });
 

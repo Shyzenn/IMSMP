@@ -1,4 +1,5 @@
 import { ProductData } from "@/lib/interfaces";
+import { capitalLetter } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import {
   UseFormClearErrors,
@@ -20,37 +21,38 @@ export function useProductDropdown<T extends FieldValues>(
   >({});
   const dropdownRefs = useRef<(HTMLLIElement | null)[]>([]);
 
-  const handleFocus = (index: number) => {
-    const top10 = products.slice(0, 10);
-    setFilteredProducts(top10);
-    setDropdownIndex(index);
-  };
-  
+  const handleSelectProduct = (index: number, product: ProductData) => {
+    const displayValue = `${product.product_name} ${product.strength ?? ""} ${
+      capitalLetter(product.dosageForm) ?? ""
+    }`.trim();
+    setValue(
+      `products.${index}.productId` as Path<T>,
+      displayValue as PathValue<T, Path<T>>
+    );
 
-  const handleSelectProduct = (index: number, productName: string) => {
-    setValue(`products.${index}.productId` as Path<T>, productName as PathValue<T, Path<T>>);
     clearErrors(`products.${index}.productId` as Path<T>);
     setDropdownIndex(null);
 
-    const selectedProduct = products.find(
-      (p) => p.productName.toLowerCase() === productName.toLowerCase()
-    );
-
-    if (selectedProduct) {
-      setSelectedQuantity((prev) => ({
-        ...prev,
-        [index]: Number(selectedProduct.quantity),
-      }));
-    }
+    setSelectedQuantity((prev) => ({
+      ...prev,
+      [index]: Number(product.quantity),
+    }));
   };
 
   const handleInputChangeProduct = (index: number, value: string) => {
     const top10 = products.filter((product) =>
-      product.productName.toLowerCase().includes(value.toLowerCase())
+      product.product_name.toLowerCase().includes(value.toLowerCase())
     );
-    setValue(`products.${index}.productId` as Path<T>, value as PathValue<T, Path<T>>);
+    setValue(
+      `products.${index}.productId ` as Path<T>,
+      value as PathValue<T, Path<T>>
+    );
     setDropdownIndex(index);
     setFilteredProducts(top10);
+
+    if (value === "") {
+      setDropdownIndex(null);
+    }
   };
 
   useEffect(() => {
@@ -70,7 +72,6 @@ export function useProductDropdown<T extends FieldValues>(
   return {
     dropdownIndex,
     filteredProducts,
-    handleFocus,
     handleSelectProduct,
     handleInputChangeProduct,
     setFilteredProducts,

@@ -1,9 +1,10 @@
-'use client'
+"use client";
 
 import { RiDashboardHorizontalLine } from "react-icons/ri";
 import { AiOutlineAudit } from "react-icons/ai";
 import { MdOutlineInventory2 } from "react-icons/md";
 import { GrTransaction } from "react-icons/gr";
+import { MdOutlinePointOfSale } from "react-icons/md";
 import { Links } from "./interfaces";
 
 export const adminLinks: Links[] = [
@@ -13,21 +14,25 @@ export const adminLinks: Links[] = [
     icon: RiDashboardHorizontalLine,
   },
   {
-    name: "Inventory" ,
+    name: "Inventory",
     icon: MdOutlineInventory2,
     subLinks: [
       { name: "Products", href: "/admin_inventory/products" },
       { name: "Batches", href: "/admin_inventory/batches" },
-     
     ],
   },
-   {
-    name: "Transaction " ,
+  {
+    name: "Transaction ",
     icon: GrTransaction,
     subLinks: [
-      { name: "Order Request / Walk In", href: "/admin_transaction/order_walkin" },
-      { name: "MedTech Request", href: "/admin_transaction/medtech_transaction" },
-     
+      {
+        name: "Order Request / Walk In",
+        href: "/admin_transaction/order_walkin",
+      },
+      {
+        name: "MedTech Request",
+        href: "/admin_transaction/medtech_transaction",
+      },
     ],
   },
   { name: "Audit Log", href: "/admin_audit", icon: AiOutlineAudit },
@@ -40,21 +45,19 @@ export const managerLinks: Links[] = [
     icon: RiDashboardHorizontalLine,
   },
   {
-    name: "Inventory" ,
+    name: "Inventory",
     icon: MdOutlineInventory2,
     subLinks: [
       { name: "Products", href: "/inventory/products" },
       { name: "Batches", href: "/inventory/batches" },
-     
     ],
   },
-   {
-    name: "Transaction " ,
+  {
+    name: "Transaction ",
     icon: GrTransaction,
     subLinks: [
       { name: "Order Request / Walk In", href: "/transaction/order_walkin" },
       { name: "MedTech Request", href: "/transaction/medtech_transaction" },
-     
     ],
   },
   { name: "Audit Log", href: "/audit_log", icon: AiOutlineAudit },
@@ -66,13 +69,12 @@ export const nurseLinks = [
     href: "/nurse_dashboard",
     icon: RiDashboardHorizontalLine,
   },
- {
-    name: "Inventory" ,
+  {
+    name: "Inventory",
     icon: MdOutlineInventory2,
     subLinks: [
       { name: "Products", href: "/nurse_inventory/products" },
       { name: "Batches", href: "/nurse_inventory/batches" },
-      
     ],
   },
   {
@@ -83,55 +85,61 @@ export const nurseLinks = [
 ];
 
 export const pharmacistLinks = [
-  
   {
     name: "Dashboard",
     href: "/pharmacist_dashboard",
     icon: RiDashboardHorizontalLine,
   },
   {
-    name: "Inventory" ,
+    name: "Walk-In POS",
+    href: "/walkin_pos",
+    icon: MdOutlinePointOfSale,
+  },
+  {
+    name: "Inventory",
     icon: MdOutlineInventory2,
     subLinks: [
       { name: "Products", href: "/pharmacist_inventory/products" },
       { name: "Batches", href: "/pharmacist_inventory/batches" },
-     
     ],
   },
   {
-    name: "Transaction" ,
+    name: "Transaction",
     icon: GrTransaction,
     subLinks: [
-      { name: "Order Request / Walk In", href: "/pharmacist_transaction/order_walkin" },
-      { name: "MedTech Request", href: "/pharmacist_transaction/medtech_transaction" },
-     
+      {
+        name: "Order Request / Walk In",
+        href: "/pharmacist_transaction/order_walkin",
+      },
+      {
+        name: "MedTech Request",
+        href: "/pharmacist_transaction/medtech_transaction",
+      },
     ],
   },
-]
+];
 
 export const cashierLinks = [
   {
     name: "Dashboard",
     href: "/cashier_dashboard",
     icon: RiDashboardHorizontalLine,
-
   },
-  { name: "Transaction", href: "/cashier_transaction", icon: GrTransaction }
-]
+  { name: "Transaction", href: "/cashier_transaction", icon: GrTransaction },
+];
 
 export const medTechLinks = [
-   {
+  {
     name: "Dashboard",
     href: "/medtech_dashboard",
     icon: RiDashboardHorizontalLine,
   },
   {
-    name: "Inventory " ,
+    name: "Inventory ",
     icon: MdOutlineInventory2,
     subLinks: [
       { name: "Products", href: "/medtech_inventory/products" },
       { name: "Batches", href: "/medtech_inventory/batches" },
-      
     ],
   },
   {
@@ -139,7 +147,7 @@ export const medTechLinks = [
     href: "/medtech_transaction",
     icon: GrTransaction,
   },
-]
+];
 
 export function getLogoLink(role?: string) {
   switch (role) {
@@ -154,8 +162,8 @@ export function getLogoLink(role?: string) {
     case "MedTech":
       return "/medtech_dashboard";
     case "SuperAdmin":
-      return "/admin_dashboard";  
+      return "/admin_dashboard";
     default:
-      return "/"; 
+      return "/";
   }
 }

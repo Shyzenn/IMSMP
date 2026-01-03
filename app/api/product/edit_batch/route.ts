@@ -24,9 +24,9 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ errors: zodErrors }, { status: 400 });
     }
 
-    const { id, quantity, releaseDate, expiryDate } = result.data;
+    const { id, quantity, manufactureDate, expiryDate, notes } = result.data;
 
-    if (isNaN(releaseDate.getTime()) || isNaN(expiryDate.getTime())) {
+    if (isNaN(manufactureDate.getTime()) || isNaN(expiryDate.getTime())) {
       return NextResponse.json(
         { message: "Invalid date format" },
         { status: 400 }
@@ -44,21 +44,23 @@ export async function PATCH(req: Request) {
 
     const oldBatchSuffix = existingBatch.batchNumber.split("B")[1] ?? "01";
 
-    const newDateCode = format(releaseDate, "ddMMyyyy");
+    const newDateCode = format(manufactureDate, "ddMMyyyy");
     const newBatchNumber = `${newDateCode}B${oldBatchSuffix}`;
     function normalizeDate(date: Date) {
       const d = new Date(date);
-      d.setHours(12, 0, 0, 0); 
+      d.setHours(12, 0, 0, 0);
       return d;
     }
 
     const updatedBatch = await db.productBatch.update({
       where: { id },
       data: {
+        id,
+        batchNumber: newBatchNumber,
         quantity,
-        releaseDate: normalizeDate(releaseDate),
+        notes,
+        manufactureDate: normalizeDate(manufactureDate),
         expiryDate: normalizeDate(expiryDate),
-        batchNumber: newBatchNumber, 
       },
       include: {
         product: { select: { product_name: true } },

@@ -1,11 +1,11 @@
 import React, { Suspense } from "react";
 import InventoryTable from "@/app/components/Inventory/products/InventoryTable";
-import { TableRowSkeleton } from "@/app/components/Skeleton";
-import Pagination from "@/app/components/Pagination";
+import { TableRowSkeleton } from "@/app/components/ui/Skeleton";
+import Pagination from "@/app/components/ui/Pagination";
 import { fetchProductsPages } from "@/lib/action/get";
 import { redirect } from "next/navigation";
 import { inventorySkeletonHeaders } from "@/lib/utils";
-import PageTableHeader from "@/app/components/PageTableHeader";
+import PageTableHeader from "@/app/components/ui/PageTableHeader";
 
 async function Inventory(props: {
   searchParams?: Promise<{

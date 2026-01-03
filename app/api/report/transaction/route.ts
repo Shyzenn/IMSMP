@@ -24,8 +24,10 @@ export async function POST(req: NextRequest) {
     const safeQuery = query?.toLowerCase().trim() || "";
 
     // Determine which sources to fetch
-    const fetchOrderRequests = !sources || sources.length === 0 || sources.includes("order_request");
-    const fetchWalkIns = !sources || sources.length === 0 || sources.includes("walk_in");
+    const fetchOrderRequests =
+      !sources || sources.length === 0 || sources.includes("order_request");
+    const fetchWalkIns =
+      !sources || sources.length === 0 || sources.includes("walk_in");
 
     // --- Separate date conditions to avoid type conflicts ---
     const orderRequestDateCondition: Prisma.OrderRequestWhereInput = {};
@@ -49,10 +51,10 @@ export async function POST(req: NextRequest) {
     const walkInStatusCondition: Prisma.WalkInTransactionWhereInput = {};
 
     if (statuses && statuses.length > 0) {
-      const validStatuses = statuses.filter((s): s is Status => 
+      const validStatuses = statuses.filter((s): s is Status =>
         Object.values(Status).includes(s as Status)
       );
-      
+
       if (validStatuses.length > 0) {
         orderRequestStatusCondition.status = { in: validStatuses };
         walkInStatusCondition.status = { in: validStatuses };
@@ -74,24 +76,38 @@ export async function POST(req: NextRequest) {
 
     // --- Fetch data ---
     const [requestOrders, walkInOrders] = await Promise.all([
-      fetchOrderRequests ? db.orderRequest.findMany({
-        where: requestWhere,
-        include: {
-          user: true,
-          receivedBy: true,
-          processedBy: true,
-          items: { include: { product: true } },
-        },
-        orderBy: { createdAt: "desc" },
-      }) : Promise.resolve([]),
-      fetchWalkIns ? db.walkInTransaction.findMany({
-        where: walkInWhere,
-        include: {
-          items: { include: { product: true } },
-          user: true,
-        },
-        orderBy: { createdAt: "desc" },
-      }) : Promise.resolve([]),
+      fetchOrderRequests
+        ? db.orderRequest.findMany({
+            where: requestWhere,
+            include: {
+              user: true,
+              receivedBy: true,
+              items: { include: { product: true } },
+              payments: {
+                select: {
+                  processedBy: true,
+                },
+              },
+              patient: {
+                select: {
+                  patientName: true,
+                  roomNumber: true,
+                },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+          })
+        : Promise.resolve([]),
+      fetchWalkIns
+        ? db.walkInTransaction.findMany({
+            where: walkInWhere,
+            include: {
+              items: { include: { product: true } },
+              user: true,
+            },
+            orderBy: { createdAt: "desc" },
+          })
+        : Promise.resolve([]),
     ]);
 
     // --- Format data ---
@@ -113,23 +129,27 @@ export async function POST(req: NextRequest) {
 
     const formattedRequest = requestOrders.map((tx) => ({
       id: tx.id,
-      customer: tx.patient_name || "Unknown",
-      patient_name: tx.patient_name,
-      roomNumber: tx.room_number ? Number(tx.room_number) : undefined,
+      customer: tx.patient.patientName || "Unknown",
+      patient_name: tx.patient.patientName,
+      roomNumber: tx.patient.roomNumber
+        ? Number(tx.patient.roomNumber)
+        : undefined,
       type: tx.type,
       createdAt: tx.createdAt,
       status: tx.status,
       source: "Request Order" as const,
       requestedBy: tx.user?.username || "Unknown",
       receivedBy: tx.receivedBy?.username || "Unknown",
-      processedBy: tx.processedBy?.username || "Unknown",
+      processedBy: tx.payments.map((p) => p.processedBy),
       total: tx.items.reduce(
-        (sum, item) => sum + item.quantity * (item.product?.price?.toNumber() ?? 0),
+        (sum, item) =>
+          sum +
+          Number(item.quantityOrdered) * (item.product?.price?.toNumber() ?? 0),
         0
       ),
       itemDetails: tx.items.map((item) => ({
         productName: item.product?.product_name ?? "Unknown",
-        quantity: item.quantity,
+        quantity: item.quantityOrdered,
         price: item.product?.price?.toNumber() ?? 0,
       })),
     }));
@@ -137,7 +157,10 @@ export async function POST(req: NextRequest) {
     // --- Combine and sort ---
     const combined = [...formattedWalkIn, ...formattedRequest];
     if (combined.length === 0) {
-      return NextResponse.json({ error: "No transactions found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "No transactions found" },
+        { status: 404 }
+      );
     }
 
     combined.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
@@ -155,6 +178,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ transactions: combined, meta });
   } catch (error) {
     console.error("Transaction report error:", error);
-    return NextResponse.json({ error: "Failed to generate report" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to generate report" },
+      { status: 500 }
+    );
   }
 }

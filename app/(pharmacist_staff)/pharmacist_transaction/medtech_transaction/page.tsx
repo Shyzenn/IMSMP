@@ -1,6 +1,6 @@
-import PageTableHeader from "@/app/components/PageTableHeader";
-import Pagination from "@/app/components/Pagination";
-import { TableRowSkeleton } from "@/app/components/Skeleton";
+import PageTableHeader from "@/app/components/ui/PageTableHeader";
+import Pagination from "@/app/components/ui/Pagination";
+import { TableRowSkeleton } from "@/app/components/ui/Skeleton";
 import MTTransactionTable from "@/app/components/transaction/table/MTTable";
 import { fetchMTTransactionPages } from "@/lib/action/get";
 import { transactionMTSkeletonHeaders } from "@/lib/utils";

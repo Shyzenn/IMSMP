@@ -3,7 +3,7 @@ import { TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { getAuditLogList } from "@/lib/action/get";
 import { formattedDateTime, toTitleCase } from "@/lib/utils";
 
-import EmptyTable from "../../EmptyTable";
+import EmptyTable from "../../ui/EmptyTable";
 import AuditLogTableHeader from "./Header";
 
 export default async function AuditLogTable({

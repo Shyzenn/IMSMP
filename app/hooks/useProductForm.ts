@@ -8,36 +8,53 @@ export function useProductForm<T extends FieldValues>(
 ) {
   const router = useRouter();
 
-  const handleErrors = useCallback((errors: Record<string, string>) => {
-    Object.entries(errors).forEach(([field, message]) => {
-      setError(field as Path<T>, {
-        type: "server",
-        message,
+  const handleErrors = useCallback(
+    (errors: Record<string, string>) => {
+      Object.entries(errors).forEach(([field, message]) => {
+        setError(field as Path<T>, {
+          type: "server",
+          message,
+        });
       });
-    });
-  }, [setError]);
+    },
+    [setError]
+  );
 
-  const handleSubmitWrapper = useCallback(async (
-    submitFn: () => Promise<{ success?: boolean; errors?: Record<string, string> }>,
-  ) => {
-    try {
-      const response = await submitFn();
-      if (response.errors) {
-        handleErrors(response.errors);
-      } else if (response.success) {
-        onSuccess?.();
-        router.refresh();
-      }
-    } catch (error) {
+  const handleSubmitWrapper = useCallback(
+    async (
+      submitFn: () => Promise<{
+        success?: boolean;
+        errors?: Record<string, string>;
+      }>
+    ) => {
       try {
-        const errorData = JSON.parse((error as Error).message);
-        if (errorData.errors) handleErrors(errorData.errors);
-        else alert("Unexpected error occurred.");
-      } catch {
-        alert("Unexpected error occurred.");
+        const response = await submitFn();
+        if (response.errors) {
+          handleErrors(response.errors);
+          return false; // Indicate failure
+        } else if (response.success) {
+          onSuccess?.();
+          router.refresh();
+          return true; // Indicate success
+        }
+        return false;
+      } catch (error) {
+        console.error("Submit error:", error);
+        try {
+          const errorData = JSON.parse((error as Error).message);
+          if (errorData.errors) {
+            handleErrors(errorData.errors);
+          } else {
+            alert("Unexpected error occurred.");
+          }
+        } catch {
+          alert("Unexpected error occurred.");
+        }
+        return false;
       }
-    }
-  }, [handleErrors, onSuccess, router]);
+    },
+    [handleErrors, onSuccess, router]
+  );
 
   return { handleSubmitWrapper };
 }

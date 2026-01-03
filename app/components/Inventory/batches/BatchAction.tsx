@@ -14,7 +14,7 @@ import { BatchProps } from "./BatchTable";
 import EditBatchForm from "./EditBatchForm";
 import { archiveBatch } from "@/lib/action/product";
 import toast from "react-hot-toast";
-import ConfirmationModal from "../../ConfirmationModal";
+import ConfirmationModal from "../../ui/ConfirmationModal";
 
 const BatchAction = ({ batch }: { batch: BatchProps }) => {
   const { open, close, isOpen } = useModal();

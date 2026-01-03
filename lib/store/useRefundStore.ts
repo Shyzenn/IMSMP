@@ -1,15 +1,19 @@
-import { create } from 'zustand';
-import { CombinedTransaction } from '@/lib/action/get';
-import { OrderItem } from '@/lib/interfaces';
+import { create } from "zustand";
+import { OrderView } from "@/lib/interfaces";
 
-interface RefundStore {
-  transaction: CombinedTransaction | null;
-  refundItems: OrderItem[];
-  setTransaction: (transaction: CombinedTransaction | null) => void;
-  setRefundItems: (items: OrderItem[]) => void;
+interface RefundItem {
+  productName: string;
+  quantity: number;
 }
 
-export const useRefundStore = create<RefundStore>((set) => ({
+interface RefundState {
+  transaction: OrderView | null;
+  refundItems: RefundItem[];
+  setTransaction: (transaction: OrderView | null) => void;
+  setRefundItems: (items: RefundItem[]) => void;
+}
+
+export const useRefundStore = create<RefundState>((set) => ({
   transaction: null,
   refundItems: [],
   setTransaction: (transaction) => set({ transaction }),

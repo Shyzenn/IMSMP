@@ -4,13 +4,12 @@ import { subDays, startOfMonth, startOfYear } from "date-fns";
 import { auth } from "@/auth";
 
 export async function GET(req: Request) {
-
   const session = await auth();
-  
+
   if (!session || !session.user?.id) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
-  
+
   const { searchParams } = new URL(req.url);
   const filter = searchParams.get("filter") || "This Month";
 
@@ -33,7 +32,7 @@ export async function GET(req: Request) {
               where: {
                 type: { not: "ARCHIVED" },
                 quantity: { gt: 0 },
-                createdAt: { gte: fromDate }, 
+                createdAt: { gte: fromDate },
               },
             },
           },
@@ -41,22 +40,26 @@ export async function GET(req: Request) {
       },
     });
 
-    const responseData = categories.map((cat) => {
-      const totalStock = cat.products.reduce((sum, product) => {
-        const productStock = product.batches.reduce(
-          (batchSum, b) => batchSum + b.quantity,
-          0
-        );
-        return sum + productStock;
-      }, 0);
+    const responseData = categories
+      .map((cat) => {
+        const totalStock = cat.products.reduce((sum, product) => {
+          const productStock = product.batches.reduce(
+            (batchSum, b) => batchSum + b.quantity,
+            0
+          );
+          return sum + productStock;
+        }, 0);
 
-      return {
-        category: cat.name,
-        stock: totalStock,
-      };
-    });
+        return {
+          category: cat.name,
+          stock: totalStock,
+        };
+      })
+      .filter((cat) => cat.stock > 0)
+      .sort((a, b) => b.stock - a.stock);
 
-    return NextResponse.json(responseData);
+    const topCategories = responseData.slice(0, 10);
+    return NextResponse.json(topCategories);
   } catch (error) {
     console.error("Error fetching inventory stats:", error);
     return NextResponse.json(
