@@ -9,13 +9,13 @@ import { CartItem } from "./WalkInPOS";
 import toast from "react-hot-toast";
 import { WalkInPaymentSchema } from "@/lib/types";
 import { formatPackageType } from "@/lib/utils";
-import { paymentServices } from "@/services/payment.service";
 import { useQueryClient } from "@tanstack/react-query";
 import PreviewReceipt from "./PreviewReceipt";
 import { z } from "zod";
 import { printWalkInReceipt } from "@/lib/printUtlis";
 import { useSession } from "next-auth/react";
 import PrintConfirmationModal from "../ui/PrintConfirmationModa";
+import { orderService } from "@/services/order.service";
 
 type WalkInPaymentData = z.infer<typeof WalkInPaymentSchema>;
 
@@ -176,9 +176,7 @@ const Payment = ({
     }
 
     try {
-      const result = await paymentServices.submitWalkInPayment(
-        pendingPaymentData
-      );
+      const result = await orderService.addWalkInOrder(pendingPaymentData);
 
       if (result.success) {
         toast.success("Payment Successful", { duration: 3000 });

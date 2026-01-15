@@ -1,7 +1,6 @@
 "use client";
 
 import { ReactNode, useEffect } from "react";
-import { createPortal } from "react-dom";
 
 interface ModalProps {
   isOpen?: boolean;
@@ -41,20 +40,19 @@ export default function Modal({
 
   if (!isOpen) return null;
 
-  return createPortal(
+  return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40"
-      onClick={onClose} // close if clicking backdrop
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      onClick={onClose}
     >
       <div
         className={`${bgColor} rounded-lg shadow-lg overflow-hidden ${width} max-h-[90vh] w-full`}
-        onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
+        onClick={(e) => e.stopPropagation()}
       >
         <div className={`overflow-y-auto max-h-[90vh] ${padding} ${bgColor}`}>
           {children}
         </div>
       </div>
-    </div>,
-    document.body
+    </div>
   );
 }

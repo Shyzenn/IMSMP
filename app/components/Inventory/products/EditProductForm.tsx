@@ -5,11 +5,9 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { editProductSchema, TEditProductSchema } from "@/lib/types";
-import { editNewProduct } from "@/lib/action/add";
 import FormField from "../../ui/FormField";
 import LoadingButton from "@/components/loading-button";
 import { Input } from "@/components/ui/input";
-import { useProductForm } from "@/app/hooks/useProductForm";
 import { useQuery } from "@tanstack/react-query";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -21,6 +19,8 @@ import CategoryField from "../../ui/CategoryField";
 import axios from "axios";
 import { ProductProps } from "./InventoryTable";
 import CancelButton from "../../ui/CancelButton";
+import { useFormHook } from "@/app/hooks/useFormHook";
+import { productService } from "@/services/product.service";
 
 const EditProductForm = ({
   setIsModalOpen,
@@ -59,13 +59,13 @@ const EditProductForm = ({
     toast.success("Product edited successfully! 🎉", { icon: "✅" });
   }, []);
 
-  const { handleSubmitWrapper } = useProductForm(setError, () => {
+  const { handleSubmitWrapper } = useFormHook(setError, () => {
     notify();
     setIsModalOpen(false);
   });
 
   const onSubmit = async (data: TEditProductSchema) => {
-    await handleSubmitWrapper(() => editNewProduct(data));
+    await handleSubmitWrapper(() => productService.editProduct(data));
   };
 
   const checkProductExist = async (productName: string, strength?: string) => {
@@ -138,10 +138,8 @@ const EditProductForm = ({
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
         <div className="bg-gray-50 w-full max-w-[600px] max-h-[95vh] rounded-md relative py-4 px-8">
           <div className="mb-6 relative">
-            <p className="text-xl font-medium">Add Product</p>
-            <p className="text-sm text-gray-500">
-              Add a new product to your pharmacy store.
-            </p>
+            <p className="text-xl font-medium">Edit Product</p>
+            <p className="text-sm text-gray-500">{`Product ID: #PRD-0${product.id}`}</p>
             <button
               className="absolute -right-2 -top-2 cursor-pointer"
               onClick={() => setIsModalOpen(false)}

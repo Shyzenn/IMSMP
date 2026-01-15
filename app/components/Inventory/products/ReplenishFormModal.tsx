@@ -8,12 +8,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { replenishProductSchema, TReplenishProductSchema } from "@/lib/types";
 import toast from "react-hot-toast";
 import LoadingButton from "@/components/loading-button";
-import { useProductForm } from "../../../hooks/useProductForm";
-import { replenishProduct } from "@/lib/action/add";
 import { ProductProps } from "./InventoryTable";
 import { formatPackageType } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { IoClose } from "react-icons/io5";
+import { useFormHook } from "@/app/hooks/useFormHook";
+import { productService } from "@/services/product.service";
 
 const ReplenishFormModal = ({
   setShowReplenishModal,
@@ -42,7 +42,7 @@ const ReplenishFormModal = ({
     });
   }, []);
 
-  const { handleSubmitWrapper } = useProductForm(setError, () => {
+  const { handleSubmitWrapper } = useFormHook(setError, () => {
     reset();
     notify();
     setShowReplenishModal(false);
@@ -52,7 +52,7 @@ const ReplenishFormModal = ({
   const newTotalStock = Number(product.totalQuantity) + Number(quantity || 0);
 
   const onSubmit = (data: TReplenishProductSchema) => {
-    return handleSubmitWrapper(() => replenishProduct(data));
+    return handleSubmitWrapper(() => productService.replenishProduct(data));
   };
 
   const CardsWrapper = ({

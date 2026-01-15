@@ -5,7 +5,6 @@ import { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 
 export async function PATCH(req: Request) {
-
   const session = await auth();
 
   if (!session || !session.user?.id) {
@@ -17,7 +16,7 @@ export async function PATCH(req: Request) {
     const { id, role, username, email, firstName, lastName, middleName } = body;
 
     // Validate input with conditional schema
-    const result = editUserSchema().safeParse(body);
+    const result = editUserSchema.safeParse(body);
 
     // Create an object to store validation errors
     const zodErrors: Record<string, string> = {};
@@ -34,14 +33,14 @@ export async function PATCH(req: Request) {
     });
 
     if (!currentUser) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Check for existing username (case-insensitive, excluding current user)
-    if (username && username.toLowerCase() !== currentUser.username.toLowerCase()) {
+    if (
+      username &&
+      username.toLowerCase() !== currentUser.username.toLowerCase()
+    ) {
       const allUsers = await db.user.findMany({
         where: {
           id: { not: id }, // Exclude current user

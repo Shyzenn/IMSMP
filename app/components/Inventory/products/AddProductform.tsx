@@ -5,12 +5,10 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { addProductSchema, TAddProductSchema } from "@/lib/types";
-import { addNewProduct } from "@/lib/action/add";
 import AddButton from "../../ui/Button";
 import FormField from "../../ui/FormField";
 import LoadingButton from "@/components/loading-button";
 import { Input } from "@/components/ui/input";
-import { useProductForm } from "@/app/hooks/useProductForm";
 import { useModal } from "@/app/hooks/useModal";
 import { IoMdAdd } from "react-icons/io";
 import { useQuery } from "@tanstack/react-query";
@@ -21,9 +19,10 @@ import { IoClose } from "react-icons/io5";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import SearchableSelect from "../../ui/SearchableSelect";
-
 import Modal from "../../ui/Modal";
 import CancelButton from "../../ui/CancelButton";
+import { productService } from "@/services/product.service";
+import { useFormHook } from "@/app/hooks/useFormHook";
 
 export type ModalMode = "add" | "edit" | "delete" | null;
 
@@ -52,14 +51,17 @@ const AddProductForm = () => {
     toast.success("Product created successfully! 🎉", { icon: "✅" });
   }, []);
 
-  const { handleSubmitWrapper } = useProductForm(setError, () => {
+  const { handleSubmitWrapper } = useFormHook(setError, () => {
     reset();
     notify();
   });
 
   const onSubmit = async (data: TAddProductSchema) =>
     handleSubmitWrapper(() =>
-      addNewProduct({ ...data, category: data.category.trim().toLowerCase() })
+      productService.addProduct({
+        ...data,
+        category: data.category.trim().toLowerCase(),
+      })
     );
 
   const { data: categories, refetch } = useQuery<ProductCategory[]>({

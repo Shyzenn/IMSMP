@@ -122,60 +122,10 @@ export const changePasswordSchema = z
 
 export type TChangePasswordSchema = z.infer<typeof changePasswordSchema>;
 
-export const editUserSchema = () =>
-  z.object({
-    id: z.string(),
-    username: z
-      .string()
-      .trim()
-      .min(4, "Username must contain at least 4 characters")
-      .max(20, "Username must not exceed 20 characters")
-      .regex(
-        nameRegex,
-        "Username must not contain numbers or special characters"
-      ),
-    firstName: z
-      .string()
-      .trim()
-      .min(1, "First name is required")
-      .max(30, "First name must not exceed 30 characters")
-      .regex(
-        nameRegex,
-        "First name must not contain numbers or special characters"
-      ),
-    middleName: z
-      .string()
-      .trim()
-      .max(30, "Middle name must not exceed 30 characters")
-      .optional()
-      .refine((val) => !val || nameRegex.test(val), {
-        message: "Middle name must not contain numbers or special characters",
-      }),
-    lastName: z
-      .string()
-      .trim()
-      .min(1, "Last name is Required")
-      .max(30, "Last name must not exceed 30 characters")
-      .regex(
-        nameRegex,
-        "Last name must not contain numbers or special characters"
-      ),
-    email: z
-      .string()
-      .trim()
-      .min(1, "Email is required")
-      .max(50, "Email must not exceed 50 characters")
-      .email("Invalid email address")
-      .refine((val) => val.endsWith("@gmail.com"), {
-        message: "Only Gmail are allowed",
-      }),
-    role: z.enum(
-      ["Pharmacist_Staff", "Nurse", "Manager", "Cashier", "MedTech"],
-      { message: "User Type is required." }
-    ),
-  });
-
-export type TEditUserSchema = z.infer<ReturnType<typeof editUserSchema>>;
+export const editUserSchema = signUpSchema.extend({
+  id: z.string().optional(),
+});
+export type TEditUserSchema = z.infer<typeof editUserSchema>;
 
 // Edit User Profile
 export const editUserProfileSchema = z.object({

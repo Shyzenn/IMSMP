@@ -1,22 +1,21 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { editUserSchema, TEditUserSchema } from "@/lib/types";
 import { UserFormValues } from "@/lib/interfaces";
 import LoadingButton from "@/components/loading-button";
 import toast from "react-hot-toast";
-import { editUser } from "@/lib/action/add";
-import { useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useProductForm } from "@/app/hooks/useProductForm";
 import FormField from "../ui/FormField";
 import SelectField from "../ui/SelectField";
 import ResetPasswordModal from "./ResetPasswordModal";
 import CancelButton from "../ui/CancelButton";
+import { userService } from "@/services/user.service";
+import { ApiError } from "@/services/api/errors";
 
 const UserEditModal = ({
   setIsModalOpen,
@@ -27,68 +26,51 @@ const UserEditModal = ({
 }) => {
   const [showResetModal, setShowResetModal] = useState(false);
 
+  const queryClient = useQueryClient();
   const {
-    setError,
-    formState: { errors, isSubmitting, isDirty },
-    handleSubmit,
-    control,
     register,
+    handleSubmit,
+    formState: { errors, isDirty, isSubmitting },
+    setError,
+    control,
   } = useForm<TEditUserSchema>({
-    resolver: zodResolver(editUserSchema()),
+    resolver: zodResolver(editUserSchema),
     defaultValues: {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName.trim(),
-      middleName: user.middleName.trim(),
-      lastName: user.lastName.trim(),
+      firstName: user.firstName,
+      middleName: user.middleName || "",
+      lastName: user.lastName,
       username: user.username,
+      email: user.email,
       role: user.role,
     },
   });
 
-  const notify = useCallback(() => {
-    toast.success(`User "${user.username.trim()}" edited successfully! 🎉`, {
-      icon: "✅",
-      duration: 10000,
-    });
-  }, [user]);
+  const mutation = useMutation({
+    mutationFn: userService.editUser,
 
-  const queryClient = useQueryClient();
+    onSuccess: () => {
+      toast.success("User edited successfully.🎉", { duration: 10000 });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      setIsModalOpen(false);
+    },
 
-  const { handleSubmitWrapper } = useProductForm(setError, async () => {
-    queryClient.invalidateQueries({ queryKey: ["users"] });
-    notify();
-    setIsModalOpen(false);
+    onError: (error: ApiError<TEditUserSchema>) => {
+      if (error.errors) {
+        Object.entries(error.errors).forEach(([field, message]) => {
+          setError(field as keyof TEditUserSchema, {
+            type: "server",
+            message,
+          });
+        });
+        return;
+      }
+
+      toast.error(error.message || "An unexpected error occurred.");
+    },
   });
 
-  const onSubmit = async (data: TEditUserSchema) => {
-    const payload = {
-      ...data,
-    };
-
-    try {
-      await axios.patch("/api/user/update", payload);
-      handleSubmitWrapper(() => editUser(data));
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        if (error.response?.data?.errors) {
-          Object.entries(error.response.data.errors).forEach(
-            ([field, message]) => {
-              setError(field as keyof TEditUserSchema, {
-                type: "server",
-                message: message as string,
-              });
-            }
-          );
-        } else {
-          toast.error("Failed to update user. Please try again.");
-        }
-      } else if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("An unexpected error occurred.");
-      }
-    }
+  const onSubmit = (data: TEditUserSchema) => {
+    mutation.mutate({ ...data, id: user.id });
   };
 
   return (
@@ -144,8 +126,9 @@ const UserEditModal = ({
                 type="email"
               />
             </FormField>
+
             <div className="flex flex-col space-y-1.5 text-sm mb-[3px] text-gray-700">
-              <Label htmlFor="password">Types</Label>
+              <Label htmlFor="role">Types</Label>
               <Controller
                 control={control}
                 name="role"
@@ -193,15 +176,19 @@ const UserEditModal = ({
           <div className="flex gap-6 bg-white border-t-2 p-4 absolute bottom-0 left-0 w-full justify-end">
             <CancelButton setIsModalOpen={setIsModalOpen} />
             <button
-              disabled={!isDirty || isSubmitting}
+              disabled={!isDirty || isSubmitting || mutation.isPending}
               className={`px-12 rounded-md ${
-                !isDirty || isSubmitting
+                !isDirty || isSubmitting || mutation.isPending
                   ? "bg-gray-400 cursor-not-allowed"
                   : " cursor-pointer bg-buttonBgColor hover:bg-buttonHover text-white"
               }`}
               type="submit"
             >
-              {isSubmitting ? <LoadingButton color="text-white" /> : "Save"}
+              {isSubmitting || mutation.isPending ? (
+                <LoadingButton color="text-white" />
+              ) : (
+                "Save"
+              )}
             </button>
           </div>
         </form>

@@ -66,7 +66,11 @@ const UserTable = ({
                 </TableCell>
                 <TableCell>{user.lastName}</TableCell>
                 <TableCell>{user.username}</TableCell>
-                <TableCell>{user.role}</TableCell>
+                <TableCell>
+                  {user.role === "Pharmacist_Staff"
+                    ? "Pharmacist Staff"
+                    : user.role}
+                </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <span

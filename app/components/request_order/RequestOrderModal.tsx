@@ -9,10 +9,8 @@ import { IoIosClose } from "react-icons/io";
 import LoadingButton from "@/components/loading-button";
 import { useQueryClient } from "@tanstack/react-query";
 import { addRequestOrderSchema, TAddRequestOrderSchema } from "@/lib/types";
-import { addRequesOrder } from "@/lib/action/add";
 import { Textarea } from "@/components/ui/textarea";
 import { useProducts } from "@/app/hooks/useProducts";
-import { useProductForm } from "@/app/hooks/useProductForm";
 import FormField from "../ui/FormField";
 import CancelButton from "../ui/CancelButton";
 import { ProductData } from "@/lib/interfaces";
@@ -21,6 +19,8 @@ import { CiSearch } from "react-icons/ci";
 import { FiPlusCircle } from "react-icons/fi";
 import { RxDoubleArrowDown, RxDoubleArrowUp } from "react-icons/rx";
 import ToolTip from "../ui/ToolTip";
+import { useFormHook } from "@/app/hooks/useFormHook";
+import { orderService } from "@/services/order.service";
 
 interface Props {
   close: () => void;
@@ -71,7 +71,7 @@ const RequestOrderModal = ({ close }: Props) => {
     },
   });
 
-  const { handleSubmitWrapper } = useProductForm<TAddRequestOrderSchema>(
+  const { handleSubmitWrapper } = useFormHook<TAddRequestOrderSchema>(
     setError,
     () => {
       reset();
@@ -217,7 +217,9 @@ const RequestOrderModal = ({ close }: Props) => {
       status: data.type === "EMERGENCY" ? "for_payment" : "pending",
     };
 
-    await handleSubmitWrapper(() => addRequesOrder(updatedData));
+    await handleSubmitWrapper(() =>
+      orderService.addOrderRequestOrder(updatedData)
+    );
   };
 
   useEffect(() => {

@@ -16,10 +16,10 @@ import CancelButton from "../../ui/CancelButton";
 import toast from "react-hot-toast";
 import { Input } from "@/components/ui/input";
 import { QueryObserverResult } from "@tanstack/react-query";
-import { addCategory, editCategory } from "@/lib/action/add";
 import { BsExclamationCircle } from "react-icons/bs";
 import { BsExclamationTriangle } from "react-icons/bs";
 import { HiChevronUpDown } from "react-icons/hi2";
+import { productService } from "@/services/product.service";
 
 type CategoryDropdown = {
   field: ControllerRenderProps<TAddProductSchema, "category">;
@@ -88,11 +88,16 @@ const CategoryDropdown: React.FC<CategoryDropdown> = ({
       setIsProcessingCategory(true);
 
       if (modalMode === "add") {
-        await addCategory(categoryName, refetch);
+        await productService.addCategory(categoryName);
+        refetch();
         closeCategoryModal();
         toast.success("Category added!");
       } else if (modalMode === "edit" && selectedCategoryForEdit) {
-        await editCategory(selectedCategoryForEdit, categoryName, refetch);
+        await productService.editCategory(
+          selectedCategoryForEdit,
+          categoryName
+        );
+        refetch();
         closeCategoryModal();
         toast.success("Category updated!");
       } else if (modalMode === "delete" && selectedCategoryForEdit) {

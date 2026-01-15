@@ -6,11 +6,12 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useState } from "react";
 import { FiPlus } from "react-icons/fi";
-import { registerUser } from "@/lib/action/add";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import AddUserForm from "./AddUserForm";
 import AddButton from "../ui/Button";
+import { userService } from "@/services/user.service";
+import { ApiError } from "@/services/api/errors";
 
 const AddUser = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,45 +30,32 @@ const AddUser = () => {
   });
 
   const mutation = useMutation({
-    mutationFn: registerUser,
-    onSuccess: (responseData) => {
-      if (responseData.errors) {
-        Object.keys(responseData.errors).forEach((field) => {
+    mutationFn: userService.addUser,
+
+    onSuccess: () => {
+      setIsOpen(false);
+      reset();
+
+      toast.success(
+        "User created successfully. An OTP has been sent to their email for verification. 🎉",
+        { duration: 10000 }
+      );
+
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+
+    onError: (error: ApiError<TSignUpSchema>) => {
+      if (error.errors) {
+        Object.entries(error.errors).forEach(([field, message]) => {
           setError(field as keyof TSignUpSchema, {
             type: "server",
-            message: responseData.errors[field],
+            message,
           });
         });
-      } else if (responseData.success) {
-        setIsOpen(false);
-        reset();
-        toast.success(
-          "User created successfully. An OTP has been sent to their email for verification. 🎉",
-          {
-            icon: "✅",
-            duration: 10000,
-          }
-        );
+        return;
+      }
 
-        queryClient.invalidateQueries({ queryKey: ["users"] });
-      }
-    },
-    onError: (error) => {
-      try {
-        const errorData = JSON.parse(error.message);
-        if (errorData.errors) {
-          Object.keys(errorData.errors).forEach((field) => {
-            setError(field as keyof TSignUpSchema, {
-              type: "server",
-              message: errorData.errors[field],
-            });
-          });
-        } else {
-          toast.error("An unexpected error occurred.");
-        }
-      } catch {
-        toast.error("An unexpected error occurred.");
-      }
+      toast.error(error.message || "An unexpected error occurred.");
     },
   });
 

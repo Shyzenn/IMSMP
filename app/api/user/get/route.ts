@@ -4,7 +4,6 @@ import { Prisma, Role } from "@prisma/client";
 import { auth } from "@/auth";
 
 export async function GET(request: NextRequest) {
-
   const session = await auth();
 
   if (!session || !session.user?.id) {
@@ -17,7 +16,7 @@ export async function GET(request: NextRequest) {
     const safeQuery = query.toLowerCase().trim();
 
     let where: Prisma.UserWhereInput;
-      
+
     if (session.user.role === "SuperAdmin") {
       where = {
         role: Role.Manager,
@@ -35,9 +34,7 @@ export async function GET(request: NextRequest) {
           ],
         }),
       };
-    }
-
-     else if (session.user.role === "Manager") {
+    } else if (session.user.role === "Manager") {
       where = {
         role: { not: Role.SuperAdmin },
         ...(safeQuery && {
@@ -54,9 +51,7 @@ export async function GET(request: NextRequest) {
           ],
         }),
       };
-    }
-
-   else {
+    } else {
       return NextResponse.json(
         { message: "Forbidden: You don't have permission" },
         { status: 403 }
@@ -78,12 +73,12 @@ export async function GET(request: NextRequest) {
       middleName: user.middleName || "",
       username: user.username,
       password: "*********",
-      role: user.role ? user.role.replace("_", " ") : "N/A",
+      role: user.role,
       action: "Edit",
       status: user.status,
       isOnline: user.isOnline,
       bannedReason: user.bannedReason,
-      bannedAt: user.bannedAt
+      bannedAt: user.bannedAt,
     }));
 
     return NextResponse.json(formattedProducts, { status: 200 });

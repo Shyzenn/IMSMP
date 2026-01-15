@@ -378,7 +378,6 @@ const PatientOrderModal: React.FC<PatientOrderModalProps> = ({
                 selectedOrder.length < 1 ? "opacity-30" : ""
               }`}
             >
-              <p className="text-sm text-gray-700">Discount</p>
               <div className="flex flex-col gap-1">
                 <label
                   htmlFor=""

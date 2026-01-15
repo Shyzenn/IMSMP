@@ -4,16 +4,16 @@ import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { editBatchSchema, TEditBatchSchema } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { editBatch } from "@/lib/action/add";
 import LoadingButton from "@/components/loading-button";
 import CancelButton from "../../ui/CancelButton";
-import { useProductForm } from "@/app/hooks/useProductForm";
 import toast from "react-hot-toast";
 import { BatchProps } from "./BatchTable";
 import DateField from "../../ui/DateField";
 import { formatPackageType } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { IoClose } from "react-icons/io5";
+import { useFormHook } from "@/app/hooks/useFormHook";
+import { productService } from "@/services/product.service";
 
 const EditBatchForm = ({
   setIsModalOpen,
@@ -44,13 +44,13 @@ const EditBatchForm = ({
     toast.success("Product Batch edited successfully! 🎉", { icon: "✅" });
   }, []);
 
-  const { handleSubmitWrapper } = useProductForm(setError, () => {
+  const { handleSubmitWrapper } = useFormHook(setError, () => {
     notify();
     setIsModalOpen(false);
   });
 
   const onSubmit = (data: TEditBatchSchema) => {
-    return handleSubmitWrapper(() => editBatch(data));
+    return handleSubmitWrapper(() => productService.editBatch(data));
   };
 
   const quantity = watch("quantity");

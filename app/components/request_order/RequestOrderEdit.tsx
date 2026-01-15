@@ -9,10 +9,8 @@ import { IoIosClose } from "react-icons/io";
 import LoadingButton from "@/components/loading-button";
 import { useQueryClient } from "@tanstack/react-query";
 import { editRequestOrderSchema, TEditRequestOrderSchema } from "@/lib/types";
-import { editRequesOrder } from "@/lib/action/add";
 import { Textarea } from "@/components/ui/textarea";
 import { useProducts } from "@/app/hooks/useProducts";
-import { useProductForm } from "@/app/hooks/useProductForm";
 import FormField from "../ui/FormField";
 import CancelButton from "../ui/CancelButton";
 import { ProductData, OrderItem, OrderView } from "@/lib/interfaces";
@@ -22,6 +20,8 @@ import { FiPlusCircle } from "react-icons/fi";
 import { RxDoubleArrowDown, RxDoubleArrowUp } from "react-icons/rx";
 import ToolTip from "../ui/ToolTip";
 import { CartItem } from "./RequestOrderModal";
+import { useFormHook } from "@/app/hooks/useFormHook";
+import { orderService } from "@/services/order.service";
 
 const RequestOrderEdit = ({
   setShowRequestEditModal,
@@ -216,7 +216,7 @@ const RequestOrderEdit = ({
     return;
   }, [showSuggestions, patientSearchQuery, setValue]);
 
-  const { handleSubmitWrapper } = useProductForm<TEditRequestOrderSchema>(
+  const { handleSubmitWrapper } = useFormHook<TEditRequestOrderSchema>(
     setError,
     () => {
       reset();
@@ -264,7 +264,7 @@ const RequestOrderEdit = ({
 
     try {
       await handleSubmitWrapper(() =>
-        editRequesOrder(data, String(orderData.id))
+        orderService.editOrderRequestOrder(data, String(orderData.id))
       );
     } catch (error) {
       console.error("❌ Submission failed:", error);
