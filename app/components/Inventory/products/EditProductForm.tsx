@@ -17,10 +17,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import SearchableSelect from "../../ui/SearchableSelect";
 import CategoryField from "../../ui/CategoryField";
 import axios from "axios";
-import { ProductProps } from "./InventoryTable";
 import CancelButton from "../../ui/CancelButton";
 import { useFormHook } from "@/app/hooks/useFormHook";
 import { productService } from "@/services/product.service";
+import { ProductProps } from "./InventoryTable";
 
 const EditProductForm = ({
   setIsModalOpen,

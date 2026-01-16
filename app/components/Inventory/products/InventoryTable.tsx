@@ -2,11 +2,10 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { formatPackageType, formattedDateTime, toTitleCase } from "@/lib/utils";
 import { IconType } from "react-icons/lib";
 import EmptyTable from "../../ui/EmptyTable";
-import { getProductList } from "@/lib/action/get";
 import Action from "./InventoryAction";
 import InventoryTableHeader from "./InventoryTableHeader";
 import { FaExclamation } from "react-icons/fa6";
-import { auth } from "@/auth";
+import { useSession } from "next-auth/react";
 
 export interface ProductProps {
   id: number;
@@ -30,30 +29,20 @@ export interface ProductProps {
   archiveReason: string | null;
 }
 
-export default async function InventoryTable({
-  query = "",
-  currentPage = 1,
-  filter = "latest",
-  sortBy = "createdAt",
-  sortOrder = "desc",
+export default function InventoryTable({
+  products,
+  isLoading,
 }: {
-  query?: string;
-  currentPage?: number;
-  filter?: string;
-  sortBy?: string;
-  sortOrder?: "asc" | "desc";
+  products: ProductProps[];
+  isLoading: boolean;
 }) {
-  const products: ProductProps[] = await getProductList(
-    query,
-    currentPage,
-    filter,
-    sortBy,
-    sortOrder
-  );
-
-  const session = await auth();
+  const { data: session } = useSession();
   const userRole = session?.user?.role;
   const hasAction = userRole === "Manager" || userRole === "Pharmacist_Staff";
+
+  if (isLoading) {
+    return <div className="p-4">Loading products...</div>;
+  }
 
   return (
     <>

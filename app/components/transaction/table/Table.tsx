@@ -1,37 +1,25 @@
 import { Table } from "@/components/ui/table";
 import { TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { getTransactionList } from "@/lib/action/get";
 import { formattedDateTime, statusLabels, toTitleCase } from "@/lib/utils";
 import TransactionTableHeader from "./TransactionHeader";
 import EmptyTable from "../../ui/EmptyTable";
 import TransactionAction from "./TransactionAction";
+import { OrderView } from "@/lib/interfaces";
+import { useSession } from "next-auth/react";
 
-const TransactionTable = async ({
-  query,
-  currentPage,
-  filter,
-  sortBy = "createdAt",
-  sortOrder = "desc",
-  userRole,
-  dateRange,
+export default function TransactionTable({
+  transactions,
+  isLoading,
 }: {
-  query: string;
-  currentPage: number;
-  filter: string;
-  sortBy: string;
-  sortOrder: "asc" | "desc";
-  userRole: string;
-  dateRange: { from: string; to: string };
-}) => {
-  const transactions = await getTransactionList(
-    query,
-    currentPage,
-    filter,
-    sortBy,
-    sortOrder,
-    userRole,
-    dateRange
-  );
+  transactions: OrderView[];
+  isLoading: boolean;
+}) {
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
+
+  if (isLoading) {
+    return <div className="p-4">Loading transactions...</div>;
+  }
 
   return (
     <>
@@ -79,6 +67,4 @@ const TransactionTable = async ({
       )}
     </>
   );
-};
-
-export default TransactionTable;
+}

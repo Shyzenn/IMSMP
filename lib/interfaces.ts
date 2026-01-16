@@ -55,6 +55,8 @@ export interface ProductData {
   quantity: number;
   requiresPrescription?: boolean;
   batches?: Batch[];
+  status?: "ARCHIVED" | "CONSUMED";
+  createdAt?: Date;
 }
 
 export interface Batch {
