@@ -4,13 +4,13 @@ import { format } from "date-fns";
 import { LastAutoTableShape, logoPath } from "./productReport";
 
 const formatManila = (isoOrDate: string | Date) => {
-  const date = typeof isoOrDate === 'string' ? new Date(isoOrDate) : isoOrDate;
+  const date = typeof isoOrDate === "string" ? new Date(isoOrDate) : isoOrDate;
   return format(date, "MMM dd, yyyy hh:mm a");
 };
 
 const formatDateOnly = (dateStr: string) => {
   // Parse YYYY-MM-DD as local date
-  const [year, month, day] = dateStr.split('-').map(Number);
+  const [year, month, day] = dateStr.split("-").map(Number);
   const date = new Date(year, month - 1, day);
   return format(date, "MMM dd, yyyy");
 };
@@ -33,6 +33,11 @@ interface SaleRecord {
     name: string;
   } | null;
   items: SaleItem[];
+  subtotal: number;
+  discount: number;
+  isVatExempt: boolean;
+  vatExemptAmount: number;
+  grandTotal: number;
 }
 
 interface SalesMeta {
@@ -41,17 +46,32 @@ interface SalesMeta {
   type: string;
 }
 
+interface SalesSummary {
+  totalRevenue: number;
+  totalDiscount: number;
+  totalVatExempt: number;
+  totalSubtotal: number;
+  transactionCount: number;
+}
 
 export const generateSalesPDF = (
   sales: SaleRecord[],
   meta: SalesMeta,
+  summary: SalesSummary,
   generatedBy?: string
 ) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
   const logoWidth = 45;
   const logoHeight = 10;
-  doc.addImage(logoPath, "PNG", (pageWidth / 2) - (logoWidth / 2), 8, logoWidth, logoHeight);
+  doc.addImage(
+    logoPath,
+    "PNG",
+    pageWidth / 2 - logoWidth / 2,
+    8,
+    logoWidth,
+    logoHeight
+  );
 
   // === HEADER ===
   doc.setFontSize(14);
@@ -78,11 +98,14 @@ export const generateSalesPDF = (
   doc.setFont("helvetica", "bold");
   doc.text("Type:", leftMargin, y);
   doc.setFont("helvetica", "normal");
-  const typeDisplay = 
-    meta.type === "all" ? "All Sales" :
-    meta.type === "orderrequest" ? "Order Request" :
-    meta.type === "walkin" ? "Walk-In" :
-    meta.type;
+  const typeDisplay =
+    meta.type === "all"
+      ? "All Sales"
+      : meta.type === "orderrequest"
+      ? "Order Request"
+      : meta.type === "walkin"
+      ? "Walk-In"
+      : meta.type;
   doc.text(typeDisplay, leftMargin + 25, y);
   y += 5;
 
@@ -103,54 +126,108 @@ export const generateSalesPDF = (
 
   const startY = y + 7;
 
-  // === BUILD ROWS ===
-  const allItems = sales.flatMap((sale) =>
-    sale.items.map((item: SaleItem) => ({
-      type: sale.type,
-      id: sale.id,
-      productName: item.productName,
-      category: item.category ?? "Uncategorized",
-      quantity: item.quantity,
-      total: item.total ?? 0,
-      createdAt: sale.createdAt,
-    }))
-  );
+  // === BUILD ROWS (One row per transaction) ===
+  const rows = sales.map((sale) => {
+    const itemCount = sale.items.reduce((sum, item) => sum + item.quantity, 0);
 
-  const rows = allItems.map((item) => [
-    item.type,
-    String(item.id),
-    item.productName,
-    item.category,
-    String(item.quantity),
-    item.total ? item.total.toFixed(2) : "—",
-    formatManila(item.createdAt),
-  ]);
+    return [
+      sale.type,
+      String(sale.id),
+      String(itemCount),
+      sale.subtotal.toFixed(2),
+      sale.discount > 0 ? sale.discount.toFixed(2) : "—",
+      sale.isVatExempt ? "Yes" : "—",
+      sale.grandTotal.toFixed(2),
+      formatManila(sale.createdAt),
+    ];
+  });
 
   // === TABLE ===
   autoTable(doc, {
-    head: [["Type", "Order ID", "Product", "Category", "Qty", "Total (PHP)", "Date"]],
+    head: [
+      [
+        "Type",
+        "Order ID",
+        "Items",
+        "Subtotal",
+        "Discount",
+        "VAT Exempt",
+        "Total (PHP)",
+        "Date",
+      ],
+    ],
     body: rows,
     startY,
     margin: { left: leftMargin, right: 14 },
     styles: { fontSize: 8 },
     headStyles: { fillColor: [59, 130, 246], textColor: 255 },
+    columnStyles: {
+      3: { halign: "right" },
+      4: { halign: "right" },
+      6: { halign: "right" },
+    },
   });
 
-  // === TOTAL ===
-  const total = allItems.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
-  const finalY = (doc as LastAutoTableShape).lastAutoTable?.finalY ?? startY + 10;
+  // === SUMMARY ===
+  const finalY =
+    (doc as LastAutoTableShape).lastAutoTable?.finalY ?? startY + 10;
+  let summaryY = finalY + 10;
 
   doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.text("Summary", leftMargin, summaryY);
+  summaryY += 6;
+
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+
+  const summaryData = [
+    ["Total Transactions:", summary.transactionCount.toString()],
+    [
+      "Gross Sales:",
+      `PHP ${summary.totalSubtotal.toLocaleString("en-PH", {
+        minimumFractionDigits: 2,
+      })}`,
+    ],
+    [
+      "Total Discounts:",
+      `PHP ${summary.totalDiscount.toLocaleString("en-PH", {
+        minimumFractionDigits: 2,
+      })}`,
+    ],
+    [
+      "VAT Exemptions:",
+      `PHP ${summary.totalVatExempt.toLocaleString("en-PH", {
+        minimumFractionDigits: 2,
+      })}`,
+    ],
+  ];
+
+  summaryData.forEach(([label, value]) => {
+    doc.text(label, leftMargin, summaryY);
+    doc.text(value, leftMargin + 50, summaryY);
+    summaryY += 5;
+  });
+
+  // Net Sales (Total Revenue)
+  summaryY += 2;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("Net Sales:", leftMargin, summaryY);
   doc.text(
-    `Total Sales: PHP ${total.toLocaleString("en-PH", {
+    `PHP ${summary.totalRevenue.toLocaleString("en-PH", {
       minimumFractionDigits: 2,
     })}`,
-    leftMargin,
-    finalY + 8
+    leftMargin + 50,
+    summaryY
   );
 
   // === SAVE ===
-  const fromDate = meta.from ? formatDateOnly(meta.from).replace(/[\s,]/g, '-') : 'all';
-  const toDate = meta.to ? formatDateOnly(meta.to).replace(/[\s,]/g, '-') : 'all';
+  const fromDate = meta.from
+    ? formatDateOnly(meta.from).replace(/[\s,]/g, "-")
+    : "all";
+  const toDate = meta.to
+    ? formatDateOnly(meta.to).replace(/[\s,]/g, "-")
+    : "all";
   doc.save(`sales-report-${meta.type}-${fromDate}-to-${toDate}.pdf`);
 };

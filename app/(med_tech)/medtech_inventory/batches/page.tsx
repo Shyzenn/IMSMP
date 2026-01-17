@@ -1,36 +1,32 @@
-import BatchTable from "@/app/components/Inventory/batches/BatchTable";
+import BatchClient from "@/app/components/Inventory/batches/BatchesClient";
 import PageTableHeader from "@/app/components/ui/PageTableHeader";
-import Pagination from "@/app/components/ui/Pagination";
-import { TableRowSkeleton } from "@/app/components/ui/Skeleton";
-import { fetchBatchPages } from "@/lib/action/get";
-import { inventorySkeletonHeaders } from "@/lib/utils";
 import { redirect } from "next/navigation";
-import React, { Suspense } from "react";
 
-const ProductBatch = async (props: {
-  searchParams?: Promise<{
-    query?: string;
-    page?: string;
-    filter?: string;
-    sort?: string;
-    order?: string;
-  }>;
-}) => {
-  const searchParams = await props.searchParams;
-  const query = searchParams?.query || "";
-  const page = searchParams?.page;
-  const filter = searchParams?.filter;
+type SearchParams = {
+  query?: string;
+  page?: string;
+  filter?: string;
+  sort?: string;
+  order?: string;
+};
+
+async function ProductBatch({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const params = await searchParams;
+
+  const query = params.query ?? "";
+  const page = Number(params.page ?? 1);
+  const filter = params.filter ?? "all";
+  const sortBy = params.sort ?? "createdAt";
+  const sortOrder = (params.order as "asc" | "desc") ?? "desc";
 
   if (!filter || !page) {
     redirect(`/medtech_inventory/batches?query=&page=1&filter=all&sort=number&order=desc
   `);
   }
-
-  const sortBy = searchParams?.sort || "createdAt";
-  const sortOrder = (searchParams?.order as "asc" | "desc") || "desc";
-
-  const currentPage = Number(page);
-  const totalPages = await fetchBatchPages(query, filter);
 
   return (
     <div
@@ -45,26 +41,15 @@ const ProductBatch = async (props: {
         batchExport={true}
       />
 
-      <div className="overflow-x-auto">
-        <Suspense
-          key={`${currentPage}-${query}-${filter}-${sortBy}-${sortOrder}`}
-          fallback={<TableRowSkeleton headerLabel={inventorySkeletonHeaders} />}
-        >
-          <BatchTable
-            query={query}
-            currentPage={currentPage}
-            filter={filter}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-          />
-        </Suspense>
-
-        <div className="mt-6 flex items-center justify-center">
-          <Pagination totalPages={totalPages} />
-        </div>
-      </div>
+      <BatchClient
+        query={query}
+        initialPage={page}
+        filter={filter}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+      />
     </div>
   );
-};
+}
 
 export default ProductBatch;

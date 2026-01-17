@@ -285,6 +285,8 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
     }
   };
 
+  // In your PageTableHeader component, update handleSalesExport:
+
   const handleSalesExport = async () => {
     setIsExporting(true);
     try {
@@ -324,7 +326,9 @@ const PageTableHeader: React.FC<PageTableHeaderProps> = ({
 
       const data = await response.json();
       const username = session?.user?.username || "Unknown User";
-      generateSalesPDF(data.sales, data.meta, username);
+
+      // Pass the summary object to the PDF generator
+      generateSalesPDF(data.sales, data.meta, data.summary, username);
 
       setShowSalesReportModal(false);
       setSalesDateRange({});

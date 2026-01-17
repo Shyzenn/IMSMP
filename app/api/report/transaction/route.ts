@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     const fetchWalkIns =
       !sources || sources.length === 0 || sources.includes("walk_in");
 
-    // --- Separate date conditions to avoid type conflicts ---
+    // Date conditions
     const orderRequestDateCondition: Prisma.OrderRequestWhereInput = {};
     const walkInDateCondition: Prisma.WalkInTransactionWhereInput = {};
 
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       walkInDateCondition.createdAt = createdAt;
     }
 
-    // --- Status filters ---
+    // Status filters
     const orderRequestStatusCondition: Prisma.OrderRequestWhereInput = {};
     const walkInStatusCondition: Prisma.WalkInTransactionWhereInput = {};
 
@@ -61,20 +61,24 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // --- WHERE filters ---
+    // WHERE filters
     const requestWhere: Prisma.OrderRequestWhereInput = {
-      ...(safeQuery && { patient_name: { contains: safeQuery } }),
+      ...(safeQuery && {
+        patient: {
+          patientName: { equals: safeQuery },
+        },
+      }),
       ...orderRequestDateCondition,
       ...orderRequestStatusCondition,
     };
 
     const walkInWhere: Prisma.WalkInTransactionWhereInput = {
-      ...(safeQuery && { customer_name: { contains: safeQuery } }),
+      ...(safeQuery && { customer_name: { equals: safeQuery } }),
       ...walkInDateCondition,
       ...walkInStatusCondition,
     };
 
-    // --- Fetch data ---
+    // Fetch data
     const [requestOrders, walkInOrders] = await Promise.all([
       fetchOrderRequests
         ? db.orderRequest.findMany({
@@ -86,6 +90,8 @@ export async function POST(req: NextRequest) {
               payments: {
                 select: {
                   processedBy: true,
+                  discountAmount: true,
+                  discountType: true,
                 },
               },
               patient: {
@@ -104,57 +110,123 @@ export async function POST(req: NextRequest) {
             include: {
               items: { include: { product: true } },
               user: true,
+              payments: {
+                select: {
+                  discountAmount: true,
+                  discountType: true,
+                },
+              },
             },
             orderBy: { createdAt: "desc" },
           })
         : Promise.resolve([]),
     ]);
 
-    // --- Format data ---
-    const formattedWalkIn = walkInOrders.map((tx) => ({
-      id: tx.id,
-      customer: tx.customer_name || "Unknown",
-      type: "Walk In" as const,
-      createdAt: tx.createdAt,
-      status: tx.status,
-      source: "Walk In" as const,
-      total: tx.totalAmount?.toNumber() ?? 0,
-      handledBy: tx.user?.username || "Unknown",
-      itemDetails: tx.items.map((item) => ({
-        productName: item.product?.product_name ?? "Unknown",
-        quantity: item.quantity,
-        price: item.product?.price?.toNumber() ?? 0,
-      })),
-    }));
+    // Format Walk-In transactions
+    const formattedWalkIn = walkInOrders.map((tx) => {
+      // Calculate subtotal
+      const itemsTotal = tx.items.reduce((sum, item) => {
+        const netQuantity = item.quantity - (item.refundedQuantity || 0);
+        return sum + (Number(item.price) || 0) * netQuantity;
+      }, 0);
 
-    const formattedRequest = requestOrders.map((tx) => ({
-      id: tx.id,
-      customer: tx.patient.patientName || "Unknown",
-      patient_name: tx.patient.patientName,
-      roomNumber: tx.patient.roomNumber
-        ? Number(tx.patient.roomNumber)
-        : undefined,
-      type: tx.type,
-      createdAt: tx.createdAt,
-      status: tx.status,
-      source: "Request Order" as const,
-      requestedBy: tx.user?.username || "Unknown",
-      receivedBy: tx.receivedBy?.username || "Unknown",
-      processedBy: tx.payments.map((p) => p.processedBy),
-      total: tx.items.reduce(
-        (sum, item) =>
-          sum +
-          Number(item.quantityOrdered) * (item.product?.price?.toNumber() ?? 0),
-        0
-      ),
-      itemDetails: tx.items.map((item) => ({
-        productName: item.product?.product_name ?? "Unknown",
-        quantity: item.quantityOrdered,
-        price: item.product?.price?.toNumber() ?? 0,
-      })),
-    }));
+      // Get payment info
+      const firstPayment = tx.payments?.[0];
+      const isVatExempt =
+        firstPayment &&
+        (firstPayment.discountType === "PWD" ||
+          firstPayment.discountType === "SENIOR");
 
-    // --- Combine and sort ---
+      // Calculate base amount (VAT-exclusive if exempt)
+      const baseAmount = isVatExempt ? itemsTotal / 1.12 : itemsTotal;
+
+      // Sum ALL payment discounts
+      const discount =
+        tx.payments?.reduce(
+          (sum, p) => sum + Number(p.discountAmount || 0),
+          0
+        ) || 0;
+
+      // Calculate grand total
+      const grandTotal = baseAmount - discount;
+
+      return {
+        id: tx.id,
+        customer: tx.customer_name || "Unknown",
+        type: "Walk In" as const,
+        createdAt: tx.createdAt,
+        status: tx.status,
+        source: "Walk In" as const,
+        subtotal: itemsTotal,
+        discount,
+        isVatExempt,
+        total: grandTotal,
+        handledBy: tx.user?.username || "Unknown",
+        itemDetails: tx.items.map((item) => ({
+          productName: item.product?.product_name ?? "Unknown",
+          quantity: item.quantity - (item.refundedQuantity || 0),
+          price: item.product?.price?.toNumber() ?? 0,
+        })),
+      };
+    });
+
+    // Format Order Request transactions
+    const formattedRequest = requestOrders.map((tx) => {
+      // Calculate subtotal
+      const itemsTotal = tx.items.reduce((sum, item) => {
+        const netQuantity =
+          Number(item.quantityOrdered) - (Number(item.refundedQuantity) || 0);
+        return sum + netQuantity * (item.product?.price?.toNumber() ?? 0);
+      }, 0);
+
+      // Get payment info
+      const firstPayment = tx.payments?.[0];
+      const isVatExempt =
+        firstPayment &&
+        (firstPayment.discountType === "PWD" ||
+          firstPayment.discountType === "SENIOR");
+
+      // Calculate base amount (VAT-exclusive if exempt)
+      const baseAmount = isVatExempt ? itemsTotal / 1.12 : itemsTotal;
+
+      // Sum ALL payment discounts
+      const discount =
+        tx.payments?.reduce(
+          (sum, p) => sum + Number(p.discountAmount || 0),
+          0
+        ) || 0;
+
+      // Calculate grand total
+      const grandTotal = baseAmount - discount;
+
+      return {
+        id: tx.id,
+        customer: tx.patient.patientName || "Unknown",
+        patient_name: tx.patient.patientName,
+        roomNumber: tx.patient.roomNumber
+          ? Number(tx.patient.roomNumber)
+          : undefined,
+        type: tx.type,
+        createdAt: tx.createdAt,
+        status: tx.status,
+        source: "Request Order" as const,
+        requestedBy: tx.user?.username || "Unknown",
+        receivedBy: tx.receivedBy?.username || "Unknown",
+        processedBy: tx.payments.map((p) => p.processedBy),
+        subtotal: itemsTotal,
+        discount,
+        isVatExempt,
+        total: grandTotal,
+        itemDetails: tx.items.map((item) => ({
+          productName: item.product?.product_name ?? "Unknown",
+          quantity:
+            Number(item.quantityOrdered) - (Number(item.refundedQuantity) || 0),
+          price: item.product?.price?.toNumber() ?? 0,
+        })),
+      };
+    });
+
+    // Combine and sort
     const combined = [...formattedWalkIn, ...formattedRequest];
     if (combined.length === 0) {
       return NextResponse.json(
@@ -165,13 +237,20 @@ export async function POST(req: NextRequest) {
 
     combined.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
+    // Calculate totals using grandTotal (after discounts and VAT)
+    const totalAmount = combined.reduce((sum, tx) => sum + tx.total, 0);
+    const totalDiscount = combined.reduce((sum, tx) => sum + tx.discount, 0);
+    const totalSubtotal = combined.reduce((sum, tx) => sum + tx.subtotal, 0);
+
     const meta = {
       dateRange: { from: from || null, to: to || null },
       searchQuery: query || null,
       statusFilters: statuses || null,
       sourceFilters: sources || null,
       totalTransactions: combined.length,
-      totalAmount: combined.reduce((sum, tx) => sum + tx.total, 0),
+      totalAmount,
+      totalDiscount,
+      totalSubtotal,
       generatedAt: new Date().toISOString(),
     };
 

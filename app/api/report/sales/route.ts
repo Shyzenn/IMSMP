@@ -28,8 +28,10 @@ export interface ReportSale {
     name: string;
   } | null;
   items: ReportItem[];
+  subtotal: number;
   discount: number;
   isVatExempt: boolean;
+  vatExemptAmount: number;
   grandTotal: number;
 }
 
@@ -104,14 +106,19 @@ export async function POST(req: Request) {
       });
 
       orders.forEach((order) => {
-        // Get payment info
-        const payment = order.payments?.[0];
+        // Get payment info - check first payment for VAT exemption status
+        const firstPayment = order.payments?.[0];
         const isVatExempt =
-          payment &&
-          (payment.discountType === "PWD" || payment.discountType === "SENIOR");
-        const discountAmount = payment
-          ? Number(payment.discountAmount || 0)
-          : 0;
+          firstPayment &&
+          (firstPayment.discountType === "PWD" ||
+            firstPayment.discountType === "SENIOR");
+
+        // Sum ALL payment discounts (same as sales card)
+        const discountAmount =
+          order.payments?.reduce(
+            (sum, p) => sum + Number(p.discountAmount || 0),
+            0
+          ) || 0;
 
         const items = order.items.map((item) => {
           const productName = item.product?.product_name ?? "Unknown";
@@ -134,13 +141,20 @@ export async function POST(req: Request) {
           };
         });
 
-        // Calculate order subtotal
-        const orderSubtotal = items.reduce((sum, item) => sum + item.total, 0);
+        // Calculate order subtotal (gross amount)
+        const subtotal = items.reduce((sum, item) => sum + item.total, 0);
 
-        // Calculate base amount (VAT-exclusive if exempt)
-        const baseAmount = isVatExempt ? orderSubtotal / 1.12 : orderSubtotal;
+        // Calculate VAT-exempt amount if applicable
+        let vatExemptAmount = 0;
+        let baseAmount = subtotal;
 
-        // Calculate grand total
+        if (isVatExempt) {
+          // Remove VAT (12%) from the total
+          baseAmount = subtotal / 1.12;
+          vatExemptAmount = subtotal - baseAmount;
+        }
+
+        // Calculate grand total (base amount minus discount)
         const grandTotal = baseAmount - discountAmount;
 
         results.push({
@@ -154,8 +168,10 @@ export async function POST(req: Request) {
               }
             : null,
           items,
+          subtotal,
           discount: discountAmount,
           isVatExempt,
+          vatExemptAmount,
           grandTotal,
         });
       });
@@ -190,21 +206,24 @@ export async function POST(req: Request) {
       });
 
       walkins.forEach((txn) => {
-        // Get payment info
-        const payment = txn.payments?.[0];
+        // Get payment info - check first payment for VAT exemption status
+        const firstPayment = txn.payments?.[0];
         const isVatExempt =
-          payment &&
-          (payment.discountType === "PWD" || payment.discountType === "SENIOR");
-        const discountAmount = payment
-          ? Number(payment.discountAmount || 0)
-          : 0;
+          firstPayment &&
+          (firstPayment.discountType === "PWD" ||
+            firstPayment.discountType === "SENIOR");
+
+        // Sum ALL payment discounts (same as sales card)
+        const discountAmount =
+          txn.payments?.reduce(
+            (sum, p) => sum + Number(p.discountAmount || 0),
+            0
+          ) || 0;
 
         const items = txn.items.map((item) => {
           const productName = item.product?.product_name ?? "Unknown";
           const categoryName = item.product?.category?.name ?? "Uncategorized";
-
           const productPrice = item.price ? Number(item.price) : 0;
-
           const netQuantity = item.quantity - (item.refundedQuantity || 0);
           const total = productPrice * netQuantity;
 
@@ -218,13 +237,20 @@ export async function POST(req: Request) {
           };
         });
 
-        // Calculate transaction subtotal
-        const txnSubtotal = items.reduce((sum, item) => sum + item.total, 0);
+        // Calculate transaction subtotal (gross amount)
+        const subtotal = items.reduce((sum, item) => sum + item.total, 0);
 
-        // Calculate base amount (VAT-exclusive if exempt)
-        const baseAmount = isVatExempt ? txnSubtotal / 1.12 : txnSubtotal;
+        // Calculate VAT-exempt amount if applicable
+        let vatExemptAmount = 0;
+        let baseAmount = subtotal;
 
-        // Calculate grand total
+        if (isVatExempt) {
+          // Remove VAT (12%) from the total
+          baseAmount = subtotal / 1.12;
+          vatExemptAmount = subtotal - baseAmount;
+        }
+
+        // Calculate grand total (base amount minus discount)
         const grandTotal = baseAmount - discountAmount;
 
         results.push({
@@ -238,8 +264,10 @@ export async function POST(req: Request) {
               }
             : null,
           items,
+          subtotal,
           discount: discountAmount,
           isVatExempt,
+          vatExemptAmount,
           grandTotal,
         });
       });
@@ -249,8 +277,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "No data found" }, { status: 404 });
     }
 
+    // Calculate totals for summary
+    const totalRevenue = results.reduce(
+      (sum, sale) => sum + sale.grandTotal,
+      0
+    );
+    const totalDiscount = results.reduce((sum, sale) => sum + sale.discount, 0);
+    const totalVatExempt = results.reduce(
+      (sum, sale) => sum + sale.vatExemptAmount,
+      0
+    );
+    const totalSubtotal = results.reduce((sum, sale) => sum + sale.subtotal, 0);
+
     return NextResponse.json({
       sales: results,
+      summary: {
+        totalRevenue,
+        totalDiscount,
+        totalVatExempt,
+        totalSubtotal,
+        transactionCount: results.length,
+      },
       meta: {
         from: body.from ?? null,
         to: body.to ?? null,
