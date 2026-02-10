@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE `ProductBatch` ADD COLUMN `type` VARCHAR(191) NOT NULL DEFAULT 'ACTIVE';

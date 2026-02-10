@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -97,11 +97,11 @@ model Product {
 
   genericName          String?
   manufacturer         String?
-  description          String? @db.Text
+  description          String?
   strength             String? // e.g., "500mg", "100 units/ml"
   dosageForm           String? // tablet, capsule, powder, solution, suspension, etc.
   requiresPrescription Boolean @default(false)
-  price Decimal @db.Decimal(10, 2)
+  price Decimal
   minimumStockAlert Decimal @default(6)
   
   archivedById   String?
@@ -136,7 +136,7 @@ model ProductBatch {
   manufactureDate DateTime
   expiryDate      DateTime
   type            String   @default("ACTIVE") // ACTIVE | EXPIRING | EXPIRED | CONSUMED | ARCHIVED
-  notes           String?  @db.Text
+  notes           String?  
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -239,19 +239,19 @@ model Payment {
   walkInOrder   WalkInTransaction? @relation(fields: [walkInOrderId], references: [id], onDelete: Cascade)
   walkInOrderId Int?
 
-  subTotal        Decimal @db.Decimal(10,2) // before discount, VAT-inclusive
-  discountAmount  Decimal @default(0) @db.Decimal(10,2)
-  discountPercent Decimal @default(0) @db.Decimal(5,2)
+  subTotal        Decimal  // before discount, VAT-inclusive
+  discountAmount  Decimal @default(0) 
+  discountPercent Decimal @default(0)
   discountType  DiscountType  @default(NONE)
 
-  vatRate      Decimal @default(12) @db.Decimal(5,2)
-  vatAmount    Decimal @db.Decimal(10,2)
-  vatExempt    Decimal @default(0) @db.Decimal(10,2)
-  zeroRated    Decimal @default(0) @db.Decimal(10,2)
+  vatRate      Decimal @default(12)
+  vatAmount    Decimal 
+  vatExempt    Decimal @default(0) 
+  zeroRated    Decimal @default(0) 
 
-  amountDue        Decimal @db.Decimal(10,2) // final payable
-  amountTendered   Decimal @db.Decimal(10,2)
-  change           Decimal @default(0) @db.Decimal(10,2)
+  amountDue        Decimal  // final payable
+  amountTendered   Decimal 
+  change           Decimal @default(0) 
 
   processedBy   User   @relation("PaymentProcessedBy", fields: [processedById], references: [id])
   processedById String
@@ -271,7 +271,7 @@ model Refund {
   walkInOrder   WalkInTransaction? @relation(fields: [walkInOrderId], references: [id], onDelete: Cascade)
   walkInOrderId Int?
 
-  refundAmount Decimal @db.Decimal(10, 2)
+  refundAmount Decimal 
   refundReason String
 
   refundedBy   User   @relation("RefundProcessedBy", fields: [refundedById], references: [id])
@@ -351,7 +351,7 @@ model OrderItem {
   productId        Int
 
   quantityOrdered Decimal 
-  price           Decimal @db.Decimal(10, 2)
+  price           Decimal 
   totalPrice Decimal 
 }
 

@@ -7,7 +7,7 @@ type SearchParams = {
   page: string;
   filter: string;
   sort: string;
-  order: string;
+  order: "asc" | "desc";
   from: string;
   to: string;
 };
@@ -23,13 +23,13 @@ async function Transaction({
   const page = Number(params.page ?? 1);
   const filter = params.filter ?? "all";
   const sortBy = params.sort ?? "createdAt";
-  const sortOrder = (params.order as "asc" | "desc") ?? "desc";
+  const sortOrder = params.order ?? "desc";
   const from = params.from;
   const to = params.to;
 
   if (!params.filter || !params.page) {
     redirect(
-      `/cashier_transaction/order_walkin?page=1&filter=all&sort=createdAt&order=desc`
+      `/cashier_transaction?page=1&filter=all&sort=createdAt&order=desc`,
     );
   }
 

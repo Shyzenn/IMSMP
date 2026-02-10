@@ -28,9 +28,7 @@ async function Transaction({
   const to = params.to;
 
   if (!params.filter || !params.page) {
-    redirect(
-      `/nurse_transaction/order_walkin?page=1&filter=all&sort=createdAt&order=desc`
-    );
+    redirect(`/nurse_transaction?page=1&filter=all&sort=createdAt&order=desc`);
   }
 
   return (

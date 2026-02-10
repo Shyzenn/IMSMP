@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE `Notification` ADD COLUMN `type` ENUM('ORDER_REQUEST', 'ADD_PRODUCT') NULL;
